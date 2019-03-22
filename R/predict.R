@@ -1,27 +1,41 @@
 #' Model predictions
 #'
 #' Apply a model to create different types of predictions.
-#'  `predict` can be used for all types of models and used the
+#'  `predict()` can be used for all types of models and used the
 #'  "type" argument for more specificity.
 #'
 #' @param object An object of class `model_fit`
 #' @param new_data A rectangular data object, such as a data frame.
 #' @param type A single character value or `NULL`. Possible values
-#'  are "numeric", "class", "probs", "conf_int", "pred_int", "quantile",
-#'  or "raw". When `NULL`, `predict` will choose an appropriate value
+#'  are "numeric", "class", "prob", "conf_int", "pred_int", "quantile",
+#'  or "raw". When `NULL`, `predict()` will choose an appropriate value
 #'  based on the model's mode.
 #' @param opts A list of optional arguments to the underlying
 #'  predict function that will be used when `type = "raw"`. The
 #'  list should not include options for the model object or the
 #'  new data being predicted.
-#' @param ... Ignored. To pass arguments to pass to the underlying
-#'  function when `predict.model_fit(type = "raw")`,
-#' use the `opts` argument.
-#' @details If "type" is not supplied to `predict`, then a choice
+#' @param ... Arguments to the underlying model's prediction
+#'  function cannot be passed here (see `opts`). There are some
+#'  `parsnip` related options that can be passed, depending on the
+#'  value of `type`. Possible arguments are:
+#'  \itemize{
+#'     \item `level`: for `type`s of "conf_int" and "pred_int" this
+#'            is the parameter for the tail area of the intervals
+#'            (e.g. confidence level for confidence intervals).
+#'            Default value is 0.95.
+#'     \item `std_error`: add the standard error of fit or
+#'            prediction for `type`s of "conf_int" and "pred_int".
+#'            Default value is `FALSE`.
+#'     \item `quantile`: the quantile(s) for quantile regression
+#'            (not implemented yet)
+#'     \item `time`: the time(s) for hazard probability estimates
+#'            (not implemented yet)
+#'  }
+#' @details If "type" is not supplied to `predict()`, then a choice
 #'  is made (`type = "numeric"` for regression models and
 #'  `type = "class"` for classification).
 #'
-#' `predict` is designed to provide a tidy result (see "Value"
+#' `predict()` is designed to provide a tidy result (see "Value"
 #'  section below) in a tibble output format.
 #'
 #'  When using `type = "conf_int"` and `type = "pred_int"`, the options
@@ -29,7 +43,7 @@
 #'   extra column of standard error values (if available).
 #'
 #' @return With the exception of `type = "raw"`, the results of
-#'  `predict.model_fit` will be a tibble as many rows in the output
+#'  `predict.model_fit()` will be a tibble as many rows in the output
 #'  as there are rows in `new_data` and the column names will be
 #'  predictable.
 #'
@@ -49,15 +63,18 @@
 #'  a list-column. Each list element contains a tibble with columns
 #'  `.pred` and `.quantile` (and perhaps other columns).
 #'
-#' Using `type = "raw"` with `predict.model_fit` (or using
-#'  `predict_raw`) will return the unadulterated results of the
-#'  prediction function.
+#' Using `type = "raw"` with `predict.model_fit()` will return
+#'  the unadulterated results of the prediction function.
 #'
 #' In the case of Spark-based models, since table columns cannot
 #'  contain dots, the same convention is used except 1) no dots
 #'  appear in names and 2) vectors are never returned but
 #'  type-specific prediction functions.
 #'
+#' When the model fit failed and the error was captured, the
+#'  `predict()` function will return the same structure as above but
+#'  filled with missing values. This does not currently work for
+#'  multivariate models.
 #' @examples
 #' library(dplyr)
 #'
@@ -90,10 +107,26 @@
 #' @method predict model_fit
 #' @export predict.model_fit
 #' @export
-predict.model_fit <- function (object, new_data, type = NULL, opts = list(), ...) {
-  if (any(names(enquos(...)) == "newdata"))
+predict.model_fit <- function(object, new_data, type = NULL, opts = list(), ...) {
+  the_dots <- enquos(...)
+  if (any(names(the_dots) == "newdata"))
     stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
-  
+
+  if (inherits(object$fit, "try-error")) {
+    warning("Model fit failed; cannot make predictions.", call. = FALSE)
+    return(NULL)
+  }
+
+  other_args <- c("level", "std_error", "quantile") # "time" for survival probs later
+  is_pred_arg <- names(the_dots) %in% other_args
+  if (any(!is_pred_arg)) {
+    bad_args <- names(the_dots)[!is_pred_arg]
+    bad_args <- paste0("`", bad_args, "`", collapse = ", ")
+    stop("The ellipses are not used to pass args to the model function's ",
+         "predict function. These arguments cannot be used: ",
+         bad_args, call. = FALSE)
+  }
+
   type <- check_pred_type(object, type)
   if (type != "raw" && length(opts) > 0)
     warning("`opts` is only used with `type = 'raw'` and was ignored.")
@@ -131,10 +164,10 @@ check_pred_type <- function(object, type) {
       switch(object$spec$mode,
              regression = "numeric",
              classification = "class",
-             stop("Type should be 'regression' or 'classification'.", call. = FALSE))
+             stop("`type` should be 'regression' or 'classification'.", call. = FALSE))
   }
   if (!(type %in% pred_types))
-    stop("'type' should be one of: ",
+    stop("`type` should be one of: ",
          glue_collapse(pred_types, sep = ", ", last = " and "),
          call. = FALSE)
   if (type == "numeric" & object$spec$mode != "regression")
@@ -212,16 +245,22 @@ prepare_data <- function(object, new_data) {
 #' @return A tibble with the same number of rows as the data being predicted.
 #'  Mostly likely, there is a list-column named `.pred` that is a tibble with
 #'  multiple rows per sub-model.
-#' @keywords internal
 #' @export
-multi_predict <- function(object, ...)
+multi_predict <- function(object, ...) {
+  if (inherits(object$fit, "try-error")) {
+    warning("Model fit failed; cannot make predictions.", call. = FALSE)
+    return(NULL)
+  }
   UseMethod("multi_predict")
+}
 
-#' @keywords internal
 #' @export
 #' @rdname multi_predict
 multi_predict.default <- function(object, ...)
-  stop ("No `multi_predict` method exists for objects with classes ",
+  stop("No `multi_predict` method exists for objects with classes ",
         paste0("'", class(), "'", collapse = ", "), call. = FALSE)
 
-
+#' @export
+predict.model_spec <- function(object, ...) {
+  stop("You must use `fit()` on your model specification before you can use `predict()`.", call. = FALSE)
+}

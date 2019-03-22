@@ -20,6 +20,7 @@ quiet_ctrl <- fit_control(verbosity = 0, catch = TRUE)
 test_that('kknn execution', {
 
   skip_if_not_installed("kknn")
+  library(kknn)
 
   # continuous
   # expect no error
@@ -74,11 +75,11 @@ test_that('kknn prediction', {
     newdata = iris[1:5, num_pred]
   )
 
-  expect_equal(uni_pred, predict_numeric(res_xy, iris[1:5, num_pred]))
+  expect_equal(uni_pred, predict(res_xy, iris[1:5, num_pred])$.pred)
 
   # nominal
   res_xy_nom <- fit_xy(
-    iris_basic,
+    iris_basic %>% set_mode("classification"),
     control = ctrl,
     x = iris[, c("Sepal.Length", "Petal.Width")],
     y = iris$Species
@@ -89,11 +90,14 @@ test_that('kknn prediction', {
     newdata = iris[1:5, c("Sepal.Length", "Petal.Width")]
   )
 
-  expect_equal(uni_pred_nom, predict_class(res_xy_nom, iris[1:5, c("Sepal.Length", "Petal.Width")]))
+  expect_equal(
+    uni_pred_nom,
+    predict(res_xy_nom, iris[1:5, c("Sepal.Length", "Petal.Width")], type = "class")$.pred_class
+  )
 
   # continuous - formula interface
   res_form <- fit(
-    iris_basic,
+    iris_basic %>% set_mode("regression"),
     Sepal.Length ~ log(Sepal.Width) + Species,
     data = iris,
     control = ctrl
@@ -104,5 +108,5 @@ test_that('kknn prediction', {
     newdata = iris[1:5,]
   )
 
-  expect_equal(form_pred, predict_numeric(res_form, iris[1:5, c("Sepal.Width", "Species")]))
+  expect_equal(form_pred, predict(res_form, iris[1:5, c("Sepal.Width", "Species")])$.pred)
 })

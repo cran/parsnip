@@ -244,23 +244,24 @@ test_that('glm execution', {
     )
   )
 
-  # passes interactively but not on R CMD check
-  # glm_form_catch <- fit(
-  #   lc_basic,
-  #   funded_amnt ~ term,
-  #   data = lending_club,
-  #
-  #   control = caught_ctrl
-  # )
-  # expect_true(inherits(glm_form_catch$fit, "try-error"))
-
-  glm_xy_catch <- fit_xy(
-    lc_basic,
-    control = caught_ctrl,
-    x = lending_club[, num_pred],
-    y = lending_club$total_bal_il
+  # wrong outcome type
+  expect_error(
+    glm_form_catch <- fit(
+      lc_basic,
+      funded_amnt ~ term,
+      data = lending_club,
+      control = caught_ctrl
+    )
   )
-  expect_true(inherits(glm_xy_catch$fit, "try-error"))
+
+  expect_error(
+    glm_xy_catch <- fit_xy(
+      lc_basic,
+      control = caught_ctrl,
+      x = lending_club[, num_pred],
+      y = lending_club$total_bal_il
+    )
+  )
 })
 
 test_that('glm prediction', {
@@ -275,7 +276,7 @@ test_that('glm prediction', {
   xy_pred <- ifelse(xy_pred >= 0.5, "good", "bad")
   xy_pred <- factor(xy_pred, levels = levels(lending_club$Class))
   xy_pred <- unname(xy_pred)
-  expect_equal(xy_pred, predict_class(classes_xy, lending_club[1:7, num_pred]))
+  expect_equal(xy_pred, predict(classes_xy, lending_club[1:7, num_pred], type = "class")$.pred_class)
 
 })
 
@@ -288,10 +289,10 @@ test_that('glm probabilities', {
   )
 
   xy_pred <- predict(classes_xy$fit, newdata = lending_club[1:7, num_pred], type = "response")
-  xy_pred <- tibble(bad = 1 - xy_pred, good = xy_pred)
-  expect_equal(xy_pred, predict_classprob(classes_xy, lending_club[1:7, num_pred]))
+  xy_pred <- tibble(.pred_bad = 1 - xy_pred, .pred_good = xy_pred)
+  expect_equal(xy_pred, predict(classes_xy, lending_club[1:7, num_pred], type = "prob"))
 
-  one_row <- predict_classprob(classes_xy, lending_club[1, num_pred])
+  one_row <- predict(classes_xy, lending_club[1, num_pred], type = "prob")
   expect_equal(xy_pred[1,], one_row)
 
 })
@@ -323,8 +324,10 @@ test_that('glm intervals', {
             level = 0.93,
             std_error = TRUE)
 
-  expect_equivalent(confidence_parsnip$.pred_lower, lower_glm)
-  expect_equivalent(confidence_parsnip$.pred_upper, upper_glm)
+  expect_equivalent(confidence_parsnip$.pred_lower_good, lower_glm)
+  expect_equivalent(confidence_parsnip$.pred_upper_good, upper_glm)
+  expect_equivalent(confidence_parsnip$.pred_lower_bad, 1 - upper_glm)
+  expect_equivalent(confidence_parsnip$.pred_upper_bad, 1 - lower_glm)
   expect_equivalent(confidence_parsnip$.std_error, pred_glm$se.fit)
 
 })

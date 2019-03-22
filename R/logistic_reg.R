@@ -1,8 +1,8 @@
 #' General Interface for Logistic Regression Models
 #'
-#' `logistic_reg` is a way to generate a _specification_ of a model
+#' `logistic_reg()` is a way to generate a _specification_ of a model
 #'  before fitting and allows the model to be created using
-#'  different packages in R, Stan, keras, or via Spark. The main 
+#'  different packages in R, Stan, keras, or via Spark. The main
 #'  arguments for the model are:
 #' \itemize{
 #'   \item \code{penalty}: The total amount of regularization
@@ -12,9 +12,9 @@
 #' }
 #' These arguments are converted to their specific names at the
 #'  time that the model is fit. Other options and argument can be
-#'  set using `set_engine`. If left to their defaults
+#'  set using `set_engine()`. If left to their defaults
 #'  here (`NULL`), the values are taken from the underlying model
-#'  functions. If parameters need to be modified, `update` can be used
+#'  functions. If parameters need to be modified, `update()` can be used
 #'  in lieu of recreating the object from scratch.
 #' @inheritParams boost_tree
 #' @param mode A single character string for the type of model.
@@ -29,7 +29,7 @@
 #'  L2 penalty (i.e. weight decay, or ridge regression) versus L1
 #'  (the lasso) (`glmnet` and `spark` only).
 #' @details
-#' For `logistic_reg`, the mode will always be "classification".
+#' For `logistic_reg()`, the mode will always be "classification".
 #'
 #' The model can be created using the `fit()` function using the
 #'  following _engines_:
@@ -65,16 +65,16 @@
 #' \pkg{keras}
 #'
 #' \Sexpr[results=rd]{parsnip:::show_fit(parsnip:::logistic_reg(), "keras")}
-#' 
+#'
 #' When using `glmnet` models, there is the option to pass
-#'  multiple values (or no values) to the `penalty` argument.
-#'  This can have an effect on the model object results. When using
-#'  the `predict` method in these cases, the return object type
-#'  depends on the value of `penalty`. If a single value is
-#'  given, the results will be a simple numeric vector. When
-#'  multiple values or no values for `penalty` are used in
-#'  `logistic_reg`, the `predict` method will return a data frame with
-#'  columns `values` and `lambda`.
+#'  multiple values (or no values) to the `penalty` argument. This
+#'  can have an effect on the model object results. When using the
+#'  `predict()` method in these cases, the return value depends on
+#'  the value of `penalty`. When using `predict()`, only a single
+#'  value of the penalty can be used. When predicting on multiple
+#'  penalties, the `multi_predict()` function can be used. It
+#'  returns a tibble with a list column called `.pred` that contains
+#'  a tibble with all of the penalty results.
 #'
 #' For prediction, the `stan` engine can compute posterior
 #'  intervals analogous to confidence and prediction intervals. In
@@ -86,13 +86,13 @@
 #'
 #' @note For models created using the spark engine, there are
 #'  several differences to consider. First, only the formula
-#'  interface to via `fit` is available; using `fit_xy` will
+#'  interface to via `fit()` is available; using `fit_xy()` will
 #'  generate an error. Second, the predictions will always be in a
 #'  spark table format. The names will be the same as documented but
 #'  without the dots. Third, there is no equivalent to factor
 #'  columns in spark tables so class predictions are returned as
 #'  character columns. Fourth, to retain the model object for a new
-#'  R session (via `save`), the `model$fit` element of the `parsnip`
+#'  R session (via `save()`), the `model$fit` element of the `parsnip`
 #'  object should be serialized via `ml_save(object$fit)` and
 #'  separately saved to disk. In a new session, the object can be
 #'  reloaded and reattached to the `parsnip` object.
@@ -235,41 +235,41 @@ organize_glmnet_prob <- function(x, object) {
 }
 
 # ------------------------------------------------------------------------------
+# glmnet call stack for linear regression using `predict` when object has
+# classes "_lognet" and "model_fit" (for class predictions):
+#
+#  predict()
+# 	predict._lognet(penalty = NULL)    <-- checks and sets penalty
+#    predict.model_fit()               <-- checks for extra vars in ...
+#     predict_class()
+#      predict_class._lognet()
+#       predict_class.model_fit()
+#        predict.lognet()
+
+
+# glmnet call stack for linear regression using `multi_predict` when object has
+# classes "_lognet" and "model_fit" (for class predictions):
+#
+# 	multi_predict()
+#    multi_predict._lognet(penalty = NULL)
+#      predict._lognet(multi = TRUE)           <-- checks and sets penalty
+#       predict.model_fit()                    <-- checks for extra vars in ...
+#        predict_raw()
+#         predict_raw._lognet()
+#          predict_raw.model_fit(opts = list(s = penalty))
+#           predict.lognet()
+
+# ------------------------------------------------------------------------------
 
 #' @export
-predict._lognet <- function (object, new_data, type = NULL, opts = list(), ...) {
+predict._lognet <- function (object, new_data, type = NULL, opts = list(), penalty = NULL, multi = FALSE, ...) {
   if (any(names(enquos(...)) == "newdata"))
     stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
-  
+
+  object$spec$args$penalty <- check_penalty(penalty, object, multi)
+
   object$spec <- eval_args(object$spec)
   predict.model_fit(object, new_data = new_data, type = type, opts = opts, ...)
-}
-
-#' @export
-predict_class._lognet <- function (object, new_data, ...) {
-  if (any(names(enquos(...)) == "newdata"))
-    stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
-  
-  object$spec <- eval_args(object$spec)
-  predict_class.model_fit(object, new_data = new_data, ...)
-}
-
-#' @export
-predict_classprob._lognet <- function (object, new_data, ...) {
-  if (any(names(enquos(...)) == "newdata"))
-    stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
-  
-  object$spec <- eval_args(object$spec)
-  predict_classprob.model_fit(object, new_data = new_data, ...)
-}
-
-#' @export
-predict_raw._lognet <- function (object, new_data, opts = list(), ...) {
-  if (any(names(enquos(...)) == "newdata"))
-    stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
-  
-  object$spec <- eval_args(object$spec)
-  predict_raw.model_fit(object, new_data = new_data, opts = opts, ...)
 }
 
 
@@ -280,16 +280,19 @@ multi_predict._lognet <-
   function(object, new_data, type = NULL, penalty = NULL, ...) {
     if (any(names(enquos(...)) == "newdata"))
       stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
-    
+
+    if (is_quosure(penalty))
+      penalty <- eval_tidy(penalty)
+
     dots <- list(...)
     if (is.null(penalty))
-      penalty <- object$lambda
+      penalty <- eval_tidy(object$fit$lambda)
     dots$s <- penalty
 
     if (is.null(type))
       type <- "class"
-    if (!(type %in% c("class", "prob", "link"))) {
-      stop ("`type` should be either 'class', 'link', or 'prob'.", call. = FALSE)
+    if (!(type %in% c("class", "prob", "link", "raw"))) {
+      stop ("`type` should be either 'class', 'link', 'raw', or 'prob'.", call. = FALSE)
     }
     if (type == "prob")
       dots$type <- "response"
@@ -297,7 +300,7 @@ multi_predict._lognet <-
       dots$type <- type
 
     object$spec <- eval_args(object$spec)
-    pred <- predict(object, new_data = new_data, type = "raw", opts = dots)
+    pred <- predict.model_fit(object, new_data = new_data, type = "raw", opts = dots)
     param_key <- tibble(group = colnames(pred), penalty = penalty)
     pred <- as_tibble(pred)
     pred$.row <- 1:nrow(pred)
@@ -320,6 +323,38 @@ multi_predict._lognet <-
     names(pred) <- NULL
     tibble(.pred = pred)
   }
+
+
+
+
+
+#' @export
+predict_class._lognet <- function (object, new_data, ...) {
+  if (any(names(enquos(...)) == "newdata"))
+    stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
+
+  object$spec <- eval_args(object$spec)
+  predict_class.model_fit(object, new_data = new_data, ...)
+}
+
+#' @export
+predict_classprob._lognet <- function (object, new_data, ...) {
+  if (any(names(enquos(...)) == "newdata"))
+    stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
+
+  object$spec <- eval_args(object$spec)
+  predict_classprob.model_fit(object, new_data = new_data, ...)
+}
+
+#' @export
+predict_raw._lognet <- function (object, new_data, opts = list(), ...) {
+  if (any(names(enquos(...)) == "newdata"))
+    stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
+
+  object$spec <- eval_args(object$spec)
+  predict_raw.model_fit(object, new_data = new_data, opts = opts, ...)
+}
+
 
 # ------------------------------------------------------------------------------
 

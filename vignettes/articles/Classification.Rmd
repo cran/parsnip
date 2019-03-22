@@ -39,7 +39,8 @@ credit_test  <- testing(data_split)
 A single hidden layer neural network will be used to predict a person's credit status. To do so, the columns of the predictor matrix should be numeric and on a common scale. `recipes` will be used to do so.  
 
 ```{r credit-proc}
-credit_rec <- recipe(Status ~ ., data = credit_train) %>%
+credit_rec <- 
+  recipe(Status ~ ., data = credit_train) %>%
   step_knnimpute(Home, Job, Marital, Income, Assets, Debt) %>%
   step_dummy(all_nominal(), -Status) %>%
   step_center(all_predictors()) %>%
@@ -48,7 +49,7 @@ credit_rec <- recipe(Status ~ ., data = credit_train) %>%
 
 # juice() will be used to get the processed training set back
 
-test_normalized <- bake(credit_rec, newdata = credit_test, all_predictors())
+test_normalized <- bake(credit_rec, new_data = credit_test, all_predictors())
 ```
 
 `keras` will be used to fit a model with 5 hidden units and uses a 10% dropout rate to regularize the model. At each training iteration (aka epoch) a random 20% of the data will be used to measure the cross-entropy of the model. 
@@ -64,19 +65,22 @@ nnet_fit <-
 nnet_fit
 ```
 
-In `parsnip`, the `predict` function is only appropriate for numeric outcomes while `predict_class` and `predict_classprob` can be used for categorical outcomes.  
+In `parsnip`, the `predict` function can be used:.  
 
 
 ```{r credit-perf}
-test_results <- credit_test %>%
+test_results <- 
+  credit_test %>%
   select(Status) %>%
   as_tibble() %>%
   mutate(
-    `nnet class` = predict_class(nnet_fit, new_data = test_normalized),
-    `nnet prob`  = predict_classprob(nnet_fit, new_data = test_normalized) %>% pull(good)
+    nnet_class = predict(nnet_fit, new_data = test_normalized) %>% 
+      pull(.pred_class),
+    nnet_prob  = predict(nnet_fit, new_data = test_normalized, type = "prob") %>% 
+      pull(.pred_good)
   )
 
-test_results %>% roc_auc(truth = Status, estimate = `nnet prob`)
-test_results %>% accuracy(truth = Status, estimate = `nnet class`)
-test_results %>% conf_mat(truth = Status, estimate = `nnet class`)
+test_results %>% roc_auc(truth = Status, nnet_prob)
+test_results %>% accuracy(truth = Status, nnet_class)
+test_results %>% conf_mat(truth = Status, nnet_class)
 ```

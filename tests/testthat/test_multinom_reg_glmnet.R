@@ -29,14 +29,14 @@ test_that('glmnet execution', {
     regexp = NA
   )
 
-  glmnet_xy_catch <- fit_xy(
-    multinom_reg() %>% set_engine("glmnet"),
-    x = iris[, 2:5],
-    y = iris$Sepal.Length,
-    ,
-    control = caught_ctrl
+  expect_error(
+    glmnet_xy_catch <- fit_xy(
+      multinom_reg() %>% set_engine("glmnet"),
+      x = iris[, 2:5],
+      y = iris$Sepal.Length,
+      control = caught_ctrl
+    )
   )
-  expect_true(inherits(glmnet_xy_catch$fit, "try-error"))
 
 })
 
@@ -58,7 +58,7 @@ test_that('glmnet prediction, one lambda', {
   uni_pred <- factor(uni_pred[,1], levels = levels(iris$Species))
   uni_pred <- unname(uni_pred)
 
-  expect_equal(uni_pred, predict_class(xy_fit, iris[rows, 1:4]))
+  expect_equal(uni_pred, parsnip:::predict_class.model_fit(xy_fit, iris[rows, 1:4]))
   expect_equal(uni_pred, predict(xy_fit, iris[rows, 1:4], type = "class")$.pred_class)
 
   res_form <- fit(
@@ -77,7 +77,7 @@ test_that('glmnet prediction, one lambda', {
             s = res_form$spec$args$penalty,
             type = "class")
   form_pred <- factor(form_pred[,1], levels = levels(iris$Species))
-  expect_equal(form_pred, predict_class(res_form, iris[rows, c("Sepal.Width", "Petal.Width")]))
+  expect_equal(form_pred, parsnip:::predict_class.model_fit(res_form, iris[rows, c("Sepal.Width", "Petal.Width")]))
   expect_equal(form_pred, predict(res_form, iris[rows, c("Sepal.Width", "Petal.Width")], type = "class")$.pred_class)
 
 })
@@ -134,12 +134,18 @@ test_that('glmnet probabilities, mulitiple lambda', {
     mult_class$.pred,
     multi_predict(xy_fit, iris[rows, 1:4], penalty = lams)$.pred
   )
-  
+
   expect_error(
-    multi_predict(xy_fit, newdata = iris[rows, 1:4], penalty = lams), 
+    multi_predict(xy_fit, newdata = iris[rows, 1:4], penalty = lams),
     "Did you mean"
   )
-  
+
+  # Can predict probs with default penalty. See #108
+  expect_error(
+    multi_predict(xy_fit, new_data = iris[rows, 1:4], type = "prob"),
+    NA
+  )
+
 })
 
 

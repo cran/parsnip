@@ -1,18 +1,18 @@
 # These functions are the go-betweens between parsnip::fit (or parsnip::fit_xy)
-# and the underlying model function (such as ranger::ranger). So if `fit_xy` is
+# and the underlying model function (such as ranger::ranger). So if `fit_xy()` is
 # used to fit a ranger model, there needs to be a conversion from x/y format
 # data to formula/data objects and so on.
 
 #' @importFrom  stats model.frame model.response terms as.formula model.matrix
 form_form <-
   function(object, control, env, ...) {
-    opts <- quos(...)
 
-    if (object$mode != "regression") {
-      y_levels <- levels_from_formula( # prob rewrite this as simple subset/levels
-        env$formula,
-        env$data
-      )
+    if (object$mode == "classification") {
+      # prob rewrite this as simple subset/levels
+      y_levels <- levels_from_formula(env$formula, env$data)
+      if (!inherits(env$data, "tbl_spark") && is.null(y_levels))
+        stop("For classification models, the outcome should be a factor.",
+             call. =  FALSE)
     } else {
       y_levels <- NULL
     }
@@ -20,7 +20,7 @@ form_form <-
     object <- check_mode(object, y_levels)
 
     # if descriptors are needed, update descr_env with the calculated values
-    if(requires_descrs(object)) {
+    if (requires_descrs(object)) {
       data_stats <- get_descr_form(env$formula, env$data)
       scoped_descrs(data_stats)
     }
@@ -66,13 +66,19 @@ form_form <-
 xy_xy <- function(object, env, control, target = "none", ...) {
 
   if (inherits(env$x, "tbl_spark") | inherits(env$y, "tbl_spark"))
-    stop("spark objects can only be used with the formula interface to `fit`",
+    stop("spark objects can only be used with the formula interface to `fit()`",
          call. = FALSE)
 
   object <- check_mode(object, levels(env$y))
 
+  if (object$mode == "classification") {
+    if (is.null(levels(env$y)))
+      stop("For classification models, the outcome should be a factor.",
+           call. =  FALSE)
+  }
+
   # if descriptors are needed, update descr_env with the calculated values
-  if(requires_descrs(object)) {
+  if (requires_descrs(object)) {
     data_stats <- get_descr_form(env$formula, env$data)
     scoped_descrs(data_stats)
   }
@@ -125,13 +131,12 @@ form_xy <- function(object, control, env,
   env$x <- data_obj$x
   env$y <- data_obj$y
 
-  res <- list(
-    lvl = levels_from_formula(
-      env$formula,
-      env$data
-    ),
-    spec = object
-  )
+  res <- list(lvl = levels_from_formula(env$formula, env$data), spec = object)
+  if (object$mode == "classification") {
+    if (is.null(res$lvl))
+      stop("For classification models, the outcome should be a factor.",
+           call. =  FALSE)
+  }
 
   res <- xy_xy(
     object = object,
@@ -148,6 +153,13 @@ form_xy <- function(object, control, env,
 }
 
 xy_form <- function(object, env, control, ...) {
+
+  if (object$mode == "classification") {
+    if (is.null(levels(env$y)))
+      stop("For classification models, the outcome should be a factor.",
+           call. =  FALSE)
+  }
+
   data_obj <-
     convert_xy_to_form_fit(
       x = env$x,
