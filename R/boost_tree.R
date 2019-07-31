@@ -54,7 +54,7 @@
 #' The model can be created using the `fit()` function using the
 #'  following _engines_:
 #' \itemize{
-#' \item \pkg{R}:  `"xgboost"`, `"C5.0"`
+#' \item \pkg{R}:  `"xgboost"` (the default), `"C5.0"`
 #' \item \pkg{Spark}: `"spark"`
 #' }
 #'
@@ -137,7 +137,7 @@ print.boost_tree <- function(x, ...) {
   cat("Boosted Tree Model Specification (", x$mode, ")\n\n", sep = "")
   model_printer(x, ...)
 
-  if(!is.null(x$method$fit$args)) {
+  if (!is.null(x$method$fit$args)) {
     cat("Model fit template:\n")
     print(show_call(x))
   }
@@ -211,14 +211,15 @@ translate.boost_tree <- function(x, engine = x$engine, ...) {
   x <- translate.default(x, engine, ...)
 
   if (engine == "spark") {
-    if (x$mode == "unknown")
+    if (x$mode == "unknown") {
       stop(
         "For spark boosted trees models, the mode cannot be 'unknown' ",
         "if the specification is to be translated.",
         call. = FALSE
       )
-    else
+    } else {
       x$method$fit$args$type <- x$mode
+    }
   }
   x
 }
@@ -261,6 +262,7 @@ check_args.boost_tree <- function(object) {
 #' @param subsample Subsampling proportion of rows.
 #' @param ... Other options to pass to `xgb.train`.
 #' @return A fitted `xgboost` object.
+#' @keywords internal
 #' @export
 xgb_train <- function(
   x, y,
@@ -281,27 +283,33 @@ xgb_train <- function(
     }
   }
 
-  if (is.data.frame(x))
+  if (is.data.frame(x)) {
     x <- as.matrix(x) # maybe use model.matrix here?
+  }
 
   n <- nrow(x)
   p <- ncol(x)
 
-  if (!inherits(x, "xgb.DMatrix"))
+  if (!inherits(x, "xgb.DMatrix")) {
     x <- xgboost::xgb.DMatrix(x, label = y, missing = NA)
-  else
+  } else {
     xgboost::setinfo(x, "label", y)
+  }
 
   # translate `subsample` and `colsample_bytree` to be on (0, 1] if not
-  if(subsample > 1)
+  if (subsample > 1) {
     subsample <- subsample/n
-  if(subsample > 1)
+  }
+  if (subsample > 1) {
     subsample <- 1
+  }
 
-  if(colsample_bytree > 1)
+  if (colsample_bytree > 1) {
     colsample_bytree <- colsample_bytree/p
-  if(colsample_bytree > 1)
+  }
+  if (colsample_bytree > 1) {
     colsample_bytree <- 1
+  }
 
   arg_list <- list(
     eta = eta,
@@ -320,8 +328,9 @@ xgb_train <- function(
     nrounds = nrounds,
     objective = loss
   )
-  if (!is.null(num_class))
+  if (!is.null(num_class)) {
     main_args$num_class <- num_class
+  }
 
   call <- make_call(fun = "xgb.train", ns = "xgboost", main_args)
 
@@ -329,9 +338,9 @@ xgb_train <- function(
   others <- list(...)
   others <-
     others[!(names(others) %in% c("data", "weights", "nrounds", "num_class", names(arg_list)))]
-  if (length(others) > 0)
-    for (i in names(others))
-      call[[i]] <- others[[i]]
+  if (length(others) > 0) {
+    call <- rlang::call_modify(call, !!!others)
+  }
 
   eval_tidy(call, env = current_env())
 }
@@ -347,7 +356,7 @@ xgb_pred <- function(object, newdata, ...) {
 
   x = switch(
     object$params$objective,
-    "reg:linear" =, "reg:logistic" =, "binary:logistic" = res,
+    "reg:linear" = , "reg:logistic" = , "binary:logistic" = res,
     "binary:logitraw" = stats::binomial()$linkinv(res),
     "multi:softprob" = matrix(res, ncol = object$params$num_class, byrow = TRUE),
     res
@@ -357,13 +366,17 @@ xgb_pred <- function(object, newdata, ...) {
 
 #' @importFrom purrr map_df
 #' @export
+#' @rdname multi_predict
+#' @param trees An integer vector for the number of trees in the ensemble.
 multi_predict._xgb.Booster <-
   function(object, new_data, type = NULL, trees = NULL, ...) {
-    if (any(names(enquos(...)) == "newdata"))
+    if (any(names(enquos(...)) == "newdata")) {
       stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
+    }
 
-    if (is.null(trees))
+    if (is.null(trees)) {
       trees <- object$fit$nIter
+    }
     trees <- sort(trees)
 
     if (is.null(type)) {
@@ -373,9 +386,8 @@ multi_predict._xgb.Booster <-
         type <- "numeric"
     }
 
-    res <-
-      map_df(trees, xgb_by_tree, object = object,
-             new_data = new_data, type = type, ...)
+    res <- map_df(trees, xgb_by_tree, object = object, new_data = new_data,
+                  type = type, ...)
     res <- arrange(res, .row, trees)
     res <- split(res[, -1], res$.row)
     names(res) <- NULL
@@ -386,15 +398,15 @@ xgb_by_tree <- function(tree, object, new_data, type, ...) {
   pred <- xgb_pred(object$fit, newdata = new_data, ntreelimit = tree)
 
   # switch based on prediction type
-  if(object$spec$mode == "regression") {
+  if (object$spec$mode == "regression") {
     pred <- tibble(.pred = pred)
     nms <- names(pred)
   } else {
     if (type == "class") {
-      pred <- boost_tree_xgboost_data$class$post(pred, object)
+      pred <- object$spec$method$pred$class$post(pred, object)
       pred <- tibble(.pred = factor(pred, levels = object$lvl))
     } else {
-      pred <- boost_tree_xgboost_data$classprob$post(pred, object)
+      pred <- object$spec$method$pred$prob$post(pred, object)
       pred <- as_tibble(pred)
       names(pred) <- paste0(".pred_", names(pred))
     }
@@ -432,6 +444,7 @@ xgb_by_tree <- function(tree, object, new_data, type, ...) {
 #'  model in the printed output.
 #' @param ... Other arguments to pass.
 #' @return A fitted C5.0 model.
+#' @keywords internal
 #' @export
 C5.0_train <-
   function(x, y, weights = NULL, trials = 15, minCases = 2, sample = 0, ...) {
@@ -447,23 +460,23 @@ C5.0_train <-
     ctrl <- call2("C5.0Control", .ns = "C50")
     ctrl$minCases <- minCases
     ctrl$sample <- sample
-    for(i in names(ctrl_args))
-      ctrl[[i]] <- ctrl_args[[i]]
+    ctrl <- rlang::call_modify(ctrl, !!!ctrl_args)
 
     fit_call <- call2("C5.0", .ns = "C50")
     fit_call$x <- expr(x)
     fit_call$y <- expr(y)
     fit_call$trials <- trials
     fit_call$control <- ctrl
-    if(!is.null(weights))
+    if (!is.null(weights)) {
       fit_call$weights <- quote(weights)
+    }
+    fit_call <- rlang::call_modify(fit_call, !!!fit_args)
 
-    for(i in names(fit_args))
-      fit_call[[i]] <- fit_args[[i]]
     eval_tidy(fit_call)
   }
 
 #' @export
+#' @rdname multi_predict
 multi_predict._C5.0 <-
   function(object, new_data, type = NULL, trees = NULL, ...) {
     if (any(names(enquos(...)) == "newdata"))
@@ -501,8 +514,41 @@ C50_by_tree <- function(tree, object, new_data, type, ...) {
   pred[, c(".row", "trees", nms)]
 }
 
-
 # ------------------------------------------------------------------------------
 
-#' @importFrom utils globalVariables
-utils::globalVariables(c(".row"))
+#' @export
+#' @export min_grid.boost_tree
+#' @rdname min_grid
+min_grid.boost_tree <- function(x, grid, ...) {
+  grid_names <- names(grid)
+  param_info <- get_submodel_info(x, grid)
+
+  # No ability to do submodels? Finish here:
+  if (!any(param_info$has_submodel)) {
+    return(blank_submodels(grid))
+  }
+
+  fixed_args <- get_fixed_args(param_info)
+
+  # For boosted trees, fit the model with the most trees (conditional on the
+  # other parameters) so that you can do predictions on the smaller models.
+  fit_only <-
+    grid %>%
+    dplyr::group_by(!!!rlang::syms(fixed_args)) %>%
+    dplyr::summarize(trees = max(trees, na.rm = TRUE)) %>%
+    dplyr::ungroup()
+
+  # Add a column .submodels that is a list with what should be predicted
+  # by `multi_predict()` (assuming `predict()` has already been executed
+  # on the original value of 'trees')
+  min_grid_df <-
+    dplyr::full_join(fit_only %>% rename(max_tree = trees), grid, by = fixed_args) %>%
+    dplyr::filter(trees != max_tree) %>%
+    dplyr::group_by(!!!rlang::syms(fixed_args)) %>%
+    dplyr::summarize(.submodels = list(list(trees = trees))) %>%
+    dplyr::ungroup() %>%
+    dplyr::full_join(fit_only, grid, by = fixed_args)
+
+  min_grid_df  %>% dplyr::select(dplyr::one_of(grid_names), .submodels)
+}
+

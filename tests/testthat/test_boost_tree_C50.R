@@ -15,7 +15,7 @@ lending_club_fail <-
 num_pred <- c("funded_amnt", "annual_inc", "num_il_tl")
 lc_basic <-
   boost_tree(mode = "classification")  %>%
-      set_engine("C5.0")
+      set_engine("C5.0", bands = 2)
 
 ctrl <- fit_control(verbosity = 1, catch = FALSE)
 caught_ctrl <- fit_control(verbosity = 1, catch = TRUE)
@@ -45,6 +45,9 @@ test_that('C5.0 execution', {
     ),
     regexp = NA
   )
+
+  expect_true(has_multi_predict(res))
+  expect_equal(multi_predict_args(res), "trees")
 
   # outcome is not a factor:
   expect_error(

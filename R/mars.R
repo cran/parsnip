@@ -33,7 +33,7 @@
 #' @details The model can be created using the `fit()` function using the
 #'  following _engines_:
 #' \itemize{
-#' \item \pkg{R}:  `"earth"`
+#' \item \pkg{R}:  `"earth"`  (the default)
 #' }
 #'
 #' @section Engine Details:
@@ -59,7 +59,6 @@
 #' @examples
 #' mars(mode = "regression", num_terms = 5)
 #' @export
-
 mars <-
   function(mode = "unknown",
            num_terms = NULL, prod_degree = NULL, prune_method = NULL) {
@@ -149,7 +148,7 @@ translate.mars <- function(x, engine = x$engine, ...) {
   # see if it is there and, if not, add the default value.
   if (x$mode == "classification") {
     if (!("glm" %in% names(x$eng_args))) {
-      x$eng_args$glm <- quote(list(family = stats::binomial))
+      x$eng_args$glm <- rlang::quo(list(family = stats::binomial))
     }
   }
 
@@ -193,8 +192,8 @@ earth_reg_updater <- function(num, object, new_data, ...) {
   if (ncol(pred) == 1) {
     res <- tibble::tibble(.pred = pred[, 1], nprune = num)
   } else {
-    res <- tibble::as_tibble(res)
     names(res) <- paste0(".pred_", names(res))
+    res <- tibble::as_tibble(res)
     res$nprune <- num
   }
   res
@@ -205,6 +204,8 @@ earth_reg_updater <- function(num, object, new_data, ...) {
 
 #' @importFrom purrr map_df
 #' @importFrom dplyr arrange
+#' @rdname multi_predict
+#' @param num_terms An integer vector for the number of MARS terms to retain.
 #' @export
 multi_predict._earth <-
   function(object, new_data, type = NULL, num_terms = NULL, ...) {
@@ -259,4 +260,37 @@ earth_by_terms <- function(num_terms, object, new_data, type, ...) {
   pred[["num_terms"]] <- num_terms
   pred[[".row"]] <- 1:nrow(new_data)
   pred[, c(".row", "num_terms", nms)]
+}
+
+# ------------------------------------------------------------------------------
+
+#' @export
+#' @export min_grid.mars
+#' @rdname min_grid
+min_grid.mars <- function(x, grid, ...) {
+
+  grid_names <- names(grid)
+  param_info <- get_submodel_info(x, grid)
+
+  if (!any(param_info$has_submodel)) {
+    return(blank_submodels(grid))
+  }
+
+  fixed_args <- get_fixed_args(param_info)
+
+  fit_only <-
+    grid %>%
+    dplyr::group_by(!!!rlang::syms(fixed_args)) %>%
+    dplyr::summarize(num_terms = max(num_terms, na.rm = TRUE)) %>%
+    dplyr::ungroup()
+
+  min_grid_df <-
+    dplyr::full_join(fit_only %>% rename(max_terms = num_terms), grid, by = fixed_args) %>%
+    dplyr::filter(num_terms != max_terms) %>%
+    dplyr::group_by(!!!rlang::syms(fixed_args)) %>%
+    dplyr::summarize(.submodels = list(list(num_terms = num_terms))) %>%
+    dplyr::ungroup() %>%
+    dplyr::full_join(fit_only, grid, by = fixed_args)
+
+  min_grid_df  %>% dplyr::select(dplyr::one_of(grid_names), .submodels)
 }

@@ -8,7 +8,9 @@ context("nearest neighbor execution with kknn")
 
 num_pred <- c("Sepal.Width", "Petal.Width", "Petal.Length")
 iris_bad_form <- as.formula(Species ~ term)
-iris_basic <- nearest_neighbor(neighbors = 8, weight_func = "triangular") %>%
+iris_basic <- nearest_neighbor(mode = "classification",
+                               neighbors = 8,
+                               weight_func = "triangular") %>%
   set_engine("kknn")
 
 ctrl <- fit_control(verbosity = 1, catch = FALSE)
@@ -31,13 +33,13 @@ test_that('kknn execution', {
       x = iris[, num_pred],
       y = iris$Sepal.Length
     ),
-    regexp = NA
+    regexp = "outcome should be a factor"
   )
 
   # nominal
   # expect no error
   expect_error(
-    fit_xy(
+    res <- fit_xy(
       iris_basic,
       control = ctrl,
       x = iris[, c("Sepal.Length", "Petal.Width")],
@@ -45,6 +47,9 @@ test_that('kknn execution', {
     ),
     regexp = NA
   )
+
+  expect_true(has_multi_predict(res))
+  expect_equal(multi_predict_args(res), "neighbors")
 
   expect_error(
     fit(
@@ -61,13 +66,14 @@ test_that('kknn execution', {
 test_that('kknn prediction', {
 
   skip_if_not_installed("kknn")
+  library(kknn)
 
   # continuous
   res_xy <- fit_xy(
     iris_basic,
     control = ctrl,
     x = iris[, num_pred],
-    y = iris$Sepal.Length
+    y = iris$Species
   )
 
   uni_pred <- predict(
@@ -75,7 +81,7 @@ test_that('kknn prediction', {
     newdata = iris[1:5, num_pred]
   )
 
-  expect_equal(uni_pred, predict(res_xy, iris[1:5, num_pred])$.pred)
+  expect_equal(tibble(.pred_class = uni_pred), predict(res_xy, iris[1:5, num_pred]))
 
   # nominal
   res_xy_nom <- fit_xy(
@@ -109,4 +115,111 @@ test_that('kknn prediction', {
   )
 
   expect_equal(form_pred, predict(res_form, iris[1:5, c("Sepal.Width", "Species")])$.pred)
+})
+
+
+test_that('kknn multi-predict', {
+
+  skip_if_not_installed("kknn")
+  library(kknn)
+
+  iris_te <- c(1:2, 50:51, 100:101)
+  k_vals <- 1:10
+
+  res_xy <- fit_xy(
+    nearest_neighbor(mode = "classification", neighbors = 3) %>%
+      set_engine("kknn"),
+    control = ctrl,
+    x = iris[-iris_te, num_pred],
+    y = iris$Species[-iris_te]
+  )
+
+  pred_multi <- multi_predict(res_xy, iris[iris_te, num_pred], neighbors = k_vals)
+  expect_equal(pred_multi %>% unnest() %>% nrow(), length(iris_te) * length(k_vals))
+  expect_equal(pred_multi %>% nrow(), length(iris_te))
+
+  pred_uni <- predict(res_xy, iris[iris_te, num_pred])
+  pred_uni_obs <-
+    pred_multi %>%
+    mutate(.rows = row_number()) %>%
+    unnest() %>%
+    dplyr::filter(neighbors == 3) %>%
+    arrange(.rows) %>%
+    dplyr::select(.pred_class)
+  expect_equal(pred_uni, pred_uni_obs)
+
+
+  prob_multi <- multi_predict(res_xy, iris[iris_te, num_pred],
+                              neighbors = k_vals, type = "prob")
+  expect_equal(prob_multi %>% unnest() %>% nrow(), length(iris_te) * length(k_vals))
+  expect_equal(prob_multi %>% nrow(), length(iris_te))
+
+  prob_uni <- predict(res_xy, iris[iris_te, num_pred], type = "prob")
+  prob_uni_obs <-
+    prob_multi %>%
+    mutate(.rows = row_number()) %>%
+    unnest() %>%
+    dplyr::filter(neighbors == 3) %>%
+    arrange(.rows) %>%
+    dplyr::select(!!names(prob_uni))
+  expect_equal(prob_uni, prob_uni_obs)
+
+  # ----------------------------------------------------------------------------
+  # regression
+
+  cars_te <- 1:5
+  k_vals <- 1:10
+
+  res_xy <- fit(
+    nearest_neighbor(mode = "regression", neighbors = 3) %>%
+      set_engine("kknn"),
+    control = ctrl,
+    mpg ~ ., data = mtcars[-cars_te, ]
+  )
+
+  pred_multi <- multi_predict(res_xy, mtcars[cars_te, -1], neighbors = k_vals)
+  expect_equal(pred_multi %>% unnest() %>% nrow(), length(cars_te) * length(k_vals))
+  expect_equal(pred_multi %>% nrow(), length(cars_te))
+
+  pred_uni <- predict(res_xy, mtcars[cars_te, -1])
+  pred_uni_obs <-
+    pred_multi %>%
+    mutate(.rows = row_number()) %>%
+    unnest() %>%
+    dplyr::filter(neighbors == 3) %>%
+    arrange(.rows) %>%
+    dplyr::select(.pred)
+  expect_equal(pred_uni, pred_uni_obs)
+})
+
+test_that('kkknn grid reduction', {
+  reg_grid <- expand.grid(neighbors = 1:3, prod_degree = 1:2)
+  reg_grid_smol <- min_grid(nearest_neighbor() %>% set_engine("kknn"), reg_grid)
+
+  expect_equal(reg_grid_smol$neighbors, rep(3, 2))
+  expect_equal(reg_grid_smol$prod_degree, 1:2)
+  for (i in 1:nrow(reg_grid_smol)) {
+    expect_equal(reg_grid_smol$.submodels[[i]], list(neighbors = 1:2))
+  }
+
+  reg_ish_grid <- expand.grid(neighbors = 1:3, prod_degree = 1:2)[-3,]
+  reg_ish_grid_smol <- min_grid(nearest_neighbor() %>% set_engine("kknn"), reg_ish_grid)
+
+  expect_equal(reg_ish_grid_smol$neighbors, 2:3)
+  expect_equal(reg_ish_grid_smol$prod_degree, 1:2)
+  expect_equal(reg_ish_grid_smol$.submodels[[1]], list(neighbors = 1))
+  for (i in 2:nrow(reg_ish_grid_smol)) {
+    expect_equal(reg_ish_grid_smol$.submodels[[i]], list(neighbors = 1:2))
+  }
+
+  reg_grid_extra <- expand.grid(neighbors = 1:3, prod_degree = 1:2, blah = 10:12)
+  reg_grid_extra_smol <- min_grid(nearest_neighbor() %>% set_engine("kknn"), reg_grid_extra)
+
+  expect_equal(reg_grid_extra_smol$neighbors, rep(3, 6))
+  expect_equal(reg_grid_extra_smol$prod_degree, rep(1:2, each = 3))
+  expect_equal(reg_grid_extra_smol$blah, rep(10:12, 2))
+  for (i in 1:nrow(reg_grid_extra_smol)) {
+    expect_equal(reg_grid_extra_smol$.submodels[[i]], list(neighbors = 1:2))
+  }
+
 })

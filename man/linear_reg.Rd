@@ -58,7 +58,7 @@ mode will always be "regression".
 The model can be created using the \code{fit()} function using the
 following \emph{engines}:
 \itemize{
-\item \pkg{R}:  \code{"lm"} or \code{"glmnet"}
+\item \pkg{R}:  \code{"lm"}  (the default) or \code{"glmnet"}
 \item \pkg{Stan}:  \code{"stan"}
 \item \pkg{Spark}: \code{"spark"}
 \item \pkg{keras}: \code{"keras"}
@@ -105,9 +105,9 @@ model, the template of the fit calls are:
 
 \Sexpr[results=rd]{parsnip:::show_fit(parsnip:::linear_reg(), "keras")}
 
-When using \code{glmnet} models, there is the option to pass
-multiple values (or no values) to the \code{penalty} argument. This
-can have an effect on the model object results. When using the
+For \code{glmnet} models, the full regularization path is always fit regardless
+of the value given to \code{penalty}. Also, there is the option to pass
+multiple values (or no values) to the \code{penalty} argument. When using the
 \code{predict()} method in these cases, the return value depends on
 the value of \code{penalty}. When using \code{predict()}, only a single
 value of the penalty can be used. When predicting on multiple

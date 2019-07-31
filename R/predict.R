@@ -154,9 +154,6 @@ predict.model_fit <- function(object, new_data, type = NULL, opts = list(), ...)
   res
 }
 
-pred_types <-
-  c("raw", "numeric", "class", "link", "prob", "conf_int", "pred_int", "quantile")
-
 #' @importFrom glue glue_collapse
 check_pred_type <- function(object, type) {
   if (is.null(type)) {
@@ -187,7 +184,7 @@ format_num <- function(x) {
     return(x)
 
   if (isTRUE(ncol(x) > 1)) {
-    x <- as_tibble(x)
+    x <- as_tibble(x, .name_repair = "minimal")
     names(x) <- paste0(".pred_", names(x))
   } else {
     x <- tibble(.pred = x)
@@ -204,8 +201,8 @@ format_class <- function(x) {
 }
 
 format_classprobs <- function(x) {
-  x <- as_tibble(x)
   names(x) <- paste0(".pred_", names(x))
+  x <- as_tibble(x)
   x
 }
 
@@ -219,10 +216,12 @@ make_pred_call <- function(x) {
   cl
 }
 
+
 prepare_data <- function(object, new_data) {
   fit_interface <- object$spec$method$fit$interface
 
-  if (!all(is.na(object$preproc))) {
+  pp_names <- names(object$preproc)
+  if (any(pp_names == "terms") | any(pp_names == "x_var")) {
     # Translation code
     if (fit_interface == "formula") {
       new_data <- convert_xy_to_form_new(object$preproc, new_data)
@@ -234,33 +233,3 @@ prepare_data <- function(object, new_data) {
   new_data
 }
 
-# Define a generic to make multiple predictions for the same model object ------
-
-#' Model predictions across many sub-models
-#'
-#' For some models, predictions can be made on sub-models in the model object.
-#' @param object A `model_fit` object.
-#' @param ... Optional arguments to pass to `predict.model_fit(type = "raw")`
-#'  such as `type`.
-#' @return A tibble with the same number of rows as the data being predicted.
-#'  Mostly likely, there is a list-column named `.pred` that is a tibble with
-#'  multiple rows per sub-model.
-#' @export
-multi_predict <- function(object, ...) {
-  if (inherits(object$fit, "try-error")) {
-    warning("Model fit failed; cannot make predictions.", call. = FALSE)
-    return(NULL)
-  }
-  UseMethod("multi_predict")
-}
-
-#' @export
-#' @rdname multi_predict
-multi_predict.default <- function(object, ...)
-  stop("No `multi_predict` method exists for objects with classes ",
-        paste0("'", class(), "'", collapse = ", "), call. = FALSE)
-
-#' @export
-predict.model_spec <- function(object, ...) {
-  stop("You must use `fit()` on your model specification before you can use `predict()`.", call. = FALSE)
-}

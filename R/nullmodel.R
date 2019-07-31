@@ -111,14 +111,15 @@ predict.nullmodel <- function (object, new_data = NULL, type  = NULL, ...) {
       out <- factor(rep(object$value, n), levels = object$levels)
     }
   } else {
-    if(type %in% c("prob", "class")) stop("Only numeric predicitons are applicable to regression models")
-    if(length(object$value) == 1) {
+    if (type %in% c("prob", "class")) {
+      stop("Only numeric predicitons are applicable to regression models")
+    }
+    if (length(object$value) == 1) {
       out <- rep(object$value, n)
     } else {
-      out <- as_tibble(matrix(rep(object$value, n),
-                              ncol = length(object$value), byrow = TRUE))
-
-      names(out) <- names(object$value)
+      out <- matrix(rep(object$value, n), ncol = length(object$value), byrow = TRUE)
+      colnames(out) <- names(object$value)
+      out <- as_tibble(out)
     }
   }
   out
@@ -160,6 +161,7 @@ predict.nullmodel <- function (object, new_data = NULL, type  = NULL, ...) {
 #' @export
 null_model <-
   function(mode = "classification") {
+    null_model_modes <- unique(get_model_env()$null_model$mode)
     # Check for correct mode
     if (!(mode %in% null_model_modes))
       stop("`mode` should be one of: ",

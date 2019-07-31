@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -20,7 +21,7 @@
 <style type="text/css" data-origin="pandoc">
 a.sourceLine { display: inline-block; line-height: 1.25; }
 a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; position: absolute; }
+a.sourceLine:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -33,13 +34,11 @@ code.sourceCode { white-space: pre-wrap; }
 a.sourceLine { text-indent: -1em; padding-left: 1em; }
 }
 pre.numberSource a.sourceLine
-  { position: relative; }
-pre.numberSource a.sourceLine:empty
-  { position: absolute; }
+  { position: relative; left: -4em; }
 pre.numberSource a.sourceLine::before
   { content: attr(data-line-number);
-    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all;
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -96,7 +95,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -327,6 +326,9 @@ code > span.fu { color: #900; font-weight: bold; }
 code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
+
+
+
 </head>
 
 <body>
@@ -427,7 +429,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 #&gt; Ranger result
 #&gt; 
 #&gt; Call:
-#&gt;  ranger::ranger(formula = formula, data = data, mtry = ~4, num.trees = ~2000,      seed = ~63233, num.threads = 1, verbose = FALSE) 
+#&gt;  ranger::ranger(formula = formula, data = data, mtry = ~4, num.trees = ~2000,      seed = sample.int(10^5, 1), num.threads = 1, verbose = FALSE) 
 #&gt; 
 #&gt; Type:                             Regression 
 #&gt; Number of trees:                  2000 
@@ -449,15 +451,15 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 #&gt; 
 #&gt; 
 #&gt; Call:
-#&gt;  randomForest(x = as.data.frame(x), y = y, ntree = ~2000, mtry = ~4,      seed = ~63233) 
+#&gt;  randomForest(x = as.data.frame(x), y = y, ntree = ~2000, mtry = ~4) 
 #&gt;                Type of random forest: regression
 #&gt;                      Number of trees: 2000
 #&gt; No. of variables tried at each split: 4
 #&gt; 
 #&gt;           Mean of squared residuals: 5.52
 #&gt;                     % Var explained: 84.3</code></pre>
-<p>Note that the call objects show <code>num.trees = ~2000</code>. The tilde is the consequence of <code>parsnip</code> using quosures to process the model specification’s arguments.</p>
-<p>Normally, when a function is executed, the function’s arguments are immediately evaluated. In the case of <code>parsnip</code>, the model specification’s arguments are <em>not</em>; the expression is captured along with the environment where it should be evaluated. That is what a quosure does.</p>
+<p>Note that the call objects show <code>num.trees = ~2000</code>. The tilde is the consequence of <code>parsnip</code> using <a href="https://adv-r.hadley.nz/evaluation.html#quosures">quosures</a> to process the model specification’s arguments.</p>
+<p>Normally, when a function is executed, the function’s arguments are immediately evaluated. In the case of <code>parsnip</code>, the model specification’s arguments are <em>not</em>; the <a href="https://www.tidyverse.org/articles/2019/04/parsnip-internals/">expression is captured</a> along with the environment where it should be evaluated. That is what a quosure does.</p>
 <p><code>parsnip</code> uses these expressions to make a model fit call that is evaluated. The tilde in the call above reflects that the argument was captured using a quosure.</p>
 </div>
 
@@ -481,6 +483,9 @@ window.onload = function() {
   }
 }
 </script>
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

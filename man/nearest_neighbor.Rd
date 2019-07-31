@@ -13,7 +13,8 @@ Possible values for this model are \code{"unknown"}, \code{"regression"}, or
 \code{"classification"}.}
 
 \item{neighbors}{A single integer for the number of neighbors
-to consider (often called \code{k}).}
+to consider (often called \code{k}). For \pkg{kknn}, a value of 5
+is used if \code{neighbors} is not specified.}
 
 \item{weight_func}{A \emph{single} character for the type of kernel function used
 to weight distances between samples. Valid choices are: \code{"rectangular"},
@@ -48,7 +49,7 @@ in lieu of recreating the object from scratch.
 The model can be created using the \code{fit()} function using the
 following \emph{engines}:
 \itemize{
-\item \pkg{R}:  \code{"kknn"}
+\item \pkg{R}:  \code{"kknn"}  (the default)
 }
 }
 \note{
@@ -67,7 +68,7 @@ model, the template of the fit calls are:
 
 \pkg{kknn} (classification or regression)
 
-\Sexpr[results=rd]{parsnip:::show_fit(parsnip:::nearest_neighbor(), "kknn")}
+\Sexpr[results=rd]{parsnip:::show_fit(parsnip:::nearest_neighbor(mode = "regression"), "kknn")}
 }
 
 \examples{

@@ -76,7 +76,6 @@ test_that('primary arguments', {
                  x = expr(missing_arg()),
                  y = expr(missing_arg()),
                  weights = expr(missing_arg()),
-                 lambda = new_empty_quosure(1),
                  family = "gaussian"
                )
   )
@@ -253,6 +252,15 @@ test_that('lm execution', {
     regexp = NA
   )
 
+  expect_error(
+    res <- fit_xy(
+      iris_basic,
+      x = iris[, 1:2],
+      y = iris[3:4],
+      control = ctrl
+    ),
+    regexp = NA
+  )
 })
 
 test_that('lm prediction', {
@@ -334,5 +342,13 @@ test_that('newdata error trapping', {
     control = ctrl
   )
   expect_error(predict(res_xy, newdata = iris[1:3, num_pred]), "Did you mean")
+})
+
+test_that('default engine', {
+  expect_warning(
+    fit <- linear_reg() %>% fit(mpg ~ ., data = mtcars),
+    "Engine set to"
+  )
+  expect_true(inherits(fit$fit, "lm"))
 })
 

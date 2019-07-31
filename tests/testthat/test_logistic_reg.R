@@ -79,7 +79,6 @@ test_that('primary arguments', {
                  x = expr(missing_arg()),
                  y = expr(missing_arg()),
                  weights = expr(missing_arg()),
-                 lambda = new_empty_quosure(1),
                  family = "binomial"
                )
   )
@@ -332,3 +331,11 @@ test_that('glm intervals', {
 
 })
 
+
+test_that('default engine', {
+  expect_warning(
+    fit <- logistic_reg() %>% fit(Class ~ log(funded_amnt) + int_rate, data = lending_club),
+    "Engine set to"
+  )
+  expect_true(inherits(fit$fit, "glm"))
+})
