@@ -1,6 +1,6 @@
-72e036f8b9aa7fde962019fd3b96106c *DESCRIPTION
+9cd235b9a0402e5315d441002fd286bf *DESCRIPTION
 9c1ec0799169a4710013bf3d9933ce67 *NAMESPACE
-fdece99a6dc1d98efe1f7db5afab8ca5 *NEWS.md
+1d8122ce370cec78a12742da679402a2 *NEWS.md
 a13300e2f0face82915ad7cdf46bd042 *R/aaa.R
 4d839b7695fc3a4bceff14af559b85fd *R/aaa_models.R
 48f14dd45a5197859d24c620ed870d28 *R/aaa_multi_predict.R
@@ -15,7 +15,7 @@ f7551518696ed8be47292aa39077924e *R/boost_tree_data.R
 0baf4af2f5c9e543d506ee92a3da649c *R/decision_tree_data.R
 ae333397320d22dc864eac0ceae13b66 *R/descriptors.R
 a1a8cfc9b5f998223c3db852a6983513 *R/engines.R
-564fc9c995b78f100e26ab0a46062c6d *R/fit.R
+009090467784b820b8f207e39494c353 *R/fit.R
 e91018069f45a628c4e1d7aeb962cef0 *R/fit_control.R
 26b60abdeb540553a46571f3b2157e88 *R/fit_helpers.R
 2747f9eb4ab036d2c2d7549877ddd640 *R/linear_reg.R
@@ -55,7 +55,7 @@ ee6c08499f6899e6c8253a3d66ec2a13 *R/translate.R
 523ed68a8e7becbcd06ee1c63c17e09d *R/type_sum.R
 b648a06da16a3849b79002f60e9e34d0 *R/varying.R
 cccd4a368704e25af105f04422fd89e3 *R/zzz.R
-3cec1e4402efccb90aa1ed50da0f5e39 *build/parsnip.pdf
+e3ab58aadb5a4873fc40faf2373a6bb6 *build/parsnip.pdf
 a9258fc75a18d1e5960bff20cede92bd *build/vignette.rds
 8a00b71052f8b7ff2231408eb494871c *data/check_times.rda
 4a6e47b84c4224e4103178a6bcb63e57 *data/datalist
@@ -113,7 +113,7 @@ e0c22667d3234ae11911a493b976f220 *man/varying_args.model_spec.Rd
 ed1d838bf71d3884077e814f62d9ed17 *tests/testthat/helpers.R
 cf7535c2e24efdb4078b253fe2a0f153 *tests/testthat/nnet_test.txt
 eff889ab574c4a8513670f74420c3208 *tests/testthat/recipes_examples.RData
-12b69fe17c2360df6319f3640637bfe3 *tests/testthat/test_aaaa.R
+3bc82e777db100ef6e32116fe81ec90f *tests/testthat/test_aaaa.R
 7af28b94ac8e2e8e69fa6dcfdd8b942d *tests/testthat/test_adds.R
 7b79417c7c3c448ef211fcfb668c94f2 *tests/testthat/test_args_and_modes.R
 a649f42ff7a9084482f0a7e28f72971e *tests/testthat/test_boost_tree.R
@@ -124,17 +124,17 @@ fb2e857a7b2a1f03d4895b375e249233 *tests/testthat/test_convert_data.R
 399e693b99f30aab7e53604ff41506f1 *tests/testthat/test_decision_tree.R
 a1879df4c9cfcaa295c52a2b7297b9ca *tests/testthat/test_descriptors.R
 fa57123264ab953f226e2d344a3aef15 *tests/testthat/test_failed_models.R
-ecc840c3604d1bd3f246a8d3fc3bf88b *tests/testthat/test_fit_interfaces.R
+6ca957dd67a6300eb29f84e9026c6a98 *tests/testthat/test_fit_interfaces.R
 789d72d01fd302316f9237d0c147826e *tests/testthat/test_linear_reg.R
 77e31d2e9993fbdd58e37ec5bacf9b1e *tests/testthat/test_linear_reg_glmnet.R
 895dae070a4847d9538c648121b27ba0 *tests/testthat/test_linear_reg_keras.R
 da4e66ebaec41235f1f16a9379549028 *tests/testthat/test_linear_reg_spark.R
-e4eec546c1423608320e2134ea85dd54 *tests/testthat/test_linear_reg_stan.R
+826bcd8ce4648a814cd4ee3577d078be *tests/testthat/test_linear_reg_stan.R
 0cf9def331a3cae4a59e869a55fb55f2 *tests/testthat/test_logistic_reg.R
 2dff6897774fc21cb643c68e87104633 *tests/testthat/test_logistic_reg_glmnet.R
 c23fa8d08e7beeacb01a44cc4e9a705c *tests/testthat/test_logistic_reg_keras.R
 5c5f90c77cc118f3c38d9eec9e726b38 *tests/testthat/test_logistic_reg_spark.R
-8d9d81849d1ef22e77395e7e8c035796 *tests/testthat/test_logistic_reg_stan.R
+22ab4fefff1733900952c6c3e7ee900c *tests/testthat/test_logistic_reg_stan.R
 bd1e4e90c97ef5438d71852ba09d6886 *tests/testthat/test_mars.R
 1b1b258e7e8f73308f6afd080e7f5c6b *tests/testthat/test_misc.R
 6749126e07517938a9040de5bc06c6ce *tests/testthat/test_mlp.R
