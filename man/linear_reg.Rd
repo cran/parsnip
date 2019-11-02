@@ -7,8 +7,8 @@
 \usage{
 linear_reg(mode = "regression", penalty = NULL, mixture = NULL)
 
-\method{update}{linear_reg}(object, penalty = NULL, mixture = NULL,
-  fresh = FALSE, ...)
+\method{update}{linear_reg}(object, parameters = NULL, penalty = NULL,
+  mixture = NULL, fresh = FALSE, ...)
 }
 \arguments{
 \item{mode}{A single character string for the type of model.
@@ -26,6 +26,11 @@ L2 penalty (i.e. weight decay, or ridge regression) versus L1
 (the lasso) (\code{glmnet} and \code{spark} only).}
 
 \item{object}{A linear regression model specification.}
+
+\item{parameters}{A 1-row tibble or named list with \emph{main}
+parameters to update. If the individual arguments are used,
+these will supersede the values in \code{parameters}. Also, using
+engine arguments in this object will result in an error.}
 
 \item{fresh}{A logical for whether the arguments should be
 modified in-place of or replaced wholesale.}
@@ -133,5 +138,5 @@ update(model, penalty = 1)
 update(model, penalty = 1, fresh = TRUE)
 }
 \seealso{
-\code{\link[=varying]{varying()}}, \code{\link[=fit]{fit()}}, \code{\link[=set_engine]{set_engine()}}
+[\code{\link[=fit]{fit()}}, \code{\link[=set_engine]{set_engine()}}
 }

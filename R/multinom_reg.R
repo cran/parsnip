@@ -80,7 +80,7 @@
 #'  separately saved to disk. In a new session, the object can be
 #'  reloaded and reattached to the `parsnip` object.
 #'
-#' @seealso [varying()], [fit()]
+#' @seealso [[fit()]
 #' @examples
 #' multinom_reg()
 #' # Parameters can be represented by a placeholder:
@@ -137,13 +137,20 @@ translate.multinom_reg <- translate.linear_reg
 #' @export
 update.multinom_reg <-
   function(object,
+           parameters = NULL,
            penalty = NULL, mixture = NULL,
            fresh = FALSE, ...) {
     update_dot_check(...)
+
+    if (!is.null(parameters)) {
+      parameters <- check_final_param(parameters)
+    }
     args <- list(
       penalty = enquo(penalty),
       mixture = enquo(mixture)
     )
+
+    args <- update_main_parameters(args, parameters)
 
     if (fresh) {
       object$args <- args
@@ -290,7 +297,7 @@ multi_predict._multnet <-
       pred <-
         tibble(
           .row = rep(1:nrow(new_data), length(penalty)),
-          .pred = as.vector(pred),
+          .pred_class = factor(as.vector(pred), levels = object$lvl),
           penalty = rep(penalty, each = nrow(new_data))
         )
     }
@@ -336,11 +343,3 @@ check_glmnet_lambda <- function(dat, object) {
     )
   dat
 }
-
-
-# ------------------------------------------------------------------------------
-
-#' @export
-#' @export min_grid.multinom_reg
-#' @rdname min_grid
-min_grid.multinom_reg <- min_grid.linear_reg

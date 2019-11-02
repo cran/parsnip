@@ -52,14 +52,17 @@ form_form <-
       spec = object
     )
 
-    res$fit <- eval_mod(
-      fit_call,
-      capture = control$verbosity == 0,
-      catch = control$catch,
-      env = env,
-      ...
+    elapsed <- system.time(
+      res$fit <- eval_mod(
+        fit_call,
+        capture = control$verbosity == 0,
+        catch = control$catch,
+        env = env,
+        ...
+      )
     )
     res$preproc <- list(y_var = all.vars(env$formula[[2]]))
+    res$elapsed <- elapsed
     res
   }
 
@@ -79,7 +82,7 @@ xy_xy <- function(object, env, control, target = "none", ...) {
 
   # if descriptors are needed, update descr_env with the calculated values
   if (requires_descrs(object)) {
-    data_stats <- get_descr_form(env$formula, env$data)
+    data_stats <- get_descr_xy(env$x, env$y)
     scoped_descrs(data_stats)
   }
 
@@ -107,19 +110,24 @@ xy_xy <- function(object, env, control, target = "none", ...) {
 
   res <- list(lvl = levels(env$y), spec = object)
 
-  res$fit <- eval_mod(
-    fit_call,
-    capture = control$verbosity == 0,
-    catch = control$catch,
-    env = env,
-    ...
+
+  elapsed <- system.time(
+    res$fit <- eval_mod(
+      fit_call,
+      capture = control$verbosity == 0,
+      catch = control$catch,
+      env = env,
+      ...
+    )
   )
+
   if (is.vector(env$y)) {
     y_name <- character(0)
   } else {
     y_name <- colnames(env$y)
   }
   res$preproc <- list(y_var = y_name)
+  res$elapsed <- elapsed
   res
 }
 

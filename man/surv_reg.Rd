@@ -7,7 +7,8 @@
 \usage{
 surv_reg(mode = "regression", dist = NULL)
 
-\method{update}{surv_reg}(object, dist = NULL, fresh = FALSE, ...)
+\method{update}{surv_reg}(object, parameters = NULL, dist = NULL,
+  fresh = FALSE, ...)
 }
 \arguments{
 \item{mode}{A single character string for the type of model.
@@ -17,6 +18,11 @@ The only possible value for this model is "regression".}
 the default.}
 
 \item{object}{A survival regression model specification.}
+
+\item{parameters}{A 1-row tibble or named list with \emph{main}
+parameters to update. If the individual arguments are used,
+these will supersede the values in \code{parameters}. Also, using
+engine arguments in this object will result in an error.}
 
 \item{fresh}{A logical for whether the arguments should be
 modified in-place of or replaced wholesale.}
@@ -95,5 +101,5 @@ Jackson, C. (2016). \code{flexsurv}: A Platform for Parametric Survival
 Modeling in R. \emph{Journal of Statistical Software}, 70(8), 1 - 33.
 }
 \seealso{
-\code{\link[=varying]{varying()}}, \code{\link[=fit]{fit()}}, \code{\link[survival:Surv]{survival::Surv()}}
+[\code{\link[=fit]{fit()}}, \code{\link[survival:Surv]{survival::Surv()}}
 }

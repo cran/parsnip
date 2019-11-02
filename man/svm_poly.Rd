@@ -8,8 +8,9 @@
 svm_poly(mode = "unknown", cost = NULL, degree = NULL,
   scale_factor = NULL, margin = NULL)
 
-\method{update}{svm_poly}(object, cost = NULL, degree = NULL,
-  scale_factor = NULL, margin = NULL, fresh = FALSE, ...)
+\method{update}{svm_poly}(object, parameters = NULL, cost = NULL,
+  degree = NULL, scale_factor = NULL, margin = NULL, fresh = FALSE,
+  ...)
 }
 \arguments{
 \item{mode}{A single character string for the type of model.
@@ -27,6 +28,11 @@ or on the wrong side of the margin}
 loss function (regression only)}
 
 \item{object}{A polynomial SVM model specification.}
+
+\item{parameters}{A 1-row tibble or named list with \emph{main}
+parameters to update. If the individual arguments are used,
+these will supersede the values in \code{parameters}. Also, using
+engine arguments in this object will result in an error.}
 
 \item{fresh}{A logical for whether the arguments should be
 modified in-place of or replaced wholesale.}
@@ -86,5 +92,5 @@ update(model, cost = 1)
 update(model, cost = 1, fresh = TRUE)
 }
 \seealso{
-\code{\link[=varying]{varying()}}, \code{\link[=fit]{fit()}}
+[\code{\link[=fit]{fit()}}
 }

@@ -8,8 +8,8 @@
 mars(mode = "unknown", num_terms = NULL, prod_degree = NULL,
   prune_method = NULL)
 
-\method{update}{mars}(object, num_terms = NULL, prod_degree = NULL,
-  prune_method = NULL, fresh = FALSE, ...)
+\method{update}{mars}(object, parameters = NULL, num_terms = NULL,
+  prod_degree = NULL, prune_method = NULL, fresh = FALSE, ...)
 }
 \arguments{
 \item{mode}{A single character string for the type of model.
@@ -24,6 +24,11 @@ final model, including the intercept.}
 \item{prune_method}{The pruning method.}
 
 \item{object}{A MARS model specification.}
+
+\item{parameters}{A 1-row tibble or named list with \emph{main}
+parameters to update. If the individual arguments are used,
+these will supersede the values in \code{parameters}. Also, using
+engine arguments in this object will result in an error.}
 
 \item{fresh}{A logical for whether the arguments should be
 modified in-place of or replaced wholesale.}
@@ -86,5 +91,5 @@ update(model, num_terms = 1)
 update(model, num_terms = 1, fresh = TRUE)
 }
 \seealso{
-\code{\link[=varying]{varying()}}, \code{\link[=fit]{fit()}}
+[\code{\link[=fit]{fit()}}
 }

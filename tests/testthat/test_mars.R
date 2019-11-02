@@ -90,6 +90,19 @@ test_that('updating', {
 
   expect_equal(update(expr1, num_terms = 1), expr1_exp)
   expect_equal(update(expr3, num_terms = 1, fresh = TRUE), expr3_exp)
+
+  param_tibb <- tibble::tibble(num_terms = 3, prod_degree = 1)
+  param_list <- as.list(param_tibb)
+
+  expr4_updated <- update(expr4, param_tibb)
+  expect_equal(expr4_updated$args$num_terms, 3)
+  expect_equal(expr4_updated$args$prod_degree, 1)
+  expect_equal(expr4_updated$eng_args$nk, rlang::quo(10))
+
+  expr4_updated_lst <- update(expr4, param_list)
+  expect_equal(expr4_updated_lst$args$num_terms, 3)
+  expect_equal(expr4_updated_lst$args$prod_degree, 1)
+  expect_equal(expr4_updated_lst$eng_args$nk, rlang::quo(10))
 })
 
 test_that('bad input', {
@@ -111,9 +124,9 @@ num_pred <- c("Sepal.Width", "Petal.Width", "Petal.Length")
 iris_bad_form <- as.formula(Species ~ term)
 iris_basic <- mars(mode = "regression") %>% set_engine("earth")
 
-ctrl <- fit_control(verbosity = 1, catch = FALSE)
-caught_ctrl <- fit_control(verbosity = 1, catch = TRUE)
-quiet_ctrl <- fit_control(verbosity = 0, catch = TRUE)
+ctrl <- control_parsnip(verbosity = 1, catch = FALSE)
+caught_ctrl <- control_parsnip(verbosity = 1, catch = TRUE)
+quiet_ctrl <- control_parsnip(verbosity = 0, catch = TRUE)
 
 # ------------------------------------------------------------------------------
 
@@ -295,36 +308,4 @@ test_that('classification', {
       0.985827594261896)
 
   expect_equal(parsnip_pred$.pred_good, earth_pred)
-})
-
-test_that('earth grid reduction', {
-  reg_grid <- expand.grid(num_terms = 1:3, prod_degree = 1:2)
-  reg_grid_smol <- min_grid(mars() %>% set_engine("earth"), reg_grid)
-
-  expect_equal(reg_grid_smol$num_terms, rep(3, 2))
-  expect_equal(reg_grid_smol$prod_degree, 1:2)
-  for (i in 1:nrow(reg_grid_smol)) {
-    expect_equal(reg_grid_smol$.submodels[[i]], list(num_terms = 1:2))
-  }
-
-  reg_ish_grid <- expand.grid(num_terms = 1:3, prod_degree = 1:2)[-3,]
-  reg_ish_grid_smol <- min_grid(mars() %>% set_engine("earth"), reg_ish_grid)
-
-  expect_equal(reg_ish_grid_smol$num_terms, 2:3)
-  expect_equal(reg_ish_grid_smol$prod_degree, 1:2)
-  expect_equal(reg_ish_grid_smol$.submodels[[1]], list(num_terms = 1))
-  for (i in 2:nrow(reg_ish_grid_smol)) {
-    expect_equal(reg_ish_grid_smol$.submodels[[i]], list(num_terms = 1:2))
-  }
-
-  reg_grid_extra <- expand.grid(num_terms = 1:3, prod_degree = 1:2, blah = 10:12)
-  reg_grid_extra_smol <- min_grid(mars() %>% set_engine("earth"), reg_grid_extra)
-
-  expect_equal(reg_grid_extra_smol$num_terms, rep(3, 6))
-  expect_equal(reg_grid_extra_smol$prod_degree, rep(1:2, each = 3))
-  expect_equal(reg_grid_extra_smol$blah, rep(10:12, 2))
-  for (i in 1:nrow(reg_grid_extra_smol)) {
-    expect_equal(reg_grid_extra_smol$.submodels[[i]], list(num_terms = 1:2))
-  }
-
 })

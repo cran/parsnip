@@ -191,6 +191,18 @@ test_that('updating', {
   expect_equal(update(expr1, mixture = 0), expr1_exp)
   expect_equal(update(expr3, mixture = 1, fresh = TRUE), expr3_exp)
 
+  param_tibb <- tibble::tibble(mixture = 1/3, penalty = 1)
+  param_list <- as.list(param_tibb)
+
+  expr4_updated <- update(expr4, param_tibb)
+  expect_equal(expr4_updated$args$mixture, 1/3)
+  expect_equal(expr4_updated$args$penalty, 1)
+  expect_equal(expr4_updated$eng_args$nlambda, rlang::quo(10))
+
+  expr4_updated_lst <- update(expr4, param_list)
+  expect_equal(expr4_updated_lst$args$mixture, 1/3)
+  expect_equal(expr4_updated_lst$args$penalty, 1)
+  expect_equal(expr4_updated_lst$eng_args$nlambda, rlang::quo(10))
 })
 
 test_that('bad input', {
@@ -207,9 +219,9 @@ lending_club <- head(lending_club, 200)
 lc_form <- as.formula(Class ~ log(funded_amnt) + int_rate)
 num_pred <- c("funded_amnt", "annual_inc", "num_il_tl")
 lc_basic <- logistic_reg() %>% set_engine("glm")
-ctrl <- fit_control(verbosity = 1, catch = FALSE)
-caught_ctrl <- fit_control(verbosity = 1, catch = TRUE)
-quiet_ctrl <- fit_control(verbosity = 0, catch = TRUE)
+ctrl <- control_parsnip(verbosity = 1, catch = FALSE)
+caught_ctrl <- control_parsnip(verbosity = 1, catch = TRUE)
+quiet_ctrl <- control_parsnip(verbosity = 0, catch = TRUE)
 
 test_that('glm execution', {
 

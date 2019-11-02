@@ -23,7 +23,6 @@
 #'  here (`NULL`), the values are taken from the underlying model
 #'  functions. If parameters need to be modified, `update()` can be used
 #'  in lieu of recreating the object from scratch.
-#' @inheritParams boost_tree
 #' @param mode A single character string for the type of model.
 #' Possible values for this model are `"unknown"`, `"regression"`, or
 #' `"classification"`.
@@ -64,7 +63,7 @@
 #' on new data. This also means that a single value of that function's
 #' `kernel` argument (a.k.a `weight_func` here) can be supplied
 #'
-#' @seealso [varying()], [fit()]
+#' @seealso [[fit()]
 #'
 #' @examples
 #' nearest_neighbor(neighbors = 11)
@@ -107,16 +106,24 @@ print.nearest_neighbor <- function(x, ...) {
 #' @export
 #' @inheritParams update.boost_tree
 update.nearest_neighbor <- function(object,
+                                    parameters = NULL,
                                     neighbors = NULL,
                                     weight_func = NULL,
                                     dist_power = NULL,
                                     fresh = FALSE, ...) {
   update_dot_check(...)
+
+  if (!is.null(parameters)) {
+    parameters <- check_final_param(parameters)
+  }
+
   args <- list(
     neighbors   = enquo(neighbors),
     weight_func = enquo(weight_func),
     dist_power  = enquo(dist_power)
   )
+
+  args <- update_main_parameters(args, parameters)
 
   if (fresh) {
     object$args <- args
@@ -218,38 +225,4 @@ knn_by_k <- function(k, object, new_data, type, ...) {
   predict(object, new_data = new_data, type = type, ...) %>%
     dplyr::mutate(neighbors = k, .row = dplyr::row_number()) %>%
     dplyr::select(.row, neighbors, dplyr::starts_with(".pred"))
-}
-
-# ------------------------------------------------------------------------------
-
-#' @export
-#' @export min_grid.nearest_neighbor
-#' @rdname min_grid
-min_grid.nearest_neighbor <- function(x, grid, ...) {
-
-  grid_names <- names(grid)
-  param_info <- get_submodel_info(x, grid)
-
-  if (!any(param_info$has_submodel)) {
-    return(blank_submodels(grid))
-  }
-
-  fixed_args <- get_fixed_args(param_info)
-
-  fit_only <-
-    grid %>%
-    dplyr::group_by(!!!rlang::syms(fixed_args)) %>%
-    dplyr::summarize(neighbors = max(neighbors, na.rm = TRUE)) %>%
-    dplyr::ungroup()
-
-  min_grid_df <-
-    dplyr::full_join(fit_only %>% rename(max_neighbor = neighbors), grid, by = fixed_args) %>%
-    dplyr::filter(neighbors != max_neighbor) %>%
-    dplyr::rename(sub_neighbors = neighbors, neighbors = max_neighbor) %>%
-    dplyr::group_by(!!!rlang::syms(fixed_args)) %>%
-    dplyr::summarize(.submodels = list(list(neighbors = sub_neighbors))) %>%
-    dplyr::ungroup() %>%
-    dplyr::full_join(fit_only, grid, by = fixed_args)
-
-  min_grid_df  %>% dplyr::select(dplyr::one_of(grid_names), .submodels)
 }

@@ -50,7 +50,7 @@
 #' \Sexpr[results=rd]{parsnip:::show_fit(parsnip:::svm_rbf(mode = "regression"), "kernlab")}
 #'
 #' @importFrom purrr map_lgl
-#' @seealso [varying()], [fit()]
+#' @seealso [fit()]
 #' @examples
 #' svm_rbf(mode = "classification", rbf_sigma = 0.2)
 #' # Parameters can be represented by a placeholder:
@@ -104,16 +104,23 @@ print.svm_rbf <- function(x, ...) {
 #' @export
 update.svm_rbf <-
   function(object,
+           parameters = NULL,
            cost = NULL, rbf_sigma = NULL, margin = NULL,
            fresh = FALSE,
            ...) {
     update_dot_check(...)
+
+    if (!is.null(parameters)) {
+      parameters <- check_final_param(parameters)
+    }
 
     args <- list(
       cost   = enquo(cost),
       rbf_sigma  = enquo(rbf_sigma),
       margin  = enquo(margin)
     )
+
+    args <- update_main_parameters(args, parameters)
 
     if (fresh) {
       object$args <- args

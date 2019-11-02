@@ -57,7 +57,7 @@
 #'  predictions when there is a stratification variable and can be
 #'  overridden in other cases.
 #'
-#' @seealso [varying()], [fit()], [survival::Surv()]
+#' @seealso [[fit()], [survival::Surv()]
 #' @references Jackson, C. (2016). `flexsurv`: A Platform for Parametric Survival
 #'  Modeling in R. _Journal of Statistical Software_, 70(8), 1 - 33.
 #' @examples
@@ -111,11 +111,18 @@ print.surv_reg <- function(x, ...) {
 #' @method update surv_reg
 #' @rdname surv_reg
 #' @export
-update.surv_reg <- function(object, dist = NULL, fresh = FALSE, ...) {
+update.surv_reg <- function(object, parameters = NULL, dist = NULL, fresh = FALSE, ...) {
   update_dot_check(...)
+
+  if (!is.null(parameters)) {
+    parameters <- check_final_param(parameters)
+  }
+
   args <- list(
     dist = enquo(dist)
   )
+
+  args <- update_main_parameters(args, parameters)
 
   if (fresh) {
     object$args <- args

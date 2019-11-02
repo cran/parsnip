@@ -97,7 +97,7 @@
 #'  separately saved to disk. In a new session, the object can be
 #'  reloaded and reattached to the `parsnip` object.
 #'
-#' @seealso [varying()], [fit()]
+#' @seealso [[fit()]
 #' @examples
 #' logistic_reg()
 #' # Parameters can be represented by a placeholder:
@@ -154,13 +154,20 @@ translate.logistic_reg <- translate.linear_reg
 #' @export
 update.logistic_reg <-
   function(object,
+           parameters = NULL,
            penalty = NULL, mixture = NULL,
            fresh = FALSE, ...) {
     update_dot_check(...)
+
+    if (!is.null(parameters)) {
+      parameters <- check_final_param(parameters)
+    }
     args <- list(
       penalty = enquo(penalty),
       mixture = enquo(mixture)
     )
+
+    args <- update_main_parameters(args, parameters)
 
     if (fresh) {
       object$args <- args
@@ -309,7 +316,7 @@ multi_predict._lognet <-
     if (is.null(type))
       type <- "class"
     if (!(type %in% c("class", "prob", "link", "raw"))) {
-      stop ("`type` should be either 'class', 'link', 'raw', or 'prob'.", call. = FALSE)
+      stop("`type` should be either 'class', 'link', 'raw', or 'prob'.", call. = FALSE)
     }
     if (type == "prob")
       dots$type <- "response"
@@ -321,12 +328,12 @@ multi_predict._lognet <-
     param_key <- tibble(group = colnames(pred), penalty = penalty)
     pred <- as_tibble(pred)
     pred$.row <- 1:nrow(pred)
-    pred <- gather(pred, group, .pred, -.row)
+    pred <- gather(pred, group, .pred_class, -.row)
     if (dots$type == "class") {
-      pred[[".pred"]] <- factor(pred[[".pred"]], levels = object$lvl)
+      pred[[".pred_class"]] <- factor(pred[[".pred_class"]], levels = object$lvl)
     } else {
       if (dots$type == "response") {
-        pred[[".pred2"]] <- 1 - pred[[".pred"]]
+        pred[[".pred2"]] <- 1 - pred[[".pred_class"]]
         names(pred) <- c(".row", "group", paste0(".pred_", rev(object$lvl)))
         pred <- pred[, c(".row", "group", paste0(".pred_", object$lvl))]
       }
@@ -372,10 +379,3 @@ predict_raw._lognet <- function(object, new_data, opts = list(), ...) {
   predict_raw.model_fit(object, new_data = new_data, opts = opts, ...)
 }
 
-
-# ------------------------------------------------------------------------------
-
-#' @export
-#' @export min_grid.logistic_reg
-#' @rdname min_grid
-min_grid.logistic_reg <- min_grid.linear_reg

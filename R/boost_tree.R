@@ -99,7 +99,7 @@
 #'  reloaded and reattached to the `parsnip` object.
 #'
 #' @importFrom purrr map_lgl
-#' @seealso [varying()], [fit()], [set_engine()]
+#' @seealso [[fit()], [set_engine()]
 #' @examples
 #' boost_tree(mode = "classification", trees = 20)
 #' # Parameters can be represented by a placeholder:
@@ -147,8 +147,11 @@ print.boost_tree <- function(x, ...) {
 # ------------------------------------------------------------------------------
 
 #' @export
-#' @inheritParams boost_tree
 #' @param object A boosted tree model specification.
+#' @param parameters A 1-row tibble or named list with _main_
+#'  parameters to update. If the individual arguments are used,
+#'  these will supersede the values in `parameters`. Also, using
+#'  engine arguments in this object will result in an error.
 #' @param ... Not used for `update()`.
 #' @param fresh A logical for whether the arguments should be
 #'  modified in-place of or replaced wholesale.
@@ -158,16 +161,30 @@ print.boost_tree <- function(x, ...) {
 #' model
 #' update(model, mtry = 1)
 #' update(model, mtry = 1, fresh = TRUE)
+#'
+#' param_values <- tibble::tibble(mtry = 10, tree_depth = 5)
+#'
+#' model %>% update(param_values)
+#' model %>% update(param_values, mtry = 3)
+#'
+#' param_values$verbose <- 0
+#' # Fails due to engine argument
+#' # model %>% update(param_values)
 #' @method update boost_tree
 #' @rdname boost_tree
 #' @export
 update.boost_tree <-
   function(object,
+           parameters = NULL,
            mtry = NULL, trees = NULL, min_n = NULL,
            tree_depth = NULL, learn_rate = NULL,
            loss_reduction = NULL, sample_size = NULL,
            fresh = FALSE, ...) {
     update_dot_check(...)
+
+    if (!is.null(parameters)) {
+      parameters <- check_final_param(parameters)
+    }
 
     args <- list(
       mtry = enquo(mtry),
@@ -178,6 +195,8 @@ update.boost_tree <-
       loss_reduction = enquo(loss_reduction),
       sample_size = enquo(sample_size)
     )
+
+    args <- update_main_parameters(args, parameters)
 
     # TODO make these blocks into a function and document well
     if (fresh) {
@@ -404,7 +423,7 @@ xgb_by_tree <- function(tree, object, new_data, type, ...) {
   } else {
     if (type == "class") {
       pred <- object$spec$method$pred$class$post(pred, object)
-      pred <- tibble(.pred = factor(pred, levels = object$lvl))
+      pred <- tibble(.pred_class = factor(pred, levels = object$lvl))
     } else {
       pred <- object$spec$method$pred$prob$post(pred, object)
       pred <- as_tibble(pred)
@@ -503,7 +522,7 @@ C50_by_tree <- function(tree, object, new_data, type, ...) {
 
   # switch based on prediction type
   if (type == "class") {
-    pred <- tibble(.pred = factor(pred, levels = object$lvl))
+    pred <- tibble(.pred_class = factor(pred, levels = object$lvl))
   } else {
     pred <- as_tibble(pred)
     names(pred) <- paste0(".pred_", names(pred))
@@ -514,41 +533,4 @@ C50_by_tree <- function(tree, object, new_data, type, ...) {
   pred[, c(".row", "trees", nms)]
 }
 
-# ------------------------------------------------------------------------------
-
-#' @export
-#' @export min_grid.boost_tree
-#' @rdname min_grid
-min_grid.boost_tree <- function(x, grid, ...) {
-  grid_names <- names(grid)
-  param_info <- get_submodel_info(x, grid)
-
-  # No ability to do submodels? Finish here:
-  if (!any(param_info$has_submodel)) {
-    return(blank_submodels(grid))
-  }
-
-  fixed_args <- get_fixed_args(param_info)
-
-  # For boosted trees, fit the model with the most trees (conditional on the
-  # other parameters) so that you can do predictions on the smaller models.
-  fit_only <-
-    grid %>%
-    dplyr::group_by(!!!rlang::syms(fixed_args)) %>%
-    dplyr::summarize(trees = max(trees, na.rm = TRUE)) %>%
-    dplyr::ungroup()
-
-  # Add a column .submodels that is a list with what should be predicted
-  # by `multi_predict()` (assuming `predict()` has already been executed
-  # on the original value of 'trees')
-  min_grid_df <-
-    dplyr::full_join(fit_only %>% rename(max_tree = trees), grid, by = fixed_args) %>%
-    dplyr::filter(trees != max_tree) %>%
-    dplyr::group_by(!!!rlang::syms(fixed_args)) %>%
-    dplyr::summarize(.submodels = list(list(trees = trees))) %>%
-    dplyr::ungroup() %>%
-    dplyr::full_join(fit_only, grid, by = fixed_args)
-
-  min_grid_df  %>% dplyr::select(dplyr::one_of(grid_names), .submodels)
-}
 

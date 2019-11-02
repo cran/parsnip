@@ -51,7 +51,7 @@
 #' \Sexpr[results=rd]{parsnip:::show_fit(parsnip:::svm_poly(mode = "regression"), "kernlab")}
 #'
 #' @importFrom purrr map_lgl
-#' @seealso [varying()], [fit()]
+#' @seealso [[fit()]
 #' @examples
 #' svm_poly(mode = "classification", degree = 1.2)
 #' # Parameters can be represented by a placeholder:
@@ -106,10 +106,15 @@ print.svm_poly <- function(x, ...) {
 #' @export
 update.svm_poly <-
   function(object,
+           parameters = NULL,
            cost = NULL, degree = NULL, scale_factor = NULL, margin = NULL,
            fresh = FALSE,
            ...) {
     update_dot_check(...)
+
+    if (!is.null(parameters)) {
+      parameters <- check_final_param(parameters)
+    }
 
     args <- list(
       cost   = enquo(cost),
@@ -117,6 +122,8 @@ update.svm_poly <-
       scale_factor  = enquo(scale_factor),
       margin  = enquo(margin)
     )
+
+    args <- update_main_parameters(args, parameters)
 
     if (fresh) {
       object$args <- args

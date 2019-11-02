@@ -8,9 +8,9 @@
 mlp(mode = "unknown", hidden_units = NULL, penalty = NULL,
   dropout = NULL, epochs = NULL, activation = NULL)
 
-\method{update}{mlp}(object, hidden_units = NULL, penalty = NULL,
-  dropout = NULL, epochs = NULL, activation = NULL, fresh = FALSE,
-  ...)
+\method{update}{mlp}(object, parameters = NULL, hidden_units = NULL,
+  penalty = NULL, dropout = NULL, epochs = NULL, activation = NULL,
+  fresh = FALSE, ...)
 }
 \arguments{
 \item{mode}{A single character string for the type of model.
@@ -34,6 +34,11 @@ function between the hidden and output layers is automatically set to either
 "linear", "softmax", "relu", and "elu"}
 
 \item{object}{A random forest model specification.}
+
+\item{parameters}{A 1-row tibble or named list with \emph{main}
+parameters to update. If the individual arguments are used,
+these will supersede the values in \code{parameters}. Also, using
+engine arguments in this object will result in an error.}
 
 \item{fresh}{A logical for whether the arguments should be
 modified in-place of or replaced wholesale.}
@@ -116,5 +121,5 @@ update(model, hidden_units = 2)
 update(model, hidden_units = 2, fresh = TRUE)
 }
 \seealso{
-\code{\link[=varying]{varying()}}, \code{\link[=fit]{fit()}}
+[\code{\link[=fit]{fit()}}
 }

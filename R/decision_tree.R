@@ -84,7 +84,7 @@
 #'  reloaded and reattached to the `parsnip` object.
 #'
 #' @importFrom purrr map_lgl
-#' @seealso [varying()], [fit()]
+#' @seealso [[fit()]
 #' @examples
 #' decision_tree(mode = "classification", tree_depth = 5)
 #' # Parameters can be represented by a placeholder:
@@ -137,14 +137,21 @@ print.decision_tree <- function(x, ...) {
 #' @export
 update.decision_tree <-
   function(object,
+           parameters = NULL,
            cost_complexity = NULL, tree_depth = NULL, min_n = NULL,
            fresh = FALSE, ...) {
     update_dot_check(...)
+
+    if (!is.null(parameters)) {
+      parameters <- check_final_param(parameters)
+    }
     args <- list(
       cost_complexity   = enquo(cost_complexity),
       tree_depth  = enquo(tree_depth),
       min_n  = enquo(min_n)
     )
+
+    args <- update_main_parameters(args, parameters)
 
     if (fresh) {
       object$args <- args

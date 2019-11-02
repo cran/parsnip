@@ -87,7 +87,7 @@
 #'  reloaded and reattached to the `parsnip` object.
 #'
 #' @importFrom purrr map_lgl
-#' @seealso [varying()], [fit()]
+#' @seealso [[fit()]
 #' @examples
 #' rand_forest(mode = "classification", trees = 2000)
 #' # Parameters can be represented by a placeholder:
@@ -140,14 +140,21 @@ print.rand_forest <- function(x, ...) {
 #' @export
 update.rand_forest <-
   function(object,
+           parameters = NULL,
            mtry = NULL, trees = NULL, min_n = NULL,
            fresh = FALSE, ...) {
     update_dot_check(...)
+
+    if (!is.null(parameters)) {
+      parameters <- check_final_param(parameters)
+    }
     args <- list(
       mtry   = enquo(mtry),
       trees  = enquo(trees),
       min_n  = enquo(min_n)
     )
+
+    args <- update_main_parameters(args, parameters)
 
     # TODO make these blocks into a function and document well
     if (fresh) {

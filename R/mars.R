@@ -55,7 +55,7 @@
 #'  attached.
 #'
 #' @importFrom purrr map_lgl
-#' @seealso [varying()], [fit()]
+#' @seealso [[fit()]
 #' @examples
 #' mars(mode = "regression", num_terms = 5)
 #' @export
@@ -106,15 +106,22 @@ print.mars <- function(x, ...) {
 #' @export
 update.mars <-
   function(object,
+           parameters = NULL,
            num_terms = NULL, prod_degree = NULL, prune_method = NULL,
            fresh = FALSE, ...) {
     update_dot_check(...)
+
+    if (!is.null(parameters)) {
+      parameters <- check_final_param(parameters)
+    }
 
     args <- list(
       num_terms    = enquo(num_terms),
       prod_degree  = enquo(prod_degree),
       prune_method = enquo(prune_method)
     )
+
+    args <- update_main_parameters(args, parameters)
 
     if (fresh) {
       object$args <- args
@@ -232,10 +239,11 @@ multi_predict._earth <-
       paste("Please use `keepxy = TRUE` as an option to enable submodel",
             "predictions with `earth`.")
     if (any(names(object$fit$call) == "keepxy")) {
-       if(!isTRUE(object$fit$call$keepxy))
-        stop (msg, call. = FALSE)
-    } else
-      stop (msg, call. = FALSE)
+       if (!isTRUE(object$fit$call$keepxy))
+        stop(msg, call. = FALSE)
+    } else {
+      stop(msg, call. = FALSE)
+    }
 
     if (is.null(type)) {
       if (object$spec$mode == "classification")
@@ -260,37 +268,4 @@ earth_by_terms <- function(num_terms, object, new_data, type, ...) {
   pred[["num_terms"]] <- num_terms
   pred[[".row"]] <- 1:nrow(new_data)
   pred[, c(".row", "num_terms", nms)]
-}
-
-# ------------------------------------------------------------------------------
-
-#' @export
-#' @export min_grid.mars
-#' @rdname min_grid
-min_grid.mars <- function(x, grid, ...) {
-
-  grid_names <- names(grid)
-  param_info <- get_submodel_info(x, grid)
-
-  if (!any(param_info$has_submodel)) {
-    return(blank_submodels(grid))
-  }
-
-  fixed_args <- get_fixed_args(param_info)
-
-  fit_only <-
-    grid %>%
-    dplyr::group_by(!!!rlang::syms(fixed_args)) %>%
-    dplyr::summarize(num_terms = max(num_terms, na.rm = TRUE)) %>%
-    dplyr::ungroup()
-
-  min_grid_df <-
-    dplyr::full_join(fit_only %>% rename(max_terms = num_terms), grid, by = fixed_args) %>%
-    dplyr::filter(num_terms != max_terms) %>%
-    dplyr::group_by(!!!rlang::syms(fixed_args)) %>%
-    dplyr::summarize(.submodels = list(list(num_terms = num_terms))) %>%
-    dplyr::ungroup() %>%
-    dplyr::full_join(fit_only, grid, by = fixed_args)
-
-  min_grid_df  %>% dplyr::select(dplyr::one_of(grid_names), .submodels)
 }

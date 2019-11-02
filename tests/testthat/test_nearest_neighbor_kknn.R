@@ -13,9 +13,9 @@ iris_basic <- nearest_neighbor(mode = "classification",
                                weight_func = "triangular") %>%
   set_engine("kknn")
 
-ctrl <- fit_control(verbosity = 1, catch = FALSE)
-caught_ctrl <- fit_control(verbosity = 1, catch = TRUE)
-quiet_ctrl <- fit_control(verbosity = 0, catch = TRUE)
+ctrl <- control_parsnip(verbosity = 1, catch = FALSE)
+caught_ctrl <- control_parsnip(verbosity = 1, catch = TRUE)
+quiet_ctrl <- control_parsnip(verbosity = 0, catch = TRUE)
 
 # ------------------------------------------------------------------------------
 
@@ -190,36 +190,4 @@ test_that('kknn multi-predict', {
     arrange(.rows) %>%
     dplyr::select(.pred)
   expect_equal(pred_uni, pred_uni_obs)
-})
-
-test_that('kkknn grid reduction', {
-  reg_grid <- expand.grid(neighbors = 1:3, prod_degree = 1:2)
-  reg_grid_smol <- min_grid(nearest_neighbor() %>% set_engine("kknn"), reg_grid)
-
-  expect_equal(reg_grid_smol$neighbors, rep(3, 2))
-  expect_equal(reg_grid_smol$prod_degree, 1:2)
-  for (i in 1:nrow(reg_grid_smol)) {
-    expect_equal(reg_grid_smol$.submodels[[i]], list(neighbors = 1:2))
-  }
-
-  reg_ish_grid <- expand.grid(neighbors = 1:3, prod_degree = 1:2)[-3,]
-  reg_ish_grid_smol <- min_grid(nearest_neighbor() %>% set_engine("kknn"), reg_ish_grid)
-
-  expect_equal(reg_ish_grid_smol$neighbors, 2:3)
-  expect_equal(reg_ish_grid_smol$prod_degree, 1:2)
-  expect_equal(reg_ish_grid_smol$.submodels[[1]], list(neighbors = 1))
-  for (i in 2:nrow(reg_ish_grid_smol)) {
-    expect_equal(reg_ish_grid_smol$.submodels[[i]], list(neighbors = 1:2))
-  }
-
-  reg_grid_extra <- expand.grid(neighbors = 1:3, prod_degree = 1:2, blah = 10:12)
-  reg_grid_extra_smol <- min_grid(nearest_neighbor() %>% set_engine("kknn"), reg_grid_extra)
-
-  expect_equal(reg_grid_extra_smol$neighbors, rep(3, 6))
-  expect_equal(reg_grid_extra_smol$prod_degree, rep(1:2, each = 3))
-  expect_equal(reg_grid_extra_smol$blah, rep(10:12, 2))
-  for (i in 1:nrow(reg_grid_extra_smol)) {
-    expect_equal(reg_grid_extra_smol$.submodels[[i]], list(neighbors = 1:2))
-  }
-
 })

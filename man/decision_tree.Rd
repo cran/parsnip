@@ -8,8 +8,9 @@
 decision_tree(mode = "unknown", cost_complexity = NULL,
   tree_depth = NULL, min_n = NULL)
 
-\method{update}{decision_tree}(object, cost_complexity = NULL,
-  tree_depth = NULL, min_n = NULL, fresh = FALSE, ...)
+\method{update}{decision_tree}(object, parameters = NULL,
+  cost_complexity = NULL, tree_depth = NULL, min_n = NULL,
+  fresh = FALSE, ...)
 }
 \arguments{
 \item{mode}{A single character string for the type of model.
@@ -25,6 +26,11 @@ parameter (a.k.a. \code{Cp}) used by CART models (\code{rpart} only).}
 in a node that are required for the node to be split further.}
 
 \item{object}{A random forest model specification.}
+
+\item{parameters}{A 1-row tibble or named list with \emph{main}
+parameters to update. If the individual arguments are used,
+these will supersede the values in \code{parameters}. Also, using
+engine arguments in this object will result in an error.}
 
 \item{fresh}{A logical for whether the arguments should be
 modified in-place of or replaced wholesale.}
@@ -117,5 +123,5 @@ update(model, cost_complexity = 1)
 update(model, cost_complexity = 1, fresh = TRUE)
 }
 \seealso{
-\code{\link[=varying]{varying()}}, \code{\link[=fit]{fit()}}
+[\code{\link[=fit]{fit()}}
 }

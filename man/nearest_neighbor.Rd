@@ -76,5 +76,5 @@ nearest_neighbor(neighbors = 11)
 
 }
 \seealso{
-\code{\link[=varying]{varying()}}, \code{\link[=fit]{fit()}}
+[\code{\link[=fit]{fit()}}
 }
