@@ -5,10 +5,10 @@ library(tibble)
 # ------------------------------------------------------------------------------
 
 context("random forest execution with randomForest")
+source("helper-objects.R")
 
 # ------------------------------------------------------------------------------
 
-data("lending_club")
 lending_club <- head(lending_club, 200)
 num_pred <- c("funded_amnt", "annual_inc", "num_il_tl")
 
@@ -16,10 +16,6 @@ lc_basic <- rand_forest(mode = "classification") %>%
   set_engine("randomForest")
 bad_rf_cls <- rand_forest(mode = "classification") %>%
   set_engine("randomForest", sampsize = -10)
-
-ctrl <- control_parsnip(verbosity = 1, catch = FALSE)
-caught_ctrl <- control_parsnip(verbosity = 1, catch = TRUE)
-quiet_ctrl <- control_parsnip(verbosity = 0, catch = TRUE)
 
 # ------------------------------------------------------------------------------
 
@@ -155,10 +151,6 @@ bad_ranger_reg <- rand_forest(mode = "regression") %>%
   set_engine("randomForest", min.node.size = -10)
 bad_rf_reg <- rand_forest(mode = "regression") %>%
   set_engine("randomForest", sampsize = -10)
-
-ctrl <- list(verbosity = 1, catch = FALSE)
-caught_ctrl <- list(verbosity = 1, catch = TRUE)
-quiet_ctrl <- list(verbosity = 0, catch = TRUE)
 
 # ------------------------------------------------------------------------------
 

@@ -48,6 +48,7 @@
 #' # methods for specifying the model can be used
 #'
 #' library(dplyr)
+#' library(modeldata)
 #' data("lending_club")
 #'
 #' lr_mod <- logistic_reg()
@@ -89,8 +90,8 @@
 #' @export fit.model_spec
 fit.model_spec <-
   function(object,
-           formula = NULL,
-           data = NULL,
+           formula,
+           data,
            control = control_parsnip(),
            ...
   ) {
@@ -180,8 +181,8 @@ fit.model_spec <-
 #' @export fit_xy.model_spec
 fit_xy.model_spec <-
   function(object,
-           x = NULL,
-           y = NULL,
+           x,
+           y,
            control = control_parsnip(),
            ...
   ) {
@@ -367,7 +368,7 @@ check_xy_interface <- function(x, y, cl, model) {
 #' @export
 print.model_fit <- function(x, ...) {
   cat("parsnip model object\n\n")
-  cat("Fit in: ", prettyunits::pretty_sec(x$elapsed[["elapsed"]]))
+  cat("Fit time: ", prettyunits::pretty_sec(x$elapsed[["elapsed"]]), "\n")
 
   if (inherits(x$fit, "try-error")) {
     cat("Model fit failed with error:\n", x$fit, "\n")

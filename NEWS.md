@@ -1,3 +1,24 @@
+# parsnip 0.0.5
+
+## Fixes
+
+* A bug ([#206](https://github.com/tidymodels/parsnip/issues/206) and [#234](https://github.com/tidymodels/parsnip/issues/234)) was fixed that caused an error when predicting with a multinomial `glmnet` model. 
+
+## Other Changes
+
+ * `glmnet` was removed as a dependency since the new version depends on 3.6.0 or greater. Keeping it would constrain `parsnip` to that same requirement. All `glmnet` tests are run locally. 
+ 
+ * A set of internal functions are now exported. These are helpful when creating a new package that registers new model specifications. 
+ 
+## New Features
+
+ * `nnet` was added as an engine to `multinom_reg()` [#209](https://github.com/tidymodels/parsnip/issues/209)
+
+## Breaking Changes
+
+ * There were some mis-mapped parameters (going between `parsnip` and the underlying model function) for `spark` boosted trees and some `keras` models. See [897c927](https://github.com/tidymodels/parsnip/commit/897c92719332caf7344e7c9c8895ac673517d2c8).
+
+
 # parsnip 0.0.4
 
 ## New Features

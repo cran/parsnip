@@ -5,11 +5,9 @@
 \alias{fit_xy.model_spec}
 \title{Fit a Model Specification to a Dataset}
 \usage{
-\method{fit}{model_spec}(object, formula = NULL, data = NULL,
-  control = control_parsnip(), ...)
+\method{fit}{model_spec}(object, formula, data, control = control_parsnip(), ...)
 
-\method{fit_xy}{model_spec}(object, x = NULL, y = NULL,
-  control = control_parsnip(), ...)
+\method{fit_xy}{model_spec}(object, x, y, control = control_parsnip(), ...)
 }
 \arguments{
 \item{object}{An object of class \code{model_spec} that has a chosen engine
@@ -84,6 +82,7 @@ If the model engine has not been set, the model's default engine will be used
 # methods for specifying the model can be used
 
 library(dplyr)
+library(modeldata)
 data("lending_club")
 
 lr_mod <- logistic_reg()
