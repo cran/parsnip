@@ -20,7 +20,7 @@ logistic_reg(mode = "classification", penalty = NULL, mixture = NULL)
 \item{mode}{A single character string for the type of model.
 The only possible value for this model is "classification".}
 
-\item{penalty}{An non-negative number representing the total
+\item{penalty}{A non-negative number representing the total
 amount of regularization (\code{glmnet}, \code{keras}, and \code{spark} only).
 For \code{keras} models, this corresponds to purely L2 regularization
 (aka weight decay) while the other models can be a combination
@@ -90,6 +90,14 @@ reloaded and reattached to the \code{parsnip} object.
 \section{Engine Details}{
 
 
+The standardized parameter names in parsnip can be mapped to their original
+names in each engine:\tabular{llll}{
+   \strong{parsnip} \tab \strong{glmnet} \tab \strong{spark} \tab \strong{keras} \cr
+   penalty \tab lambda \tab reg_param \tab penalty \cr
+   mixture \tab alpha \tab elastic_net_param \tab NA \cr
+}
+
+
 Engines may have pre-set default arguments when executing the
 model fit call.  For this type of
 model, the template of the fit calls are:
@@ -105,6 +113,8 @@ model, the template of the fit calls are:
 \pkg{stan}
 
 \Sexpr[results=rd]{parsnip:::show_fit(parsnip:::logistic_reg(), "stan")}
+
+(note that the \code{refresh} default prevents logging of the estimation process. Change this value in \code{set_engine()} will show the logs)
 
 \pkg{spark}
 
@@ -143,5 +153,5 @@ update(model, penalty = 1)
 update(model, penalty = 1, fresh = TRUE)
 }
 \seealso{
-[\code{\link[=fit]{fit()}}
+\code{\link[=fit]{fit()}}
 }

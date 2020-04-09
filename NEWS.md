@@ -1,3 +1,11 @@
+# parsnip 0.1.0
+
+ * Release for enabling more `parsnip`-adjacent packages.
+ 
+ * Stan models no longer generate output when fit. Use the `refresh` option when setting the engine to change this. 
+ 
+ * Data sets have been moved to the `modeldata` package. 
+
 # parsnip 0.0.5
 
 ## Fixes

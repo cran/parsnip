@@ -35,7 +35,7 @@ boost_tree(
 Possible values for this model are "unknown", "regression", or
 "classification".}
 
-\item{mtry}{An number for the number (or proportion) of predictors that will
+\item{mtry}{A number for the number (or proportion) of predictors that will
 be randomly sampled at each split when creating the tree models (\code{xgboost}
 only).}
 
@@ -45,7 +45,7 @@ the ensemble.}
 \item{min_n}{An integer for the minimum number of data points
 in a node that are required for the node to be split further.}
 
-\item{tree_depth}{An integer for the maximum deopth of the tree (i.e. number
+\item{tree_depth}{An integer for the maximum depth of the tree (i.e. number
 of splits) (\code{xgboost} only).}
 
 \item{learn_rate}{A number for the rate at which the boosting algorithm adapts
@@ -54,9 +54,9 @@ from iteration-to-iteration (\code{xgboost} only).}
 \item{loss_reduction}{A number for the reduction in the loss function required
 to split further  (\code{xgboost} only).}
 
-\item{sample_size}{An number for the number (or proportion) of data that is
+\item{sample_size}{A number for the number (or proportion) of data that is
 exposed to the fitting routine. For \code{xgboost}, the sampling is done at at
-each iteration while \code{C5.0} samples once during traning.}
+each iteration while \code{C5.0} samples once during training.}
 
 \item{object}{A boosted tree model specification.}
 
@@ -126,6 +126,20 @@ separately saved to disk. In a new session, the object can be
 reloaded and reattached to the \code{parsnip} object.
 }
 \section{Engine Details}{
+
+
+The standardized parameter names in parsnip can be mapped to their original
+names in each engine:\tabular{llll}{
+   \strong{parsnip} \tab \strong{xgboost} \tab \strong{C5.0} \tab \strong{spark} \cr
+   tree_depth \tab max_depth \tab NA \tab max_depth \cr
+   trees \tab nrounds \tab trials \tab max_iter \cr
+   learn_rate \tab eta \tab NA \tab step_size \cr
+   mtry \tab colsample_bytree \tab NA \tab feature_subset_strategy \cr
+   min_n \tab min_child_weight \tab minCases \tab min_instances_per_node \cr
+   loss_reduction \tab gamma \tab NA \tab NA \cr
+   sample_size \tab subsample \tab sample \tab subsampling_rate \cr
+   min_info_gain \tab NA \tab NA \tab loss_reduction \cr
+}
 
 
 Engines may have pre-set default arguments when executing the

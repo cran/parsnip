@@ -19,7 +19,7 @@
 #' @inheritParams boost_tree
 #' @param mode A single character string for the type of model.
 #'  The only possible value for this model is "regression".
-#' @param penalty An non-negative number representing the total
+#' @param penalty A non-negative number representing the total
 #'  amount of regularization (`glmnet`, `keras`, and `spark` only).
 #'  For `keras` models, this corresponds to purely L2 regularization
 #'  (aka weight decay) while the other models can be a combination
@@ -44,6 +44,13 @@
 #'
 #' @section Engine Details:
 #'
+#' The standardized parameter names in parsnip can be mapped to their original
+#' names in each engine:
+#'
+#' ```{r echo = FALSE}
+#' convert_args("linear_reg")
+#' ```
+#'
 #' Engines may have pre-set default arguments when executing the
 #'  model fit call. For this type of
 #'  model, the template of the fit calls are:
@@ -59,6 +66,8 @@
 #' \pkg{stan}
 #'
 #' \Sexpr[results=rd]{parsnip:::show_fit(parsnip:::linear_reg(), "stan")}
+#'
+#' (note that the `refresh` default prevents logging of the estimation process. Change this value in `set_engine()` will show the logs)
 #'
 #' \pkg{spark}
 #'
@@ -98,7 +107,7 @@
 #'  separately saved to disk. In a new session, the object can be
 #'  reloaded and reattached to the `parsnip` object.
 #'
-#' @seealso [[fit()], [set_engine()]
+#' @seealso [fit()], [set_engine()]
 #' @examples
 #' linear_reg()
 #' # Parameters can be represented by a placeholder:
@@ -211,11 +220,11 @@ check_args.linear_reg <- function(object) {
   args <- lapply(object$args, rlang::eval_tidy)
 
   if (all(is.numeric(args$penalty)) && any(args$penalty < 0))
-    stop("The amount of regularization should be >= 0", call. = FALSE)
+    rlang::abort("The amount of regularization should be >= 0.")
   if (is.numeric(args$mixture) && (args$mixture < 0 | args$mixture > 1))
-    stop("The mixture proportion should be within [0,1]", call. = FALSE)
+    rlang::abort("The mixture proportion should be within [0,1].")
   if (is.numeric(args$mixture) && length(args$mixture) > 1)
-    stop("Only one value of `mixture` is allowed.", call. = FALSE)
+    rlang::abort("Only one value of `mixture` is allowed.")
 
   invisible(object)
 }
@@ -252,16 +261,22 @@ check_penalty <- function(penalty = NULL, object, multi = FALSE) {
   # when using `predict()`, allow for a single lambda
   if (!multi) {
     if (length(penalty) != 1)
-      stop("`penalty` should be a single numeric value. ",
-           "`multi_predict()` can be used to get multiple predictions ",
-           "per row of data.", call. = FALSE)
+      rlang::abort(
+        glue::glue(
+          "`penalty` should be a single numeric value. `multi_predict()` ",
+          "can be used to get multiple predictions per row of data.",
+        )
+      )
   }
 
   if (length(object$fit$lambda) == 1 && penalty != object$fit$lambda)
-    stop("The glmnet model was fit with a single penalty value of ",
-         object$fit$lambda, ". Predicting with a value of ",
-         penalty, " will give incorrect results from `glmnet()`.",
-         call. = FALSE)
+    rlang::abort(
+      glue::glue(
+        "The glmnet model was fit with a single penalty value of ",
+        "{object$fit$lambda}. Predicting with a value of {penalty} ",
+        "will give incorrect results from `glmnet()`."
+      )
+    )
 
   penalty
 }
@@ -296,7 +311,7 @@ check_penalty <- function(penalty = NULL, object, multi = FALSE) {
 predict._elnet <-
   function(object, new_data, type = NULL, opts = list(), penalty = NULL, multi = FALSE, ...) {
     if (any(names(enquos(...)) == "newdata"))
-      stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
+      rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
 
     # See discussion in https://github.com/tidymodels/parsnip/issues/195
     if (is.null(penalty) & !is.null(object$spec$args$penalty)) {
@@ -312,7 +327,7 @@ predict._elnet <-
 #' @export
 predict_numeric._elnet <- function(object, new_data, ...) {
   if (any(names(enquos(...)) == "newdata"))
-    stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
+    rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
 
   object$spec <- eval_args(object$spec)
   predict_numeric.model_fit(object, new_data = new_data, ...)
@@ -321,7 +336,7 @@ predict_numeric._elnet <- function(object, new_data, ...) {
 #' @export
 predict_raw._elnet <- function(object, new_data, opts = list(), ...)  {
   if (any(names(enquos(...)) == "newdata"))
-    stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
+    rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
 
   object$spec <- eval_args(object$spec)
   opts$s <- object$spec$args$penalty
@@ -332,11 +347,11 @@ predict_raw._elnet <- function(object, new_data, opts = list(), ...)  {
 #' @importFrom tidyr gather
 #' @export
 #'@rdname multi_predict
-#' @param penalty An numeric vector of penalty values.
+#' @param penalty A numeric vector of penalty values.
 multi_predict._elnet <-
   function(object, new_data, type = NULL, penalty = NULL, ...) {
     if (any(names(enquos(...)) == "newdata"))
-      stop("Did you mean to use `new_data` instead of `newdata`?", call. = FALSE)
+      rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
 
     dots <- list(...)
 

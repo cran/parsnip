@@ -40,6 +40,13 @@
 #'
 #' @section Engine Details:
 #'
+#' The standardized parameter names in parsnip can be mapped to their original
+#' names in each engine:
+#'
+#' ```{r echo = FALSE}
+#' convert_args("rand_forest")
+#' ```
+#'
 #' Engines may have pre-set default arguments when executing the
 #'  model fit call. For this type of
 #'  model, the template of the fit calls are::
@@ -87,7 +94,7 @@
 #'  reloaded and reattached to the `parsnip` object.
 #'
 #' @importFrom purrr map_lgl
-#' @seealso [[fit()]
+#' @seealso [fit()]
 #' @examples
 #' rand_forest(mode = "classification", trees = 2000)
 #' # Parameters can be represented by a placeholder:
@@ -193,10 +200,9 @@ translate.rand_forest <- function(x, engine = x$engine, ...) {
 
   if (x$engine == "spark") {
     if (x$mode == "unknown") {
-      stop(
-        "For spark random forests models, the mode cannot be 'unknown' ",
-        "if the specification is to be translated.",
-        call. = FALSE
+      rlang::abort(
+        glue::glue("For spark random forests models, the mode cannot ",
+                   "be 'unknown' if the specification is to be translated.")
       )
     } else {
       arg_vals$type <- x$mode
@@ -215,8 +221,7 @@ translate.rand_forest <- function(x, engine = x$engine, ...) {
   if (engine == "ranger") {
     if (any(names(arg_vals) == "importance"))
       if (isTRUE(is.logical(quo_get_expr(arg_vals$importance))))
-        stop("`importance` should be a character value. See ?ranger::ranger.",
-             call. = FALSE)
+        rlang::abort("`importance` should be a character value. See ?ranger::ranger.")
     # unless otherwise specified, classification models are probability forests
     if (x$mode == "classification" && !any(names(arg_vals) == "probability"))
       arg_vals$probability <- TRUE
