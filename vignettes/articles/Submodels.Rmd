@@ -19,14 +19,15 @@ Some R packages can create predictions from models that are different than the o
 In `parsnip`, there is a method called `multi_predict()` that can do this. It's current methods are:
 
 ```{r methods}
-library(tidymodels)
+library(parsnip)
 methods("multi_predict")
 ```
 
 We'll use the attrition data in `rsample` to illustrate:
 
 ```{r}
-data(attrition, package = "modeldata")
+library(tidymodels)
+data(attrition)
 
 set.seed(4595)
 data_split <- initial_split(attrition, strata = "Attrition")

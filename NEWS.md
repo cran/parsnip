@@ -1,10 +1,18 @@
-# parsnip 0.1.0
+# parsnip 0.1.1
 
- * Release for enabling more `parsnip`-adjacent packages.
- 
- * Stan models no longer generate output when fit. Use the `refresh` option when setting the engine to change this. 
- 
- * Data sets have been moved to the `modeldata` package. 
+## New Features
+
+ * `liquidSVM` was added as an engine for `svm_rbf()` (#300)
+
+## Fixes
+
+* The error message for missing packages was fixed (#289 and #292)
+
+
+## Other Changes
+
+* S3 dispatch for `tidy()` was broken on R 4.0. 
+
 
 # parsnip 0.0.5
 
