@@ -32,7 +32,7 @@ set_model_arg(
   eng = "kernlab",
   parsnip = "margin",
   original = "epsilon",
-  func = list(pkg = "dials", fun = "margin"),
+  func = list(pkg = "dials", fun = "svm_margin"),
   has_submodel = FALSE
 )
 
@@ -41,8 +41,9 @@ set_fit(
   eng = "kernlab",
   mode = "regression",
   value = list(
-    interface = "matrix",
-    protect = c("x", "y"),
+    interface = "formula",
+    data = c(formula = "x", data = "data"),
+    protect = c("x", "data"),
     func = c(pkg = "kernlab", fun = "ksvm"),
     defaults = list(kernel = "rbfdot")
   )
@@ -53,10 +54,22 @@ set_fit(
   eng = "kernlab",
   mode = "classification",
   value = list(
-    interface = "matrix",
-    protect = c("x", "y"),
+    interface = "formula",
+    data = c(formula = "x", data = "data"),
+    protect = c("x", "data"),
     func = c(pkg = "kernlab", fun = "ksvm"),
     defaults = list(kernel = "rbfdot")
+  )
+)
+
+set_encoding(
+  model = "svm_rbf",
+  eng = "kernlab",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 
@@ -88,6 +101,17 @@ set_pred(
     post = NULL,
     func = c(pkg = "kernlab", fun = "predict"),
     args = list(object = quote(object$fit), newdata = quote(new_data))
+  )
+)
+
+set_encoding(
+  model = "svm_rbf",
+  eng = "kernlab",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 
@@ -176,6 +200,18 @@ set_fit(
     )
   )
 )
+
+set_encoding(
+  model = "svm_rbf",
+  eng = "liquidSVM",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
+  )
+)
+
 set_fit(
   model = "svm_rbf",
   eng = "liquidSVM",
@@ -190,6 +226,18 @@ set_fit(
     )
   )
 )
+
+set_encoding(
+  model = "svm_rbf",
+  eng = "liquidSVM",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
+  )
+)
+
 set_pred(
   model = "svm_rbf",
   eng = "liquidSVM",

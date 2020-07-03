@@ -23,9 +23,9 @@
 #'            is the parameter for the tail area of the intervals
 #'            (e.g. confidence level for confidence intervals).
 #'            Default value is 0.95.
-#'     \item `std_error`: add the standard error of fit or
-#'            prediction for `type`s of "conf_int" and "pred_int".
-#'            Default value is `FALSE`.
+#'     \item `std_error`: add the standard error of fit or prediction (on
+#'            the scale of the linear predictors) for `type`s of "conf_int"
+#'            and "pred_int". Default value is `FALSE`.
 #'     \item `quantile`: the quantile(s) for quantile regression
 #'            (not implemented yet)
 #'     \item `time`: the time(s) for hazard probability estimates
@@ -117,6 +117,9 @@ predict.model_fit <- function(object, new_data, type = NULL, opts = list(), ...)
     return(NULL)
   }
 
+  check_installs(object$spec)
+  load_libs(object$spec, quiet = TRUE)
+
   other_args <- c("level", "std_error", "quantile") # "time" for survival probs later
   is_pred_arg <- names(the_dots) %in% other_args
   if (any(!is_pred_arg)) {
@@ -191,7 +194,7 @@ format_num <- function(x) {
       names(x) <- paste0(".pred_", names(x))
     }
   } else {
-    x <- tibble(.pred = x)
+    x <- tibble(.pred = unname(x))
   }
 
   x
@@ -201,7 +204,7 @@ format_class <- function(x) {
   if (inherits(x, "tbl_spark"))
     return(x)
 
-  tibble(.pred_class = x)
+  tibble(.pred_class = unname(x))
 }
 
 format_classprobs <- function(x) {
@@ -209,6 +212,7 @@ format_classprobs <- function(x) {
     names(x) <- paste0(".pred_", names(x))
   }
   x <- as_tibble(x)
+  x <- purrr::map_dfr(x, rlang::set_names, NULL)
   x
 }
 

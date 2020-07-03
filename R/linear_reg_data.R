@@ -19,6 +19,17 @@ set_fit(
   )
 )
 
+set_encoding(
+  model = "linear_reg",
+  eng = "lm",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
+  )
+)
+
 set_pred(
   model = "linear_reg",
   eng = "lm",
@@ -102,6 +113,29 @@ set_pred(
 set_model_engine("linear_reg", "regression", "glmnet")
 set_dependency("linear_reg", "glmnet", "glmnet")
 
+set_fit(
+  model = "linear_reg",
+  eng = "glmnet",
+  mode = "regression",
+  value = list(
+    interface = "matrix",
+    protect = c("x", "y", "weights"),
+    func = c(pkg = "glmnet", fun = "glmnet"),
+    defaults = list(family = "gaussian")
+  )
+)
+
+set_encoding(
+  model = "linear_reg",
+  eng = "glmnet",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
+  )
+)
+
 set_model_arg(
   model = "linear_reg",
   eng = "glmnet",
@@ -118,18 +152,6 @@ set_model_arg(
   original = "alpha",
   func = list(pkg = "dials", fun = "mixture"),
   has_submodel = FALSE
-)
-
-set_fit(
-  model = "linear_reg",
-  eng = "glmnet",
-  mode = "regression",
-  value = list(
-    interface = "matrix",
-    protect = c("x", "y", "weights"),
-    func = c(pkg = "glmnet", fun = "glmnet"),
-    defaults = list(family = "gaussian")
-  )
 )
 
 set_pred(
@@ -180,6 +202,17 @@ set_fit(
     protect = c("formula", "data", "weights"),
     func = c(pkg = "rstanarm", fun = "stan_glm"),
     defaults = list(family = expr(stats::gaussian), refresh = 0)
+  )
+)
+
+set_encoding(
+  model = "linear_reg",
+  eng = "stan",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
   )
 )
 
@@ -287,6 +320,30 @@ set_pred(
 set_model_engine("linear_reg", "regression", "spark")
 set_dependency("linear_reg", "spark", "sparklyr")
 
+set_fit(
+  model = "linear_reg",
+  eng = "spark",
+  mode = "regression",
+  value = list(
+    interface = "formula",
+    data = c(formula = "formula", data = "x"),
+    protect = c("x", "formula", "weight_col"),
+    func = c(pkg = "sparklyr", fun = "ml_linear_regression"),
+    defaults = list()
+  )
+)
+
+set_encoding(
+  model = "linear_reg",
+  eng = "spark",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
+  )
+)
+
 set_model_arg(
   model = "linear_reg",
   eng = "spark",
@@ -303,19 +360,6 @@ set_model_arg(
   original = "elastic_net_param",
   func = list(pkg = "dials", fun = "mixture"),
   has_submodel = FALSE
-)
-
-
-set_fit(
-  model = "linear_reg",
-  eng = "spark",
-  mode = "regression",
-  value = list(
-    interface = "formula",
-    protect = c("x", "formula", "weight_col"),
-    func = c(pkg = "sparklyr", fun = "ml_linear_regression"),
-    defaults = list()
-  )
 )
 
 set_pred(
@@ -342,15 +386,6 @@ set_model_engine("linear_reg", "regression", "keras")
 set_dependency("linear_reg", "keras", "keras")
 set_dependency("linear_reg", "keras", "magrittr")
 
-set_model_arg(
-  model = "linear_reg",
-  eng = "keras",
-  parsnip = "penalty",
-  original = "penalty",
-  func = list(pkg = "dials", fun = "penalty"),
-  has_submodel = FALSE
-)
-
 set_fit(
   model = "linear_reg",
   eng = "keras",
@@ -361,6 +396,26 @@ set_fit(
     func = c(pkg = "parsnip", fun = "keras_mlp"),
     defaults = list(hidden_units = 1, act = "linear")
   )
+)
+
+set_encoding(
+  model = "linear_reg",
+  eng = "keras",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
+  )
+)
+
+set_model_arg(
+  model = "linear_reg",
+  eng = "keras",
+  parsnip = "penalty",
+  original = "penalty",
+  func = list(pkg = "dials", fun = "penalty"),
+  has_submodel = FALSE
 )
 
 set_pred(

@@ -3,6 +3,9 @@ library(parsnip)
 library(rlang)
 library(tibble)
 
+source(test_path("helper-objects.R"))
+hpc <- hpc_data[1:150, c(2:5, 8)]
+
 # ------------------------------------------------------------------------------
 
 test_that('primary arguments', {
@@ -82,7 +85,7 @@ test_that('bad input', {
 
 reg_mod <-
   svm_rbf(rbf_sigma = .1, cost = 0.25) %>%
-  set_engine("liquidSVM", random_seed = 1234, folds = 1) %>%
+  set_engine("liquidSVM", random_seed = 1234, folds = 1, max_gamma=500) %>%
   set_mode("regression")
 
 cls_mod <-
@@ -98,24 +101,28 @@ test_that('svm rbf regression', {
 
   skip_if_not_installed("liquidSVM")
 
-  expect_error(
-    fit_xy(
-      reg_mod,
-      control = ctrl,
-      x = iris[, 2:4],
-      y = iris$Sepal.Length
-    ),
-    regexp = NA
+  expect_warning(
+    expect_error(
+      fit_xy(
+        reg_mod,
+        control = ctrl,
+        x = hpc[, 2:4],
+        y = hpc$compounds
+      ),
+      regexp = NA
+    )
   )
 
-  expect_error(
-    fit(
-      reg_mod,
-      Sepal.Length ~ .,
-      data = iris[, -5],
-      control = ctrl
-    ),
-    regexp = NA
+  expect_warning(
+    expect_error(
+      fit(
+        reg_mod,
+        compounds ~ .,
+        data = hpc[, -5],
+        control = ctrl
+      ),
+      regexp = NA
+    )
   )
 
 })
@@ -125,50 +132,58 @@ test_that('svm rbf regression prediction', {
 
   skip_if_not_installed("liquidSVM")
 
-  reg_form <-
-    fit(
-      object = reg_mod,
-      formula = Sepal.Length ~ .,
-      data = iris[, -5],
-      control = ctrl
-    )
+  expect_warning(
+    reg_form <-
+      fit(
+        object = reg_mod,
+        formula = compounds ~ .,
+        data = hpc[, -5],
+        control = ctrl
+      )
+  )
 
-  reg_xy_form <-
-    fit_xy(
-      object = reg_mod,
-      x = iris[, 2:4],
-      y = iris$Sepal.Length,
-      control = ctrl
-    )
+  expect_warning(
+    reg_xy_form <-
+      fit_xy(
+        object = reg_mod,
+        x = hpc[, 2:4],
+        y = hpc$compounds,
+        control = ctrl
+      )
+  )
   expect_equal(reg_form$spec, reg_xy_form$spec)
 
-  liquidSVM_form <-
-    liquidSVM::svm(
-      x = Sepal.Length ~ .,
-      y = iris[, -5],
-      gammas = .1,
-      lambdas = 0.25,
-      folds = 1,
-      random_seed = 1234
-    )
+  expect_warning(
+    liquidSVM_form <-
+      liquidSVM::svm(
+        x = compounds ~ .,
+        y = hpc[, -5],
+        gammas = .1,
+        lambdas = 0.25,
+        folds = 1,
+        random_seed = 1234
+      )
+  )
 
-  liquidSVM_xy_form <-
-    liquidSVM::svm(
-      x = iris[, 2:4],
-      y = iris$Sepal.Length,
-      gammas = .1,
-      lambdas = 0.25,
-      folds = 1,
-      random_seed = 1234
-    )
+  expect_warning(
+    liquidSVM_xy_form <-
+      liquidSVM::svm(
+        x = hpc[, 2:4],
+        y = hpc$compounds,
+        gammas = .1,
+        lambdas = 0.25,
+        folds = 1,
+        random_seed = 1234
+      )
+  )
 
   # check coeffs for liquidSVM formula and liquidSVM xy fit interfaces
   expect_equal(liquidSVM::getSolution(liquidSVM_form)[c("coeff", "sv")],
                liquidSVM::getSolution(liquidSVM_xy_form)[c("coeff", "sv")])
 
   # check predictions for liquidSVM formula and liquidSVM xy interfaces
-  liquidSVM_form_preds <- predict(liquidSVM_form, iris[1:3, 2:4])
-  liquidSVM_form_xy_preds <- predict(liquidSVM_xy_form, iris[1:3, 2:4])
+  liquidSVM_form_preds <- predict(liquidSVM_form, hpc[1:3, 2:4])
+  liquidSVM_form_xy_preds <- predict(liquidSVM_xy_form, hpc[1:3, 2:4])
   expect_equal(liquidSVM_form_preds, liquidSVM_form_xy_preds)
 
   # check predictions for parsnip formula and liquidSVM formula interfaces
@@ -177,7 +192,7 @@ test_that('svm rbf regression prediction', {
       list(.pred = liquidSVM_form_preds),
       row.names = c(NA, -3L), class = c("tbl_df", "tbl", "data.frame"))
 
-  parsnip_pred <- predict(reg_form, iris[1:3, 2:4])
+  parsnip_pred <- predict(reg_form, hpc[1:3, 2:4])
   expect_equal(as.data.frame(liquidSVM_pred), as.data.frame(parsnip_pred))
 
   # check that coeffs are equal for formula methods called via parsnip and liquidSVM
@@ -189,7 +204,7 @@ test_that('svm rbf regression prediction', {
                liquidSVM::getSolution(reg_xy_form$fit)[c("coeff", "sv")])
 
   # check predictions are equal for parsnip xy and liquidSVM xy methods
-  parsnip_xy_pred <- predict(reg_xy_form, iris[1:3, -c(1, 5)])
+  parsnip_xy_pred <- predict(reg_xy_form, hpc[1:3, -c(1, 5)])
   expect_equal(as.data.frame(liquidSVM_pred), as.data.frame(parsnip_xy_pred))
 })
 

@@ -26,28 +26,28 @@
 #'   column, `..y`.
 #'   }
 #'
-#' For example, if you use the model formula `Sepal.Width ~ .` with the `iris`
-#'  data, the values would be
+#' For example, if you use the model formula `circumference ~ .` with the
+#' built-in `Orange` data, the values would be
 #' \preformatted{
-#'  .preds() =   4          (the 4 columns in `iris`)
-#'  .cols()  =   5          (3 numeric columns + 2 from Species dummy variables)
-#'  .obs()   = 150
+#'  .preds() =   2          (the 2 remaining columns in `Orange`)
+#'  .cols()  =   5          (1 numeric column + 4 from Tree dummy variables)
+#'  .obs()   = 35
 #'  .lvls()  =  NA          (no factor outcome)
-#'  .facts() =   1          (the Species predictor)
-#'  .y()     = <vector>     (Sepal.Width as a vector)
-#'  .x()     = <data.frame> (The other 4 columns as a data frame)
+#'  .facts() =   1          (the Tree predictor)
+#'  .y()     = <vector>     (circumference as a vector)
+#'  .x()     = <data.frame> (The other 2 columns as a data frame)
 #'  .dat()   = <data.frame> (The full data set)
 #' }
 #'
-#' If the formula `Species ~ .` where used:
+#' If the formula `Tree ~ .` were used:
 #' \preformatted{
-#'  .preds() =   4          (the 4 numeric columns in `iris`)
-#'  .cols()  =   4          (same)
-#'  .obs()   = 150
-#'  .lvls()  =  c(setosa = 50, versicolor = 50, virginica = 50)
+#'  .preds() =   2          (the 2 numeric columns in `Orange`)
+#'  .cols()  =   2          (same)
+#'  .obs()   = 35
+#'  .lvls()  =  c("1" = 7, "2" = 7, "3" = 7, "4" = 7, "5" = 7)
 #'  .facts() =   0
-#'  .y()     = <vector>     (Species as a vector)
-#'  .x()     = <data.frame> (The other 4 columns as a data frame)
+#'  .y()     = <vector>     (Tree as a vector)
+#'  .x()     = <data.frame> (The other 2 columns as a data frame)
 #'  .dat()   = <data.frame> (The full data set)
 #' }
 #'
@@ -114,7 +114,11 @@ get_descr_form <- function(formula, data) {
 
 get_descr_df <- function(formula, data) {
 
-  tmp_dat <- convert_form_to_xy_fit(formula, data, indicators = FALSE)
+  tmp_dat <-
+    convert_form_to_xy_fit(formula,
+                           data,
+                           indicators = "none",
+                           remove_intercept = TRUE)
 
   if(is.factor(tmp_dat$y)) {
     .lvls <- function() {
@@ -127,7 +131,14 @@ get_descr_df <- function(formula, data) {
   }
 
   .cols <- function() {
-    ncol(convert_form_to_xy_fit(formula, data, indicators = TRUE)$x)
+    ncol(
+      convert_form_to_xy_fit(
+        formula,
+        data,
+        indicators = "traditional",
+        remove_intercept = TRUE
+      )$x
+    )
   }
 
   .obs <- function() {
@@ -285,7 +296,7 @@ get_descr_xy <- function(x, y) {
   }
 
   .dat <- function() {
-    convert_xy_to_form_fit(x, y)$data
+    convert_xy_to_form_fit(x, y, remove_intercept = TRUE)$data
   }
 
   .x <- function() {

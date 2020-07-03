@@ -86,7 +86,7 @@ call. For this type of model, the template of the fit calls are below.
 ## Computational engine: earth 
 ## 
 ## Model fit template:
-## earth::earth(x = missing_arg(), y = missing_arg(), weights = missing_arg(), 
+## earth::earth(formula = missing_arg(), data = missing_arg(), weights = missing_arg(), 
 ##     keepxy = TRUE)
 }\if{html}{\out{<div class="r">}}\preformatted{mars() \%>\% 
   set_engine("earth") \%>\% 
@@ -100,23 +100,28 @@ call. For this type of model, the template of the fit calls are below.
 ## Computational engine: earth 
 ## 
 ## Model fit template:
-## earth::earth(x = missing_arg(), y = missing_arg(), weights = missing_arg(), 
+## earth::earth(formula = missing_arg(), data = missing_arg(), weights = missing_arg(), 
 ##     glm = list(family = stats::binomial), keepxy = TRUE)
 }
 
 Note that, when the model is fit, the \code{earth} package only has its
 namespace loaded. However, if \code{multi_predict} is used, the package is
 attached.
+
+Also, \code{fit()} passes the data directly to \code{earth::earth()} so that its
+formula method can create dummy variables as-needed.
 }
 
 \subsection{Parameter translations}{
 
 The standardized parameter names in parsnip can be mapped to their
-original names in each engine that has main parameters:\tabular{ll}{
+original names in each engine that has main parameters. Each engine
+typically has a different default value (shown in parentheses) for each
+parameter.\tabular{ll}{
    \strong{parsnip} \tab \strong{earth} \cr
    num_terms \tab nprune \cr
-   prod_degree \tab degree \cr
-   prune_method \tab pmethod \cr
+   prod_degree \tab degree (1) \cr
+   prune_method \tab pmethod (backward) \cr
 }
 
 }

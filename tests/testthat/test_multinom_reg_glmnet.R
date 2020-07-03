@@ -2,11 +2,13 @@ library(testthat)
 library(parsnip)
 library(rlang)
 library(tibble)
+library(dplyr)
 
 # ------------------------------------------------------------------------------
 
 context("multinom regression execution with glmnet")
-source("helper-objects.R")
+source(test_path("helper-objects.R"))
+hpc <- hpc_data[, c(2:5, 8)]
 
 rows <- c(1, 51, 101)
 
@@ -21,8 +23,8 @@ test_that('glmnet execution', {
     res <- fit_xy(
       multinom_reg() %>% set_engine("glmnet"),
       control = ctrl,
-      x = iris[, 1:4],
-      y = iris$Species
+      x = hpc[, 1:4],
+      y = hpc$class
     ),
     regexp = NA
   )
@@ -33,8 +35,8 @@ test_that('glmnet execution', {
   expect_error(
     glmnet_xy_catch <- fit_xy(
       multinom_reg() %>% set_engine("glmnet"),
-      x = iris[, 2:5],
-      y = iris$Sepal.Length,
+      x = hpc[, 2:5],
+      y = hpc$compounds,
       control = caught_ctrl
     )
   )
@@ -49,27 +51,27 @@ test_that('glmnet prediction, one lambda', {
   xy_fit <- fit_xy(
     multinom_reg(penalty = 0.1) %>% set_engine("glmnet"),
     control = ctrl,
-    x = iris[, 1:4],
-    y = iris$Species
+    x = hpc[, 1:4],
+    y = hpc$class
   )
 
   uni_pred <-
     predict(xy_fit$fit,
-            newx = as.matrix(iris[rows, 1:4]),
+            newx = as.matrix(hpc[rows, 1:4]),
             s = xy_fit$spec$args$penalty, type = "class")
-  uni_pred <- factor(uni_pred[,1], levels = levels(iris$Species))
+  uni_pred <- factor(uni_pred[,1], levels = levels(hpc$class))
   uni_pred <- unname(uni_pred)
 
-  expect_equal(uni_pred, predict(xy_fit, iris[rows, 1:4], type = "class")$.pred_class)
+  expect_equal(uni_pred, predict(xy_fit, hpc[rows, 1:4], type = "class")$.pred_class)
 
   res_form <- fit(
     multinom_reg(penalty = 0.1) %>% set_engine("glmnet"),
-    Species ~ log(Sepal.Width) + Petal.Width,
-    data = iris,
+    class ~ log(compounds) + input_fields,
+    data = hpc,
     control = ctrl
   )
 
-  form_mat <- model.matrix(Species ~ log(Sepal.Width) + Petal.Width, data = iris)
+  form_mat <- model.matrix(class ~ log(compounds) + input_fields, data = hpc)
   form_mat <- form_mat[rows, -1]
 
   form_pred <-
@@ -77,9 +79,9 @@ test_that('glmnet prediction, one lambda', {
             newx = form_mat,
             s = res_form$spec$args$penalty,
             type = "class")
-  form_pred <- factor(form_pred[,1], levels = levels(iris$Species))
-  expect_equal(form_pred, parsnip:::predict_class.model_fit(res_form, iris[rows, c("Sepal.Width", "Petal.Width")]))
-  expect_equal(form_pred, predict(res_form, iris[rows, c("Sepal.Width", "Petal.Width")], type = "class")$.pred_class)
+  form_pred <- factor(form_pred[,1], levels = levels(hpc$class))
+  expect_equal(form_pred, parsnip:::predict_class.model_fit(res_form, hpc[rows, c("compounds", "input_fields")]))
+  expect_equal(form_pred, predict(res_form, hpc[rows, c("compounds", "input_fields")], type = "class")$.pred_class)
 
 })
 
@@ -94,16 +96,16 @@ test_that('glmnet probabilities, mulitiple lambda', {
   xy_fit <- fit_xy(
     multinom_reg(penalty = lams) %>% set_engine("glmnet"),
     control = ctrl,
-    x = iris[, 1:4],
-    y = iris$Species
+    x = hpc[, 1:4],
+    y = hpc$class
   )
 
-  expect_error(predict(xy_fit, iris[rows, 1:4], type = "class"))
-  expect_error(predict(xy_fit, iris[rows, 1:4], type = "prob"))
+  expect_error(predict(xy_fit, hpc[rows, 1:4], type = "class"))
+  expect_error(predict(xy_fit, hpc[rows, 1:4], type = "prob"))
 
   mult_pred <-
     predict(xy_fit$fit,
-            newx = as.matrix(iris[rows, 1:4]),
+            newx = as.matrix(hpc[rows, 1:4]),
             s = lams, type = "response")
   mult_pred <- apply(mult_pred, 3, as_tibble)
   mult_pred <- dplyr:::bind_rows(mult_pred)
@@ -116,10 +118,14 @@ test_that('glmnet probabilities, mulitiple lambda', {
   names(mult_pred) <- NULL
   mult_pred <- tibble(.pred = mult_pred)
 
-  expect_equal(
-    mult_pred$.pred,
-    multi_predict(xy_fit, iris[rows, 1:4], penalty = lams, type = "prob")$.pred
-  )
+  multi_pred_res <- multi_predict(xy_fit, hpc[rows, 1:4], penalty = lams, type = "prob")
+
+  for (i in seq_along(multi_pred_res$.pred)) {
+    expect_equal(
+      mult_pred      %>% dplyr::slice(i) %>% pull(.pred) %>% purrr::pluck(1) %>% dplyr::select(starts_with(".pred")),
+      multi_pred_res %>% dplyr::slice(i) %>% pull(.pred) %>% purrr::pluck(1) %>% dplyr::select(starts_with(".pred"))
+    )
+  }
 
   mult_class <- factor(names(mult_probs)[apply(mult_probs, 1, which.max)],
                        levels = xy_fit$lvl)
@@ -133,19 +139,23 @@ test_that('glmnet probabilities, mulitiple lambda', {
   names(mult_class) <- NULL
   mult_class <- tibble(.pred = mult_class)
 
-  expect_equal(
-    mult_class$.pred,
-    multi_predict(xy_fit, iris[rows, 1:4], penalty = lams)$.pred
-  )
+  mult_class_res <- multi_predict(xy_fit, hpc[rows, 1:4], penalty = lams)
+
+  for (i in seq_along(mult_class_res$.pred)) {
+    expect_equal(
+      mult_class     %>% slice(i) %>% pull(.pred) %>% purrr::pluck(1) %>% dplyr::select(starts_with(".pred")),
+      mult_class_res %>% slice(i) %>% pull(.pred) %>% purrr::pluck(1) %>% dplyr::select(starts_with(".pred"))
+    )
+  }
 
   expect_error(
-    multi_predict(xy_fit, newdata = iris[rows, 1:4], penalty = lams),
+    multi_predict(xy_fit, newdata = hpc[rows, 1:4], penalty = lams),
     "Did you mean"
   )
 
   # Can predict probs with default penalty. See #108
   expect_error(
-    multi_predict(xy_fit, new_data = iris[rows, 1:4], type = "prob"),
+    multi_predict(xy_fit, new_data = hpc[rows, 1:4], type = "prob"),
     NA
   )
 
@@ -155,10 +165,10 @@ test_that("class predictions are factors with all levels", {
   skip_if_not_installed("glmnet")
   skip_if(run_glmnet)
 
-  basic <- multinom_reg() %>% set_engine("glmnet") %>% fit(Species ~ ., data = iris)
-  nd <- iris[iris$Species == "setosa", ]
+  basic <- multinom_reg() %>% set_engine("glmnet") %>% fit(class ~ ., data = hpc)
+  nd <- hpc[hpc$class == "VF", ]
   yhat <- predict(basic, new_data = nd, penalty = .1)
   yhat_multi <- multi_predict(basic, new_data =  nd, penalty = .1)$.pred
   expect_is(yhat_multi[[1]]$.pred_class, "factor")
-  expect_equal(levels(yhat_multi[[1]]$.pred_class), levels(iris$Species))
+  expect_equal(levels(yhat_multi[[1]]$.pred_class), levels(hpc$class))
 })

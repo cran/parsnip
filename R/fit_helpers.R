@@ -30,21 +30,7 @@ form_form <-
     # sub in arguments to actual syntax for corresponding engine
     object <- translate(object, engine = object$engine)
 
-    fit_args <- object$method$fit$args
-
-    if (is_spark(object)) {
-      fit_args$x <- quote(x)
-      env$x <- env$data
-    } else {
-      fit_args$data <- quote(data)
-    }
-    fit_args$formula <- quote(formula)
-
-    fit_call <- make_call(
-      fun = object$method$fit$func["fun"],
-      ns = object$method$fit$func["pkg"],
-      fit_args
-    )
+    fit_call <- make_form_call(object, env = env)
 
     res <- list(
       lvl = y_levels,
@@ -89,21 +75,7 @@ xy_xy <- function(object, env, control, target = "none", ...) {
   # sub in arguments to actual syntax for corresponding engine
   object <- translate(object, engine = object$engine)
 
-  object$method$fit$args[["y"]] <- quote(y)
-  object$method$fit$args[["x"]] <-
-    switch(
-      target,
-      none = quote(x),
-      data.frame = quote(as.data.frame(x)),
-      matrix = quote(as.matrix(x)),
-      rlang::abort(glue::glue("Invalid data type target: {target}."))
-    )
-
-  fit_call <- make_call(
-    fun = object$method$fit$func["fun"],
-    ns = object$method$fit$func["pkg"],
-    object$method$fit$args
-  )
+  fit_call <- make_xy_call(object, target)
 
   res <- list(lvl = levels(env$y), spec = object)
 
@@ -131,12 +103,20 @@ xy_xy <- function(object, env, control, target = "none", ...) {
 form_xy <- function(object, control, env,
                     target = "none", ...) {
 
+  encoding_info <-
+    get_encoding(class(object)[1]) %>%
+    dplyr::filter(mode == object$mode, engine == object$engine)
+
+  indicators <- encoding_info %>% dplyr::pull(predictor_indicators)
+  remove_intercept <- encoding_info %>% dplyr::pull(remove_intercept)
+
   data_obj <- convert_form_to_xy_fit(
     formula = env$formula,
     data = env$data,
     ...,
-    composition = target
-    # indicators
+    composition = target,
+    indicators = indicators,
+    remove_intercept = remove_intercept
   )
   env$x <- data_obj$x
   env$y <- data_obj$y
@@ -169,12 +149,19 @@ xy_form <- function(object, env, control, ...) {
       rlang::abort("For classification models, the outcome should be a factor.")
   }
 
+  encoding_info <-
+    get_encoding(class(object)[1]) %>%
+    dplyr::filter(mode == object$mode, engine == object$engine)
+
+  remove_intercept <- encoding_info %>% dplyr::pull(remove_intercept)
+
   data_obj <-
     convert_xy_to_form_fit(
       x = env$x,
       y = env$y,
       weights = NULL,
-      y_name = "..y"
+      y_name = "..y",
+      remove_intercept = remove_intercept
     )
   env$formula <- data_obj$formula
   env$data <- data_obj$data

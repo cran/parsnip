@@ -82,7 +82,7 @@ call. For this type of model, the template of the fit calls are below:
 ## Computational engine: kernlab 
 ## 
 ## Model fit template:
-## kernlab::ksvm(x = missing_arg(), y = missing_arg(), kernel = "rbfdot")
+## kernlab::ksvm(x = missing_arg(), data = missing_arg(), kernel = "rbfdot")
 }\if{html}{\out{<div class="r">}}\preformatted{svm_rbf() \%>\% 
   set_engine("kernlab") \%>\% 
   set_mode("classification") \%>\% 
@@ -92,9 +92,12 @@ call. For this type of model, the template of the fit calls are below:
 ## Computational engine: kernlab 
 ## 
 ## Model fit template:
-## kernlab::ksvm(x = missing_arg(), y = missing_arg(), kernel = "rbfdot", 
+## kernlab::ksvm(x = missing_arg(), data = missing_arg(), kernel = "rbfdot", 
 ##     prob.model = TRUE)
 }
+
+\code{fit()} passes the data directly to \code{kernlab::ksvm()} so that its
+formula method can create dummy variables as-needed.
 }
 
 \subsection{liquidSVM}{\if{html}{\out{<div class="r">}}\preformatted{svm_rbf() \%>\% 
@@ -132,16 +135,21 @@ function.
 \code{kernlab}. To translate between engines, \code{sigma = 1/gammas^2}. Users
 will be specifying \code{sigma} and the function translates the value to
 \code{gamma}.
+
+\code{fit()} passes the data directly to \code{liquidSVM::svm()} so that its
+formula method can create dummy variables as-needed.
 }
 
 \subsection{Parameter translations}{
 
 The standardized parameter names in parsnip can be mapped to their
-original names in each engine that has main parameters:\tabular{lll}{
+original names in each engine that has main parameters. Each engine
+typically has a different default value (shown in parentheses) for each
+parameter.\tabular{lll}{
    \strong{parsnip} \tab \strong{kernlab} \tab \strong{liquidSVM} \cr
-   cost \tab C \tab lambdas \cr
-   rbf_sigma \tab sigma \tab gammas \cr
-   margin \tab epsilon \tab NA \cr
+   cost \tab C (1) \tab lambdas (varies) \cr
+   rbf_sigma \tab sigma (varies) \tab gammas (varies) \cr
+   margin \tab epsilon (0.1) \tab NA \cr
 }
 
 }

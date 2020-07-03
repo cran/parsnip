@@ -47,6 +47,17 @@ set_fit(
   )
 )
 
+set_encoding(
+  model = "nearest_neighbor",
+  eng = "kknn",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
+  )
+)
+
 set_fit(
   model = "nearest_neighbor",
   eng = "kknn",
@@ -56,6 +67,17 @@ set_fit(
     protect = c("formula", "data"),
     func = c(pkg = "kknn", fun = "train.kknn"),
     defaults = list()
+  )
+)
+
+set_encoding(
+  model = "nearest_neighbor",
+  eng = "kknn",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
   )
 )
 

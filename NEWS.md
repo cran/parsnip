@@ -1,3 +1,33 @@
+# parsnip 0.1.2
+
+## Breaking Changes
+
+ * `parsnip` now has options to set specific types of predictor encodings for different models. For example, `ranger` models run using `parsnip` and `workflows` do the same thing by _not_ creating indicator variables. These encodings can be overridden using the `blueprint` options in `workflows`. As a consequence, it is possible to get a different model fit that previous versions of `parsnip`. More details about specific encoding changes are below. (#326)
+
+## Other Changes
+
+ * `tidyr` >= 1.0.0 is now required. 
+ 
+ * SVM models produced by `kernlab` now use the formula method (see breaking change notice above). This change was due to how `ksvm()` made indicator variables for factor predictors (with one-hot encodings). Since the ordinary formula method did not do this, the data are passed as-is to `ksvm()` so that the results are closer to what one would get if `ksmv()` were called directly. 
+ 
+ * MARS models produced by `earth` now use the formula method. 
+ 
+ * For `xgboost`, a one-hot encoding is used when indicator variables are created. 
+ 
+ * Under-the-hood changes were made so that non-standard data arguments in the modeling packages can be accommodated. (#315)
+ 
+## New Features
+
+ * A new main argument was added to `boost_tree()` called `stop_iter` for early stopping. The `xgb_train()` function gained arguments for early stopping and a percentage of data to leave out for a validation set. 
+ 
+ * If `fit()` is used and the underlying model uses a formula, the _actual_ formula is pass to the model (instead of a placeholder). This makes the model call better. 
+ 
+ * A function named `repair_call()` was added. This can help change the underlying models `call` object to better reflect what they would have obtained if the model function had been used directly (instead of via `parsnip`). This is only useful when the user chooses a formula interface and the model uses a formula interface. It will also be of limited use when a recipes is used to construct the feature set in `workflows` or `tune`. 
+ 
+ * The `predict()` function now checks to see if required modeling packages are installed. The packages are loaded (but not attached). (#249) (#308) (tidymodels/workflows#45)
+ 
+ * The function `req_pkgs()` is a user interface to determining the required packages.  (#308)
+ 
 # parsnip 0.1.1
 
 ## New Features

@@ -37,6 +37,16 @@ set_fit(
   )
 )
 
+set_encoding(
+  model = "multinom_reg",
+  eng = "glmnet",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
+  )
+)
 
 set_pred(
   model = "multinom_reg",
@@ -122,9 +132,21 @@ set_fit(
   mode = "classification",
   value = list(
     interface = "formula",
+    data = c(formula = "formula", data = "x"),
     protect = c("x", "formula", "weight_col"),
     func = c(pkg = "sparklyr", fun = "ml_logistic_regression"),
     defaults = list(family = "multinomial")
+  )
+)
+
+set_encoding(
+  model = "multinom_reg",
+  eng = "spark",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
   )
 )
 
@@ -191,6 +213,17 @@ set_fit(
   )
 )
 
+set_encoding(
+  model = "multinom_reg",
+  eng = "keras",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
+  )
+)
+
 set_pred(
   model = "multinom_reg",
   eng = "keras",
@@ -254,6 +287,16 @@ set_fit(
   )
 )
 
+set_encoding(
+  model = "multinom_reg",
+  eng = "nnet",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE
+  )
+)
 
 set_pred(
   model = "multinom_reg",

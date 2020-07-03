@@ -5,8 +5,9 @@ library(rlang)
 # ------------------------------------------------------------------------------
 
 context("mars tests")
-source("helpers.R")
-source("helper-objects.R")
+source(test_path("helpers.R"))
+source(test_path("helper-objects.R"))
+hpc <- hpc_data[1:150, c(2:5, 8)]
 
 # ------------------------------------------------------------------------------
 
@@ -15,8 +16,8 @@ test_that('primary arguments', {
   basic_mars <- translate(basic %>% set_engine("earth"))
   expect_equal(basic_mars$method$fit$args,
                list(
-                 x = expr(missing_arg()),
-                 y = expr(missing_arg()),
+                 formula = expr(missing_arg()),
+                 data = expr(missing_arg()),
                  weights = expr(missing_arg()),
                  keepxy = TRUE
                )
@@ -26,8 +27,8 @@ test_that('primary arguments', {
   num_terms_mars <- translate(num_terms %>% set_engine("earth"))
   expect_equal(num_terms_mars$method$fit$args,
                list(
-                 x = expr(missing_arg()),
-                 y = expr(missing_arg()),
+                 formula = expr(missing_arg()),
+                 data = expr(missing_arg()),
                  weights = expr(missing_arg()),
                  nprune = new_empty_quosure(4),
                  glm = rlang::quo(list(family = stats::binomial)),
@@ -39,8 +40,8 @@ test_that('primary arguments', {
   prod_degree_mars <- translate(prod_degree %>% set_engine("earth"))
   expect_equal(prod_degree_mars$method$fit$args,
                list(
-                 x = expr(missing_arg()),
-                 y = expr(missing_arg()),
+                 formula = expr(missing_arg()),
+                 data = expr(missing_arg()),
                  weights = expr(missing_arg()),
                  degree = new_empty_quosure(1),
                  keepxy = TRUE
@@ -51,8 +52,8 @@ test_that('primary arguments', {
   prune_method_v_mars <- translate(prune_method_v %>% set_engine("earth"))
   expect_equal(prune_method_v_mars$method$fit$args,
                list(
-                 x = expr(missing_arg()),
-                 y = expr(missing_arg()),
+                 formula = expr(missing_arg()),
+                 data = expr(missing_arg()),
                  weights = expr(missing_arg()),
                  pmethod = new_empty_quosure(varying()),
                  keepxy = TRUE
@@ -64,8 +65,8 @@ test_that('engine arguments', {
   mars_keep <- mars(mode = "regression")
   expect_equal(translate(mars_keep %>% set_engine("earth", keepxy = FALSE))$method$fit$args,
                list(
-                 x = expr(missing_arg()),
-                 y = expr(missing_arg()),
+                 formula = expr(missing_arg()),
+                 data = expr(missing_arg()),
                  weights = expr(missing_arg()),
                  keepxy = new_empty_quosure(FALSE)
                )
@@ -107,23 +108,16 @@ test_that('updating', {
 })
 
 test_that('bad input', {
-  # expect_error(mars(prod_degree = -1))
-  # expect_error(mars(num_terms = -1))
   expect_error(translate(mars() %>% set_engine("wat?")))
   expect_error(translate(mars(mode = "regression") %>% set_engine()))
   expect_error(translate(mars(formula = y ~ x)))
-  expect_warning(
-    translate(
-      mars(mode = "regression") %>% set_engine("earth", x = iris[,1:3], y = iris$Species)
-      )
-  )
 })
 
 # ------------------------------------------------------------------------------
 
-num_pred <- c("Sepal.Width", "Petal.Width", "Petal.Length")
-iris_bad_form <- as.formula(Species ~ term)
-iris_basic <- mars(mode = "regression") %>% set_engine("earth")
+num_pred <- colnames(hpc)[1:3]
+hpc_bad_form <- as.formula(class ~ term)
+hpc_basic <- mars(mode = "regression") %>% set_engine("earth")
 
 # ------------------------------------------------------------------------------
 
@@ -132,9 +126,9 @@ test_that('mars execution', {
 
   expect_error(
     res <- fit(
-      iris_basic,
-      Sepal.Length ~ log(Sepal.Width) + Species,
-      data = iris,
+      hpc_basic,
+      compounds ~ log(input_fields) + class,
+      data = hpc,
       control = ctrl
     ),
     regexp = NA
@@ -143,9 +137,9 @@ test_that('mars execution', {
 
   expect_error(
     res <- fit_xy(
-      iris_basic,
-      x = iris[, num_pred],
-      y = iris$Sepal.Length,
+      hpc_basic,
+      x = hpc[, num_pred],
+      y = hpc$num_pending,
       control = ctrl
     ),
     regexp = NA
@@ -154,22 +148,25 @@ test_that('mars execution', {
   expect_true(has_multi_predict(res))
   expect_equal(multi_predict_args(res), "num_terms")
 
-  expect_error(
-    res <- fit(
-      iris_basic,
-      iris_bad_form,
-      data = iris,
-      control = ctrl
-    )
+  expect_message(
+    expect_error(
+      res <- fit(
+        hpc_basic,
+        hpc_bad_form,
+        data = hpc,
+        control = ctrl
+      )
+    ),
+    "Timing stopped"
   )
 
   ## multivariate y
 
   expect_error(
     res <- fit(
-      iris_basic,
-      cbind(Sepal.Width, Petal.Width) ~ .,
-      data = iris,
+      hpc_basic,
+      cbind(compounds, input_fields) ~ .,
+      data = hpc,
       control = ctrl
     ),
     regexp = NA
@@ -177,9 +174,9 @@ test_that('mars execution', {
 
   expect_error(
     res <- fit_xy(
-      iris_basic,
-      x = iris[, 1:2],
-      y = iris[3:4],
+      hpc_basic,
+      x = hpc[, 1:2],
+      y = hpc[3:4],
       control = ctrl
     ),
     regexp = NA
@@ -191,44 +188,48 @@ test_that('mars execution', {
 test_that('mars prediction', {
   skip_if_not_installed("earth")
 
-  uni_pred <- c(5.02371514510488, 4.70502120747471, 4.78973285129011, 4.81152592623742,
-                5.08745393263092)
-  inl_pred <- c(5.07584328502019, 4.64927636051174, 4.82786784324037, 4.74001260567429,
-                5.15379794835255)
+  uni_pred <- c(30.1466666666667, 30.1466666666667, 30.1466666666667,
+                30.1466666666667, 30.1466666666667)
+  inl_pred <- c(538.268789262046, 141.024903718634, 141.024903718634,
+                141.024903718634, 141.024903718634)
   mv_pred <-
     structure(
-      list(Sepal.Width =
-             c(3.4874092243636, 3.34173526636919, 3.17647644756747, 3.14280919018489, 3.41457224536639),
-           Petal.Width =
-             c(0.237414046784062, 0.221455118452782, 0.18348960240454, 0.219523313672823, 0.229434582618422
-             )), class = "data.frame", row.names = c(NA, -5L))
+      list(compounds =
+             c(371.334864384913, 129.475162245595, 256.094366313268,
+               129.475162245595, 129.475162245595),
+           input_fields =
+             c(430.476046435458, 158.833790342308, 218.07635084308,
+               158.833790342308, 158.833790342308)
+           ),
+      class = "data.frame", row.names = c(NA, -5L)
+    )
 
   res_xy <- fit_xy(
-    iris_basic,
-    x = iris[, num_pred],
-    y = iris$Sepal.Length,
+    hpc_basic,
+    x = hpc[, num_pred],
+    y = hpc$num_pending,
     control = ctrl
   )
 
-  expect_equal(uni_pred, predict(res_xy, iris[1:5, num_pred])$.pred)
+  expect_equal(uni_pred, predict(res_xy, hpc[1:5, num_pred])$.pred)
 
   res_form <- fit(
-    iris_basic,
-    Sepal.Length ~ log(Sepal.Width) + Species,
-    data = iris,
+    hpc_basic,
+    compounds ~ log(input_fields) + class,
+    data = hpc,
     control = ctrl
   )
-  expect_equal(inl_pred, predict(res_form, iris[1:5, ])$.pred)
+  expect_equal(inl_pred, predict(res_form, hpc[1:5, ])$.pred)
 
   res_mv <- fit(
-    iris_basic,
-    cbind(Sepal.Width, Petal.Width) ~ .,
-    data = iris,
+    hpc_basic,
+    cbind(compounds, input_fields) ~ .,
+    data = hpc,
     control = ctrl
   )
   expect_equal(
     setNames(mv_pred, paste0(".pred_", names(mv_pred))) %>% as.data.frame(),
-    predict(res_mv, iris[1:5,]) %>% as.data.frame()
+    predict(res_mv, hpc[1:5,]) %>% as.data.frame()
   )
 })
 
@@ -259,12 +260,13 @@ test_that('submodel prediction', {
   mp_res <- do.call("rbind", mp_res$.pred)
   expect_equal(mp_res[[".pred"]], pruned_reg_pred)
 
+  full_churn <- wa_churn[complete.cases(wa_churn), ]
   vars <- c("female", "tenure", "total_charges", "phone_service", "monthly_charges")
   class_fit <-
     mars(mode = "classification", prune_method = "none")  %>%
     set_engine("earth", keepxy = TRUE) %>%
     fit(churn ~ .,
-        data = wa_churn[-(1:4), c("churn", vars)])
+        data = full_churn[-(1:4), c("churn", vars)])
 
   cls_fit <- class_fit$fit
   cls_fit$call[["pmethod"]] <- eval_tidy(cls_fit$call[["pmethod"]])
@@ -272,9 +274,9 @@ test_that('submodel prediction', {
   cls_fit$call[["glm"]]  <- eval_tidy(cls_fit$call[["glm"]])
 
   pruned_cls <- update(cls_fit, nprune = 5)
-  pruned_cls_pred <- predict(pruned_cls, wa_churn[1:4, vars], type = "response")[,1]
+  pruned_cls_pred <- predict(pruned_cls, full_churn[1:4, vars], type = "response")[,1]
 
-  mp_res <- multi_predict(class_fit, new_data = wa_churn[1:4, vars], num_terms = 5, type = "prob")
+  mp_res <- multi_predict(class_fit, new_data = full_churn[1:4, vars], num_terms = 5, type = "prob")
   mp_res <- do.call("rbind", mp_res$.pred)
   expect_equal(mp_res[[".pred_No"]], pruned_cls_pred)
 

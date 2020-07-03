@@ -4,11 +4,12 @@ library(parsnip)
 # ------------------------------------------------------------------------------
 
 context("boosted tree execution with xgboost")
-source("helper-objects.R")
+source(test_path("helper-objects.R"))
+hpc <- hpc_data[1:150, c(2:5, 8)]
 
-num_pred <- names(iris)[1:4]
+num_pred <- names(hpc)[1:4]
 
-iris_xgboost <-
+hpc_xgboost <-
   boost_tree(trees = 2, mode = "classification") %>%
   set_engine("xgboost")
 
@@ -20,18 +21,18 @@ test_that('xgboost execution, classification', {
 
   expect_error(
     res <- parsnip::fit(
-      iris_xgboost,
-      Species ~ Sepal.Width + Sepal.Length,
-      data = iris,
+      hpc_xgboost,
+      class ~ compounds + input_fields,
+      data = hpc,
       control = ctrl
     ),
     regexp = NA
   )
   expect_error(
     res <- parsnip::fit_xy(
-      iris_xgboost,
-      x = iris[, num_pred],
-      y = iris$Species,
+      hpc_xgboost,
+      x = hpc[, num_pred],
+      y = hpc$class,
       control = ctrl
     ),
     regexp = NA
@@ -42,9 +43,9 @@ test_that('xgboost execution, classification', {
 
   expect_error(
     res <- parsnip::fit(
-      iris_xgboost,
-      Species ~ novar,
-      data = iris,
+      hpc_xgboost,
+      class ~ novar,
+      data = hpc,
       control = ctrl
     )
   )
@@ -57,28 +58,28 @@ test_that('xgboost classification prediction', {
 
   library(xgboost)
   xy_fit <- fit_xy(
-    iris_xgboost,
-    x = iris[, num_pred],
-    y = iris$Species,
+    hpc_xgboost,
+    x = hpc[, num_pred],
+    y = hpc$class,
     control = ctrl
   )
 
-  xy_pred <- predict(xy_fit$fit, newdata = xgb.DMatrix(data = as.matrix(iris[1:8, num_pred])), type = "class")
-  xy_pred <- matrix(xy_pred, ncol = 3, byrow = TRUE)
-  xy_pred <- factor(levels(iris$Species)[apply(xy_pred, 1, which.max)], levels = levels(iris$Species))
-  expect_equal(xy_pred, predict(xy_fit, new_data = iris[1:8, num_pred], type = "class")$.pred_class)
+  xy_pred <- predict(xy_fit$fit, newdata = xgb.DMatrix(data = as.matrix(hpc[1:8, num_pred])), type = "class")
+  xy_pred <- matrix(xy_pred, ncol = 4, byrow = TRUE)
+  xy_pred <- factor(levels(hpc$class)[apply(xy_pred, 1, which.max)], levels = levels(hpc$class))
+  expect_equal(xy_pred, predict(xy_fit, new_data = hpc[1:8, num_pred], type = "class")$.pred_class)
 
   form_fit <- fit(
-    iris_xgboost,
-    Species ~ .,
-    data = iris,
+    hpc_xgboost,
+    class ~ .,
+    data = hpc,
     control = ctrl
   )
 
-  form_pred <- predict(form_fit$fit, newdata = xgb.DMatrix(data = as.matrix(iris[1:8, num_pred])), type = "class")
-  form_pred <- matrix(form_pred, ncol = 3, byrow = TRUE)
-  form_pred <- factor(levels(iris$Species)[apply(form_pred, 1, which.max)], levels = levels(iris$Species))
-  expect_equal(form_pred, predict(form_fit, new_data = iris[1:8, num_pred], type = "class")$.pred_class)
+  form_pred <- predict(form_fit$fit, newdata = xgb.DMatrix(data = as.matrix(hpc[1:8, num_pred])), type = "class")
+  form_pred <- matrix(form_pred, ncol = 4, byrow = TRUE)
+  form_pred <- factor(levels(hpc$class)[apply(form_pred, 1, which.max)], levels = levels(hpc$class))
+  expect_equal(form_pred, predict(form_fit, new_data = hpc[1:8, num_pred], type = "class")$.pred_class)
 })
 
 
@@ -201,3 +202,87 @@ test_that('default engine', {
   expect_true(inherits(fit$fit, "xgb.Booster"))
 })
 
+# ------------------------------------------------------------------------------
+
+test_that('validation sets', {
+  skip_if_not_installed("xgboost")
+  expect_error(
+    reg_fit <-
+      boost_tree(trees = 20, mode = "regression") %>%
+      set_engine("xgboost", validation = .1) %>%
+      fit(mpg ~ ., data = mtcars[-(1:4), ]),
+    regex = NA
+  )
+
+  expect_equal(colnames(reg_fit$fit$evaluation_log)[2], "validation_rmse")
+
+  expect_error(
+    reg_fit <-
+      boost_tree(trees = 20, mode = "regression") %>%
+      set_engine("xgboost", validation = .1, eval_metric = "mae") %>%
+      fit(mpg ~ ., data = mtcars[-(1:4), ]),
+    regex = NA
+  )
+
+  expect_equal(colnames(reg_fit$fit$evaluation_log)[2], "validation_mae")
+
+  expect_error(
+    reg_fit <-
+      boost_tree(trees = 20, mode = "regression") %>%
+      set_engine("xgboost", eval_metric = "mae") %>%
+      fit(mpg ~ ., data = mtcars[-(1:4), ]),
+    regex = NA
+  )
+
+  expect_equal(colnames(reg_fit$fit$evaluation_log)[2], "training_mae")
+
+  expect_error(
+    reg_fit <-
+      boost_tree(trees = 20, mode = "regression") %>%
+      set_engine("xgboost", validation = 3) %>%
+      fit(mpg ~ ., data = mtcars[-(1:4), ]),
+    regex = "`validation` should be on"
+  )
+
+})
+
+
+# ------------------------------------------------------------------------------
+
+test_that('early stopping', {
+  skip_if_not_installed("xgboost")
+  set.seed(233456)
+  expect_error(
+    reg_fit <-
+      boost_tree(trees = 200, stop_iter = 5, mode = "regression") %>%
+      set_engine("xgboost", validation = .1) %>%
+      fit(mpg ~ ., data = mtcars[-(1:4), ]),
+    regex = NA
+  )
+
+  expect_equal(reg_fit$fit$niter - reg_fit$fit$best_iteration, 5)
+  expect_true(reg_fit$fit$niter < 200)
+
+  expect_error(
+    reg_fit <-
+      boost_tree(trees = 20, mode = "regression") %>%
+      set_engine("xgboost", validation = .1, eval_metric = "mae") %>%
+      fit(mpg ~ ., data = mtcars[-(1:4), ]),
+    regex = NA
+  )
+
+ expect_warning(
+    reg_fit <-
+      boost_tree(trees = 20, stop_iter = 30, mode = "regression") %>%
+      set_engine("xgboost", validation = .1) %>%
+      fit(mpg ~ ., data = mtcars[-(1:4), ]),
+    regex = "`early_stop` was reduced to 19"
+  )
+ expect_error(
+   reg_fit <-
+     boost_tree(trees = 20, stop_iter = 0, mode = "regression") %>%
+     set_engine("xgboost", validation = .1) %>%
+     fit(mpg ~ ., data = mtcars[-(1:4), ]),
+   regex = "`early_stop` should be on"
+ )
+})

@@ -65,6 +65,15 @@ set_model_arg(
   func = list(pkg = "dials", fun = "sample_size"),
   has_submodel = FALSE
 )
+set_model_arg(
+  model = "boost_tree",
+  eng = "xgboost",
+  parsnip = "stop_iter",
+  original = "early_stop",
+  func = list(pkg = "dials", fun = "stop_iter"),
+  has_submodel = FALSE
+)
+
 
 set_fit(
   model = "boost_tree",
@@ -75,6 +84,17 @@ set_fit(
     protect = c("x", "y"),
     func = c(pkg = "parsnip", fun = "xgb_train"),
     defaults = list(nthread = 1, verbose = 0)
+  )
+)
+
+set_encoding(
+  model = "boost_tree",
+  eng = "xgboost",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "one_hot",
+    compute_intercept = FALSE,
+    remove_intercept = TRUE
   )
 )
 
@@ -113,6 +133,17 @@ set_fit(
     protect = c("x", "y"),
     func = c(pkg = "parsnip", fun = "xgb_train"),
     defaults = list(nthread = 1, verbose = 0)
+  )
+)
+
+set_encoding(
+  model = "boost_tree",
+  eng = "xgboost",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "one_hot",
+    compute_intercept = FALSE,
+    remove_intercept = TRUE
   )
 )
 
@@ -212,6 +243,17 @@ set_fit(
   )
 )
 
+set_encoding(
+  model = "boost_tree",
+  eng = "C5.0",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
+  )
+)
+
 set_pred(
   model = "boost_tree",
   eng = "C5.0",
@@ -308,8 +350,8 @@ set_model_arg(
 set_model_arg(
   model = "boost_tree",
   eng = "spark",
-  parsnip = "min_info_gain",
-  original = "loss_reduction",
+  parsnip = "loss_reduction",
+  original = "min_info_gain",
   func = list(pkg = "dials", fun = "loss_reduction"),
   has_submodel = FALSE
 )
@@ -328,9 +370,21 @@ set_fit(
   mode = "regression",
   value = list(
     interface = "formula",
+    data = c(formula = "formula", data = "x"),
     protect = c("x", "formula", "type"),
     func = c(pkg = "sparklyr", fun = "ml_gradient_boosted_trees"),
     defaults = list(seed = expr(sample.int(10 ^ 5, 1)))
+  )
+)
+
+set_encoding(
+  model = "boost_tree",
+  eng = "spark",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 
@@ -340,9 +394,21 @@ set_fit(
   mode = "classification",
   value = list(
     interface = "formula",
+    data = c(formula = "formula", data = "x"),
     protect = c("x", "formula", "type"),
     func = c(pkg = "sparklyr", fun = "ml_gradient_boosted_trees"),
     defaults = list(seed = expr(sample.int(10 ^ 5, 1)))
+  )
+)
+
+set_encoding(
+  model = "boost_tree",
+  eng = "spark",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 

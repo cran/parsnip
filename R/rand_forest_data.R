@@ -132,6 +132,17 @@ set_fit(
   )
 )
 
+set_encoding(
+  model = "rand_forest",
+  eng = "ranger",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
+  )
+)
+
 set_fit(
   model = "rand_forest",
   eng = "ranger",
@@ -146,6 +157,17 @@ set_fit(
         verbose = FALSE,
         seed = expr(sample.int(10 ^ 5, 1))
       )
+  )
+)
+
+set_encoding(
+  model = "rand_forest",
+  eng = "ranger",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 
@@ -338,6 +360,17 @@ set_fit(
   )
 )
 
+set_encoding(
+  model = "rand_forest",
+  eng = "randomForest",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
+  )
+)
+
 set_fit(
   model = "rand_forest",
   eng = "randomForest",
@@ -348,6 +381,17 @@ set_fit(
     func = c(pkg = "randomForest", fun = "randomForest"),
     defaults =
       list()
+  )
+)
+
+set_encoding(
+  model = "rand_forest",
+  eng = "randomForest",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 
@@ -468,9 +512,21 @@ set_fit(
   mode = "classification",
   value = list(
     interface = "formula",
+    data = c(formula = "formula", data = "x"),
     protect = c("x", "formula", "type"),
     func = c(pkg = "sparklyr", fun = "ml_random_forest"),
     defaults = list(seed = expr(sample.int(10 ^ 5, 1)))
+  )
+)
+
+set_encoding(
+  model = "rand_forest",
+  eng = "spark",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 
@@ -480,9 +536,21 @@ set_fit(
   mode = "regression",
   value = list(
     interface = "formula",
+    data = c(formula = "formula", data = "x"),
     protect = c("x", "formula", "type"),
     func = c(pkg = "sparklyr", fun = "ml_random_forest"),
     defaults = list(seed = expr(sample.int(10 ^ 5, 1)))
+  )
+)
+
+set_encoding(
+  model = "rand_forest",
+  eng = "spark",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 

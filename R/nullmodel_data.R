@@ -21,6 +21,17 @@ set_fit(
   )
 )
 
+set_encoding(
+  model = "null_model",
+  eng = "parsnip",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
+  )
+)
+
 set_fit(
   model = "null_model",
   eng = "parsnip",
@@ -30,6 +41,17 @@ set_fit(
     protect = c("x", "y"),
     func = c(fun = "nullmodel"),
     defaults = list()
+  )
+)
+
+set_encoding(
+  model = "null_model",
+  eng = "parsnip",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 

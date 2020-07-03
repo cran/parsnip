@@ -6,8 +6,10 @@ library(tibble)
 # ------------------------------------------------------------------------------
 
 context("logistic regression")
-source("helpers.R")
-source("helper-objects.R")
+source(test_path("helpers.R"))
+source(test_path("helper-objects.R"))
+hpc <- hpc_data[1:150, c(2:5, 8)]
+
 
 # ------------------------------------------------------------------------------
 
@@ -211,7 +213,7 @@ test_that('updating', {
 test_that('bad input', {
   expect_error(logistic_reg(mode = "regression"))
   expect_error(translate(logistic_reg(formula = y ~ x)))
-  expect_error(translate(logistic_reg(x = iris[,1:3], y = iris$Species) %>% set_engine(engine = "glmnet")))
+  expect_error(translate(logistic_reg(x = hpc[,1:3], y = hpc$class) %>% set_engine(engine = "glmnet")))
   expect_error(translate(logistic_reg(formula = y ~ x) %>% set_engine(engine = "glm")))
 })
 
@@ -300,7 +302,9 @@ test_that('glm probabilities', {
     control = ctrl
   )
 
-  xy_pred <- predict(classes_xy$fit, newdata = lending_club[1:7, num_pred], type = "response")
+  xy_pred <- unname(predict(classes_xy$fit,
+                            newdata = lending_club[1:7, num_pred],
+                            type = "response"))
   xy_pred <- tibble(.pred_bad = 1 - xy_pred, .pred_good = xy_pred)
   expect_equal(xy_pred, predict(classes_xy, lending_club[1:7, num_pred], type = "prob"))
 

@@ -13,7 +13,8 @@ boost_tree(
   tree_depth = NULL,
   learn_rate = NULL,
   loss_reduction = NULL,
-  sample_size = NULL
+  sample_size = NULL,
+  stop_iter = NULL
 )
 
 \method{update}{boost_tree}(
@@ -26,6 +27,7 @@ boost_tree(
   learn_rate = NULL,
   loss_reduction = NULL,
   sample_size = NULL,
+  stop_iter = NULL,
   fresh = FALSE,
   ...
 )
@@ -57,6 +59,9 @@ to split further  (\code{xgboost} only).}
 \item{sample_size}{A number for the number (or proportion) of data that is
 exposed to the fitting routine. For \code{xgboost}, the sampling is done at at
 each iteration while \code{C5.0} samples once during training.}
+
+\item{stop_iter}{The number of iterations without improvement before
+stopping  (\code{xgboost} only).}
 
 \item{object}{A boosted tree model specification.}
 
@@ -91,6 +96,8 @@ from iteration-to-iteration.
 \item \code{loss_reduction}: The reduction in the loss function required
 to split further.
 \item \code{sample_size}: The amount of data exposed to the fitting routine.
+\item \code{stop_iter}: The number of iterations without improvement before
+stopping.
 }
 These arguments are converted to their specific names at the
 time that the model is fit. Other options and argument can be
@@ -151,6 +158,31 @@ call. For this type of model, the template of the fit calls are below:
 ## parsnip::xgb_train(x = missing_arg(), y = missing_arg(), nthread = 1, 
 ##     verbose = 0)
 }
+
+Note that, for most engines to \code{boost_tree()}, the \code{sample_size}
+argument is in terms of the \emph{number} of training set points. The
+\code{xgboost} package parameterizes this as the \emph{proportion} of training set
+samples instead. When using the \code{tune}, this \strong{occurs automatically}.
+
+If you would like to use a custom range when tuning \code{sample_size}, the
+\code{dials::sample_prop()} function can be used in that case. For example,
+using a parameter set:\if{html}{\out{<div class="r">}}\preformatted{mod <- 
+  boost_tree(sample_size = tune()) \%>\% 
+  set_engine("xgboost") \%>\% 
+  set_mode("classification")
+
+# update the parameters using the `dials` function
+mod_param <- 
+  mod \%>\% 
+  parameters() \%>\% 
+  update(sample_size = sample_prop(c(0.4, 0.9)))
+}\if{html}{\out{</div>}}
+
+Finally, note that \code{xgboost} models require that non-numeric predictors
+(e.g., factors) must be converted to dummy variables or some other
+numeric representation. By default, when using \code{fit()} with \code{xgboost}, a
+one-hot encoding is used to convert factor predictors to indicator
+variables.
 }
 
 \subsection{C5.0}{\if{html}{\out{<div class="r">}}\preformatted{boost_tree() \%>\% 
@@ -166,7 +198,9 @@ call. For this type of model, the template of the fit calls are below:
 }
 
 Note that \code{\link[C50:C5.0]{C50::C5.0()}} does not require factor
-predictors to be converted to indicator variables.
+predictors to be converted to indicator variables. \code{fit()} does not
+affect the encoding of the predictor values (i.e. factors stay factors)
+for this model.
 }
 
 \subsection{spark}{\if{html}{\out{<div class="r">}}\preformatted{boost_tree() \%>\% 
@@ -192,23 +226,32 @@ predictors to be converted to indicator variables.
 ## sparklyr::ml_gradient_boosted_trees(x = missing_arg(), formula = missing_arg(), 
 ##     type = "classification", seed = sample.int(10^5, 1))
 }
+
+\code{fit()} does not affect the encoding of the predictor values
+(i.e. factors stay factors) for this model.
 }
 
 \subsection{Parameter translations}{
 
 The standardized parameter names in parsnip can be mapped to their
-original names in each engine that has main parameters:\tabular{llll}{
+original names in each engine that has main parameters. Each engine
+typically has a different default value (shown in parentheses) for each
+parameter.\tabular{llll}{
    \strong{parsnip} \tab \strong{xgboost} \tab \strong{C5.0} \tab \strong{spark} \cr
-   tree_depth \tab max_depth \tab NA \tab max_depth \cr
-   trees \tab nrounds \tab trials \tab max_iter \cr
-   learn_rate \tab eta \tab NA \tab step_size \cr
-   mtry \tab colsample_bytree \tab NA \tab feature_subset_strategy \cr
-   min_n \tab min_child_weight \tab minCases \tab min_instances_per_node \cr
-   loss_reduction \tab gamma \tab NA \tab NA \cr
-   sample_size \tab subsample \tab sample \tab subsampling_rate \cr
-   min_info_gain \tab NA \tab NA \tab loss_reduction \cr
+   tree_depth \tab max_depth (6) \tab NA \tab max_depth (5) \cr
+   trees \tab nrounds (15) \tab trials (15) \tab max_iter (20) \cr
+   learn_rate \tab eta (0.3) \tab NA \tab step_size (0.1) \cr
+   mtry \tab colsample_bytree (1) \tab NA \tab feature_subset_strategy (see below) \cr
+   min_n \tab min_child_weight (1) \tab minCases (2) \tab min_instances_per_node (1) \cr
+   loss_reduction \tab gamma (0) \tab NA \tab min_info_gain (0) \cr
+   sample_size \tab subsample (1) \tab sample (0) \tab subsampling_rate (1) \cr
+   stop_iter \tab early_stop \tab NA \tab NA \cr
 }
 
+
+For spark, the default \code{mtry} is the square root of the number of
+predictors for classification, and one-third of the predictors for
+regression.
 }
 }
 

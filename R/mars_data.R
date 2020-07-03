@@ -40,10 +40,21 @@ set_fit(
   eng = "earth",
   mode = "regression",
   value = list(
-    interface = "data.frame",
-    protect = c("x", "y", "weights"),
+    interface = "formula",
+    protect = c("formula", "data", "weights"),
     func = c(pkg = "earth", fun = "earth"),
     defaults = list(keepxy = TRUE)
+  )
+)
+
+set_encoding(
+  model = "mars",
+  eng = "earth",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 
@@ -52,10 +63,21 @@ set_fit(
   eng = "earth",
   mode = "classification",
   value = list(
-    interface = "data.frame",
-    protect = c("x", "y", "weights"),
+    interface = "formula",
+    protect = c("formula", "data", "weights"),
     func = c(pkg = "earth", fun = "earth"),
     defaults = list(keepxy = TRUE)
+  )
+)
+
+set_encoding(
+  model = "mars",
+  eng = "earth",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE
   )
 )
 
