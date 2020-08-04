@@ -81,12 +81,12 @@
 #' lm_model <-
 #'   linear_reg() %>%
 #'   set_engine("lm") %>%
-#'   fit(mpg ~ ., data = mtcars %>% slice(11:32))
+#'   fit(mpg ~ ., data = mtcars %>% dplyr::slice(11:32))
 #'
 #' pred_cars <-
 #'   mtcars %>%
-#'   slice(1:10) %>%
-#'   select(-mpg)
+#'   dplyr::slice(1:10) %>%
+#'   dplyr::select(-mpg)
 #'
 #' predict(lm_model, pred_cars)
 #'
@@ -239,6 +239,15 @@ prepare_data <- function(object, new_data) {
       new_data <- convert_form_to_xy_new(object$preproc, new_data)$x
     }
   }
+
+  remove_intercept <-
+    get_encoding(class(object$spec)[1]) %>%
+    dplyr::filter(mode == object$spec$mode, engine == object$spec$engine) %>%
+    dplyr::pull(remove_intercept)
+  if (remove_intercept & any(grepl("Intercept", names(new_data)))) {
+    new_data <- new_data %>% dplyr::select(-dplyr::one_of("(Intercept)"))
+  }
+
   switch(
     fit_interface,
     none = new_data,

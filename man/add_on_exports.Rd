@@ -7,6 +7,7 @@
 \alias{new_model_spec}
 \alias{check_final_param}
 \alias{update_main_parameters}
+\alias{update_engine_parameters}
 \alias{is_varying}
 \title{Functions required for parsnip-adjacent packages}
 \usage{
@@ -21,6 +22,8 @@ new_model_spec(cls, args, eng_args, mode, method, engine)
 check_final_param(x)
 
 update_main_parameters(args, param)
+
+update_engine_parameters(eng_args, ...)
 
 is_varying(x)
 }
