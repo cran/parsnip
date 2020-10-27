@@ -44,7 +44,8 @@ set_encoding(
   options = list(
     predictor_indicators = "traditional",
     compute_intercept = TRUE,
-    remove_intercept = TRUE
+    remove_intercept = TRUE,
+    allow_sparse_x = TRUE
   )
 )
 
@@ -60,7 +61,7 @@ set_pred(
     args =
       list(
         object = quote(object$fit),
-        newx = quote(as.matrix(new_data)),
+        newx = quote(as.matrix(new_data[, rownames(object$fit$beta[[1]])])),
         type = "class",
         s = quote(object$spec$args$penalty)
       )
@@ -78,10 +79,10 @@ set_pred(
     func = c(fun = "predict"),
     args =
       list(
-        object = quote(object$fit),
-        newx = quote(as.matrix(new_data)),
+        object = expr(object$fit),
+        newx = expr(as.matrix(new_data[, rownames(object$fit$beta[[1]])])),
         type = "response",
-        s = quote(object$spec$args$penalty)
+        s = expr(object$spec$args$penalty)
       )
   )
 )
@@ -146,7 +147,8 @@ set_encoding(
   options = list(
     predictor_indicators = "traditional",
     compute_intercept = TRUE,
-    remove_intercept = TRUE
+    remove_intercept = TRUE,
+    allow_sparse_x = FALSE
   )
 )
 
@@ -220,7 +222,8 @@ set_encoding(
   options = list(
     predictor_indicators = "traditional",
     compute_intercept = TRUE,
-    remove_intercept = TRUE
+    remove_intercept = TRUE,
+    allow_sparse_x = FALSE
   )
 )
 
@@ -294,7 +297,8 @@ set_encoding(
   options = list(
     predictor_indicators = "traditional",
     compute_intercept = TRUE,
-    remove_intercept = TRUE
+    remove_intercept = TRUE,
+    allow_sparse_x = FALSE
   )
 )
 

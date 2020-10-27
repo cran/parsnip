@@ -96,9 +96,9 @@ call. For this type of model, the template of the fit calls are below:
 ## Computational engine: ranger 
 ## 
 ## Model fit template:
-## ranger::ranger(formula = missing_arg(), data = missing_arg(), 
-##     case.weights = missing_arg(), num.threads = 1, verbose = FALSE, 
-##     seed = sample.int(10^5, 1))
+## ranger::ranger(x = missing_arg(), y = missing_arg(), case.weights = missing_arg(), 
+##     num.threads = 1, verbose = FALSE, seed = sample.int(10^5, 
+##         1))
 }\if{html}{\out{<div class="r">}}\preformatted{rand_forest() \%>\% 
   set_engine("ranger") \%>\% 
   set_mode("classification") \%>\% 
@@ -108,9 +108,9 @@ call. For this type of model, the template of the fit calls are below:
 ## Computational engine: ranger 
 ## 
 ## Model fit template:
-## ranger::ranger(formula = missing_arg(), data = missing_arg(), 
-##     case.weights = missing_arg(), num.threads = 1, verbose = FALSE, 
-##     seed = sample.int(10^5, 1), probability = TRUE)
+## ranger::ranger(x = missing_arg(), y = missing_arg(), case.weights = missing_arg(), 
+##     num.threads = 1, verbose = FALSE, seed = sample.int(10^5, 
+##         1), probability = TRUE)
 }
 
 Note that \code{\link[ranger:ranger]{ranger::ranger()}} does not require
@@ -206,6 +206,8 @@ classification and 5 for regression.
 }
 
 \examples{
+show_engines("rand_forest")
+
 rand_forest(mode = "classification", trees = 2000)
 # Parameters can be represented by a placeholder:
 rand_forest(mode = "regression", mtry = varying())

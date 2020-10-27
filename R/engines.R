@@ -106,3 +106,27 @@ set_engine <- function(object, engine, ...) {
     engine = object$engine
   )
 }
+
+#' Display currently available engines for a model
+#'
+#' The possible engines for a model can depend on what packages are loaded.
+#' Some `parsnip`-adjacent packages add engines to existing models. For example,
+#' the `multilevelmod` package adds additional engines for the [linear_reg()]
+#' model and these are not available unless `multilevelmod` is loaded.
+#' @param x The name of a `parsnip` model (e.g., "linear_reg", "mars", etc.)
+#' @return A tibble.
+#' @examples
+#' show_engines("linear_reg")
+#' @export
+show_engines <- function(x) {
+  if (!is.character(x) || length(x) > 1) {
+    rlang::abort("`show_engines()` takes a single character string as input.")
+  }
+  res <- try(get_from_env(x), silent = TRUE)
+  if (inherits(res, "try-error")) {
+    rlang::abort(
+      paste0("No results found for model function '", x, "'.")
+    )
+  }
+  res
+}

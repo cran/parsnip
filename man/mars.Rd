@@ -55,13 +55,13 @@ model are:
 \item \code{num_terms}: The number of features that will be retained in the
 final model.
 \item \code{prod_degree}: The highest possible degree of interaction between
-features. A value of 1 indicates and additive model while a value of 2
+features. A value of 1 indicates an additive model while a value of 2
 allows, but does not guarantee, two-way interactions between features.
 \item \code{prune_method}: The type of pruning. Possible values are listed
 in \code{?earth}.
 }
 These arguments are converted to their specific names at the
-time that the model is fit. Other options and argument can be
+time that the model is fit. Other options and arguments can be
 set using \code{set_engine()}. If left to their defaults
 here (\code{NULL}), the values are taken from the underlying model
 functions. If parameters need to be modified, \code{update()} can be used
@@ -110,6 +110,10 @@ attached.
 
 Also, \code{fit()} passes the data directly to \code{earth::earth()} so that its
 formula method can create dummy variables as-needed.
+
+For this engine, tuning over \code{num_terms} is very efficient since the
+same model object can be used to make predictions over multiple values
+of \code{num_terms}.
 }
 
 \subsection{Parameter translations}{
@@ -128,6 +132,8 @@ parameter.\tabular{ll}{
 }
 
 \examples{
+show_engines("mars")
+
 mars(mode = "regression", num_terms = 5)
 model <- mars(num_terms = 10, prune_method = "none")
 model

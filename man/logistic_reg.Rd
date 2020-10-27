@@ -55,7 +55,7 @@ in the model. Note that this must be zero for some engines.
 regularization (see below). Note that this will be ignored for some engines.
 }
 These arguments are converted to their specific names at the
-time that the model is fit. Other options and argument can be
+time that the model is fit. Other options and arguments can be
 set using \code{set_engine()}. If left to their defaults
 here (\code{NULL}), the values are taken from the underlying model
 functions. If parameters need to be modified, \code{update()} can be used
@@ -72,6 +72,9 @@ following \emph{engines}:
 \item \pkg{Spark}: \code{"spark"}
 \item \pkg{keras}: \code{"keras"}
 }
+
+For this model, other packages may add additional engines. Use
+\code{\link[=show_engines]{show_engines()}} to see the current set of engines.
 }
 \note{
 For models created using the spark engine, there are
@@ -194,6 +197,8 @@ parameter.\tabular{llll}{
 }
 
 \examples{
+show_engines("logistic_reg")
+
 logistic_reg()
 # Parameters can be represented by a placeholder:
 logistic_reg(penalty = varying())

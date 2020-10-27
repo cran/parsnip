@@ -56,7 +56,7 @@ function.
 (regression only)
 }
 These arguments are converted to their specific names at the
-time that the model is fit. Other options and argument can be
+time that the model is fit. Other options and arguments can be
 set using \code{set_engine()}. If left to their defaults
 here (\code{NULL}), the values are taken from the underlying model
 functions. If parameters need to be modified, \code{update()} can be used
@@ -156,6 +156,8 @@ parameter.\tabular{lll}{
 }
 
 \examples{
+show_engines("svm_rbf")
+
 svm_rbf(mode = "classification", rbf_sigma = 0.2)
 # Parameters can be represented by a placeholder:
 svm_rbf(mode = "regression", cost = varying())

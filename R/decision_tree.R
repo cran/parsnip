@@ -15,7 +15,7 @@
 #'   that are required for the node to be split further.
 #' }
 #' These arguments are converted to their specific names at the
-#'  time that the model is fit. Other options and argument can be
+#'  time that the model is fit. Other options and arguments can be
 #'  set using `set_engine()`. If left to their defaults
 #'  here (`NULL`), the values are taken from the underlying model
 #'  functions. If parameters need to be modified, `update()` can be used
@@ -34,7 +34,7 @@
 #' The model can be created using the `fit()` function using the
 #'  following _engines_:
 #' \itemize{
-#' \item \pkg{R}:  `"rpart"` (the default) or `"C5.0"` (classification only)
+#' \item \pkg{R}: `"rpart"` (the default) or `"C5.0"` (classification only)
 #' \item \pkg{Spark}: `"spark"`
 #' }
 #'
@@ -62,6 +62,8 @@
 #' @importFrom purrr map_lgl
 #' @seealso [fit()]
 #' @examples
+#' show_engines("decision_tree")
+#'
 #' decision_tree(mode = "classification", tree_depth = 5)
 #' # Parameters can be represented by a placeholder:
 #' decision_tree(mode = "regression", cost_complexity = varying())
@@ -178,6 +180,22 @@ translate.decision_tree <- function(x, engine = x$engine, ...) {
     }
   }
 
+  ## -----------------------------------------------------------------------------
+  # Protect some arguments based on data dimensions
+
+  if (any(names(arg_vals) == "minsplit")) {
+    arg_vals$minsplit <-
+      rlang::call2("min_rows", rlang::eval_tidy(arg_vals$minsplit), expr(data))
+  }
+  if (any(names(arg_vals) == "min_instances_per_node")) {
+    arg_vals$min_instances_per_node <-
+      rlang::call2("min_rows", rlang::eval_tidy(arg_vals$min_instances_per_node), expr(x))
+  }
+
+  ## -----------------------------------------------------------------------------
+
+  x$method$fit$args <- arg_vals
+
   x
 }
 
@@ -204,7 +222,7 @@ check_args.decision_tree <- function(object) {
 #'  this means that the overall R-squared must increase by `cp` at
 #'  each step. The main role of this parameter is to save computing
 #'  time by pruning off splits that are obviously not worthwhile.
-#'  Essentially,the user informs the program that any split which
+#'  Essentially, the user informs the program that any split which
 #'  does not improve the fit by `cp` will likely be pruned off by
 #'  cross-validation, and that hence the program need not pursue it.
 #' @param weights Optional case weights.

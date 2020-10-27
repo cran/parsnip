@@ -17,7 +17,7 @@
 #' }
 #'
 #' These arguments are converted to their specific names at the
-#'  time that the model is fit. Other options and argument can be
+#'  time that the model is fit. Other options and arguments can be
 #'  set using `set_engine()`. If left to their defaults
 #'  here (see above), the values are taken from the underlying model
 #'  functions. One exception is `hidden_units` when `nnet::nnet` is used; that
@@ -56,6 +56,8 @@
 #' @importFrom purrr map_lgl
 #' @seealso [fit()]
 #' @examples
+#' show_engines("mlp")
+#'
 #' mlp(mode = "classification", penalty = 0.01)
 #' # Parameters can be represented by a placeholder:
 #' mlp(mode = "regression", hidden_units = varying())

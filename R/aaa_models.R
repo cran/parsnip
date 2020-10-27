@@ -268,7 +268,7 @@ check_pred_info <- function(pred_obj, type) {
 
 check_pkg_val <- function(pkg) {
   if (rlang::is_missing(pkg) || length(pkg) != 1 || !is.character(pkg))
-    rlang::abort("Please supply a single character vale for the package name.")
+    rlang::abort("Please supply a single character value for the package name.")
   invisible(NULL)
 }
 
@@ -329,7 +329,7 @@ check_interface_val <- function(x) {
 #' @keywords internal
 #' @details These functions are available for users to add their
 #'  own models or engines (in package or otherwise) so that they can
-#'  be accessed using `parsnip`. This are more thoroughly documented
+#'  be accessed using `parsnip`. This is more thoroughly documented
 #'  on the package web site (see references below).
 #'
 #' In short, `parsnip` stores an environment object that contains
@@ -591,7 +591,7 @@ set_fit <- function(model, mode, eng, value) {
     dplyr::filter(engine == eng & mode == !!mode) %>%
     nrow()
   if (has_engine != 1) {
-    rlang::abort(glue::glue("The combination of '{eng}' and mode '{mode}' has not",
+    rlang::abort(glue::glue("The combination of '{eng}' and mode '{mode}' has not ",
                             "been registered for model '{model}'."))
   }
 
@@ -601,7 +601,7 @@ set_fit <- function(model, mode, eng, value) {
     nrow()
 
   if (has_fit > 0) {
-    rlang::abort(glue::glue("The combination of '{eng}' and mode '{mode}'",
+    rlang::abort(glue::glue("The combination of '{eng}' and mode '{mode}' ",
                             "already has a fit component for model '{model}'."))
   }
 
@@ -819,7 +819,8 @@ check_encodings <- function(x) {
   }
   req_args <- list(predictor_indicators = rlang::na_chr,
                    compute_intercept = rlang::na_lgl,
-                   remove_intercept = rlang::na_lgl)
+                   remove_intercept = rlang::na_lgl,
+                   allow_sparse_x = rlang::na_lgl)
 
   missing_args <- setdiff(names(req_args), names(x))
   if (length(missing_args) > 0) {
@@ -896,7 +897,8 @@ get_encoding <- function(model) {
         model = model,
         predictor_indicators = "traditional",
         compute_intercept = TRUE,
-        remove_intercept = TRUE
+        remove_intercept = TRUE,
+        allow_sparse_x = FALSE
       ) %>%
       dplyr::select(model, engine, mode, predictor_indicators,
                     compute_intercept, remove_intercept)

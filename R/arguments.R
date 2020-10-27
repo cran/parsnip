@@ -131,6 +131,16 @@ eval_args <- function(spec, ...) {
 #     defaults = list()
 #   )
 
+#' Make a parsnip call expression
+#'
+#' @param fun A character string of a function name.
+#' @param ns A character string of a package name.
+#' @param args A named list of argument values.
+#' @details The arguments are spliced into the `ns::fun()` call. If they are
+#' missing, null, or a single logical, then are not spliced.
+#' @return A call.
+#' @keywords internal
+#' @export
 make_call <- function(fun, ns, args, ...) {
   # remove any null or placeholders (`missing_args`) that remain
   discard <-
@@ -191,8 +201,8 @@ make_xy_call <- function(object, target) {
     switch(
       target,
       none = rlang::expr(x),
-      data.frame = rlang::expr(as.data.frame(x)),
-      matrix = rlang::expr(as.matrix(x)),
+      data.frame = rlang::expr(maybe_data_frame(x)),
+      matrix = rlang::expr(maybe_matrix(x)),
       rlang::abort(glue::glue("Invalid data type target: {target}."))
     )
 
@@ -203,4 +213,67 @@ make_xy_call <- function(object, target) {
   )
 
   fit_call
+}
+
+## -----------------------------------------------------------------------------
+#' Execution-time data dimension checks
+#'
+#' For some tuning parameters, the range of values depend on the data
+#' dimensions (e.g. `mtry`). Some packages will fail if the parameter values are
+#' outside of these ranges. Since the model might receive resampled versions of
+#' the data, these ranges can't be set prior to the point where the model is
+#' fit.  These functions check the possible range of the data and adjust them
+#' if needed (with a warning).
+#'
+#' @param num_cols,num_rows The parameter value requested by the user.
+#' @param source A data frame for the data to be used in the fit. If the source
+#' is named "data", it is assumed that one column of the data corresponds to
+#' an outcome (and is subtracted off).
+#' @param offset A number subtracted off of the number of rows available in the
+#' data.
+#' @return An integer (and perhaps a warning).
+#' @examples
+
+#' nearest_neighbor(neighbors= 100) %>%
+#'   set_engine("kknn") %>%
+#'   set_mode("regression") %>%
+#'   translate()
+#'
+#' library(ranger)
+#' rand_forest(mtry = 2, min_n = 100, trees = 3) %>%
+#'   set_engine("ranger") %>%
+#'   set_mode("regression") %>%
+#'   fit(mpg ~ ., data = mtcars)
+#' @export
+min_cols <- function(num_cols, source) {
+  cl <- match.call()
+  src_name <- rlang::expr_text(cl$source)
+  if (cl$source == "data") {
+    p <- ncol(source) - 1
+  } else {
+    p <- ncol(source)
+  }
+  if (num_cols > p) {
+    msg <- paste0(num_cols, " columns were requested but there were ", p,
+                 " predictors in the data. ", p, " will be used.")
+    rlang::warn(msg)
+    num_cols <- p
+  }
+
+  as.integer(num_cols)
+}
+
+#' @export
+#' @rdname min_cols
+min_rows <- function(num_rows, source, offset = 0) {
+  n <- nrow(source)
+
+  if (num_rows > n - offset) {
+    msg <- paste0(num_rows, " samples were requested but there were ", n,
+                  " rows in the data. ", n - offset, " will be used.")
+    rlang::warn(msg)
+    num_rows <- n - offset
+  }
+
+  as.integer(num_rows)
 }

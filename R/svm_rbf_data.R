@@ -69,7 +69,8 @@ set_encoding(
   options = list(
     predictor_indicators = "none",
     compute_intercept = FALSE,
-    remove_intercept = FALSE
+    remove_intercept = FALSE,
+    allow_sparse_x = FALSE
   )
 )
 
@@ -111,7 +112,8 @@ set_encoding(
   options = list(
     predictor_indicators = "none",
     compute_intercept = FALSE,
-    remove_intercept = FALSE
+    remove_intercept = FALSE,
+    allow_sparse_x = FALSE
   )
 )
 
@@ -191,7 +193,7 @@ set_fit(
   eng = "liquidSVM",
   mode = "regression",
   value = list(
-    interface = "matrix",
+    interface = "data.frame",
     protect = c("x", "y"),
     func = c(pkg = "liquidSVM", fun = "svm"),
     defaults = list(
@@ -208,7 +210,8 @@ set_encoding(
   options = list(
     predictor_indicators = "none",
     compute_intercept = FALSE,
-    remove_intercept = FALSE
+    remove_intercept = FALSE,
+    allow_sparse_x = FALSE
   )
 )
 
@@ -217,7 +220,7 @@ set_fit(
   eng = "liquidSVM",
   mode = "classification",
   value = list(
-    interface = "matrix",
+    interface = "data.frame",
     protect = c("x", "y"),
     func = c(pkg = "liquidSVM", fun = "svm"),
     defaults = list(
@@ -234,7 +237,8 @@ set_encoding(
   options = list(
     predictor_indicators = "none",
     compute_intercept = FALSE,
-    remove_intercept = FALSE
+    remove_intercept = FALSE,
+    allow_sparse_x = FALSE
   )
 )
 

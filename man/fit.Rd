@@ -29,7 +29,9 @@ outcome(s), predictors, case weights, etc). Note: when needed, a
 ignored. Other options required to fit the model should be
 passed using \code{set_engine()}.}
 
-\item{x}{A matrix or data frame of predictors.}
+\item{x}{A matrix, sparse matrix, or data frame of predictors. Only some
+models have support for sparse matrix input. See \code{parsnip::get_encoding()}
+for details.}
 
 \item{y}{A vector, matrix or data frame of outcome data.}
 }
@@ -57,11 +59,11 @@ routine.
 }
 \details{
 \code{fit()} and \code{fit_xy()} substitute the current arguments in the model
-specification into the computational engine's code, checks them
-for validity, then fits the model using the data and the
+specification into the computational engine's code, check them
+for validity, then fit the model using the data and the
 engine-specific code. Different model functions have different
 interfaces (e.g. formula or \code{x}/\code{y}) and these functions translate
-between the interface used when \code{fit()} or \code{fit_xy()} were invoked and the one
+between the interface used when \code{fit()} or \code{fit_xy()} was invoked and the one
 required by the underlying model.
 
 When possible, these functions attempt to avoid making copies of the

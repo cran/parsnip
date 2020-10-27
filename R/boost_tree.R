@@ -11,7 +11,7 @@
 #'   randomly sampled at each split when creating the tree models.
 #'   \item \code{trees}: The number of trees contained in the ensemble.
 #'   \item \code{min_n}: The minimum number of data points in a node
-#'   that are required for the node to be split further.
+#'   that is required for the node to be split further.
 #'   \item \code{tree_depth}: The maximum depth of the tree (i.e. number of
 #'  splits).
 #'   \item \code{learn_rate}: The rate at which the boosting algorithm adapts
@@ -23,10 +23,10 @@
 #'   stopping.
 #' }
 #' These arguments are converted to their specific names at the
-#'  time that the model is fit. Other options and argument can be
-#'  set using the  `set_engine()` function. If left to their defaults
+#'  time that the model is fit. Other options and arguments can be
+#'  set using the `set_engine()` function. If left to their defaults
 #'  here (`NULL`), the values are taken from the underlying model
-#'  functions.  If parameters need to be modified, `update()` can be used
+#'  functions. If parameters need to be modified, `update()` can be used
 #'  in lieu of recreating the object from scratch.
 #'
 #' @param mode A single character string for the type of model.
@@ -38,18 +38,18 @@
 #' @param trees An integer for the number of trees contained in
 #'  the ensemble.
 #' @param min_n An integer for the minimum number of data points
-#'  in a node that are required for the node to be split further.
+#'  in a node that is required for the node to be split further.
 #' @param tree_depth An integer for the maximum depth of the tree (i.e. number
 #'  of splits) (`xgboost` only).
 #' @param learn_rate A number for the rate at which the boosting algorithm adapts
 #'   from iteration-to-iteration (`xgboost` only).
 #' @param loss_reduction A number for the reduction in the loss function required
-#'   to split further  (`xgboost` only).
+#'   to split further (`xgboost` only).
 #' @param sample_size A number for the number (or proportion) of data that is
-#'  exposed to the fitting routine. For `xgboost`, the sampling is done at at
+#'  exposed to the fitting routine. For `xgboost`, the sampling is done at
 #'  each iteration while `C5.0` samples once during training.
 #' @param stop_iter The number of iterations without improvement before
-#'   stopping  (`xgboost` only).
+#'   stopping (`xgboost` only).
 #' @details
 #' The data given to the function are not saved and are only used
 #'  to determine the _mode_ of the model. For `boost_tree()`, the
@@ -58,10 +58,12 @@
 #' The model can be created using the `fit()` function using the
 #'  following _engines_:
 #' \itemize{
-#' \item \pkg{R}:  `"xgboost"` (the default), `"C5.0"`
+#' \item \pkg{R}: `"xgboost"` (the default), `"C5.0"`
 #' \item \pkg{Spark}: `"spark"`
 #' }
 #'
+#' For this model, other packages may add additional engines. Use
+#' [show_engines()] to see the current set of engines.
 #'
 #' @includeRmd man/rmd/boost-tree.Rmd details
 #'
@@ -81,6 +83,8 @@
 #' @importFrom purrr map_lgl
 #' @seealso [fit()], [set_engine()]
 #' @examples
+#' show_engines("boost_tree")
+#'
 #' boost_tree(mode = "classification", trees = 20)
 #' # Parameters can be represented by a placeholder:
 #' boost_tree(mode = "regression", mtry = varying())
@@ -217,6 +221,10 @@ translate.boost_tree <- function(x, engine = x$engine, ...) {
   }
   x <- translate.default(x, engine, ...)
 
+  ## -----------------------------------------------------------------------------
+
+  arg_vals <- x$method$fit$args
+
   if (engine == "spark") {
     if (x$mode == "unknown") {
       rlang::abort(
@@ -226,9 +234,23 @@ translate.boost_tree <- function(x, engine = x$engine, ...) {
         )
       )
     } else {
-      x$method$fit$args$type <- x$mode
+      arg_vals$type <- x$mode
     }
   }
+
+  ## -----------------------------------------------------------------------------
+  # Protect some arguments based on data dimensions
+
+  # min_n parameters
+  if (any(names(arg_vals) == "min_instances_per_node")) {
+    arg_vals$min_instances_per_node <-
+      rlang::call2("min_rows", rlang::eval_tidy(arg_vals$min_instances_per_node), expr(x))
+  }
+
+  ## -----------------------------------------------------------------------------
+
+  x$method$fit$args <- arg_vals
+
   x
 }
 
@@ -238,14 +260,18 @@ check_args.boost_tree <- function(object) {
 
   args <- lapply(object$args, rlang::eval_tidy)
 
-  if (is.numeric(args$trees) && args$trees < 0)
+  if (is.numeric(args$trees) && args$trees < 0) {
     rlang::abort("`trees` should be >= 1.")
-  if (is.numeric(args$sample_size) && (args$sample_size < 0 | args$sample_size > 1))
+  }
+  if (is.numeric(args$sample_size) && (args$sample_size < 0 | args$sample_size > 1)) {
     rlang::abort("`sample_size` should be within [0,1].")
-  if (is.numeric(args$tree_depth) && args$tree_depth < 0)
+  }
+  if (is.numeric(args$tree_depth) && args$tree_depth < 0) {
     rlang::abort("`tree_depth` should be >= 1.")
-  if (is.numeric(args$min_n) && args$min_n < 0)
+  }
+  if (is.numeric(args$min_n) && args$min_n < 0) {
     rlang::abort("`min_n` should be >= 1.")
+  }
 
   invisible(object)
 }
@@ -274,7 +300,7 @@ check_args.boost_tree <- function(object) {
 #' of training set samples use for these purposes.
 #' @param early_stop An integer or `NULL`. If not `NULL`, it is the number of
 #' training iterations without improvement before stopping. If `validation` is
-#' used, performance is base on the validation set; otherwise the training set
+#' used, performance is base on the validation set; otherwise, the training set
 #' is used.
 #' @param ... Other options to pass to `xgb.train`.
 #' @return A fitted `xgboost` object.
@@ -286,11 +312,8 @@ xgb_train <- function(
   min_child_weight = 1, gamma = 0, subsample = 1, validation = 0,
   early_stop = NULL, ...) {
 
-  if (length(levels(y)) > 2) {
-    num_class <- length(levels(y))
-  }  else {
-    num_class <- NULL
-  }
+  num_class <- length(levels(y))
+
   if (!is.numeric(validation) || validation < 0 || validation >= 1) {
     rlang::abort("`validation` should be on [0, 1).")
   }
@@ -307,36 +330,17 @@ xgb_train <- function(
   if (is.numeric(y)) {
     loss <- "reg:squarederror"
   } else {
-    lvl <- levels(y)
-    y <- as.numeric(y) - 1
-    if (length(lvl) == 2) {
+    if (num_class == 2) {
       loss <- "binary:logistic"
     } else {
       loss <- "multi:softprob"
     }
   }
 
-  if (is.data.frame(x)) {
-    x <- as.matrix(x) # maybe use model.matrix here?
-  }
-
   n <- nrow(x)
   p <- ncol(x)
 
-  if (!inherits(x, "xgb.DMatrix")) {
-    if (validation > 0) {
-      trn_index <- sample(1:n, size = floor(n * validation) + 1)
-      wlist <-
-        list(validation = xgboost::xgb.DMatrix(x[-trn_index, ], label = y[-trn_index], missing = NA))
-      x <- xgboost::xgb.DMatrix(x[trn_index, ], label = y[trn_index], missing = NA)
-
-    } else {
-      x <- xgboost::xgb.DMatrix(x, label = y, missing = NA)
-      wlist <- list(training = x)
-    }
-  } else {
-    xgboost::setinfo(x, "label", y)
-  }
+  x <- as_xgb_data(x, y, validation)
 
   # translate `subsample` and `colsample_bytree` to be on (0, 1] if not
   if (subsample > 1) {
@@ -353,26 +357,31 @@ xgb_train <- function(
     colsample_bytree <- 1
   }
 
+  if (min_child_weight > n) {
+    msg <- paste0(min_child_weight, " samples were requested but there were ",
+                  n, " rows in the data. ", n, " will be used.")
+    rlang::warn(msg)
+    min_child_weight <- min(min_child_weight, n)
+  }
+
   arg_list <- list(
     eta = eta,
     max_depth = max_depth,
     gamma = gamma,
     colsample_bytree = colsample_bytree,
-    min_child_weight = min_child_weight,
+    min_child_weight = min(min_child_weight, n),
     subsample = subsample
   )
 
-  # eval if contains expressions?
-
   main_args <- list(
-    data = quote(x),
-    watchlist = quote(wlist),
+    data = quote(x$data),
+    watchlist = quote(x$watchlist),
     params = arg_list,
     nrounds = nrounds,
     objective = loss,
     early_stopping_rounds = early_stop
   )
-  if (!is.null(num_class)) {
+  if (!is.null(num_class) && num_class > 2) {
     main_args$num_class <- num_class
   }
 
@@ -395,7 +404,7 @@ xgb_train <- function(
 #' @importFrom stats binomial
 xgb_pred <- function(object, newdata, ...) {
   if (!inherits(newdata, "xgb.DMatrix")) {
-    newdata <- as.matrix(newdata)
+    newdata <- maybe_matrix(newdata)
     newdata <- xgboost::xgb.DMatrix(data = newdata, missing = NA)
   }
 
@@ -411,6 +420,37 @@ xgb_pred <- function(object, newdata, ...) {
   x
 }
 
+
+as_xgb_data <- function(x, y, validation = 0, ...) {
+  lvls <- levels(y)
+  n <- nrow(x)
+
+  if (is.data.frame(x)) {
+    x <- as.matrix(x)
+  }
+
+  if (is.factor(y)) {
+    y <- as.numeric(y) - 1
+  }
+
+  if (!inherits(x, "xgb.DMatrix")) {
+    if (validation > 0) {
+      trn_index <- sample(1:n, size = floor(n * (1 - validation)) + 1)
+      wlist <-
+        list(validation = xgboost::xgb.DMatrix(x[-trn_index, ], label = y[-trn_index], missing = NA))
+      dat <- xgboost::xgb.DMatrix(x[trn_index, ], label = y[trn_index], missing = NA)
+
+    } else {
+      dat <- xgboost::xgb.DMatrix(x, label = y, missing = NA)
+      wlist <- list(training = dat)
+    }
+  } else {
+    dat <- xgboost::setinfo(x, "label", y)
+    wlist <- list(training = dat)
+  }
+
+  list(data = dat, watchlist = wlist)
+}
 #' @importFrom purrr map_df
 #' @export
 #' @rdname multi_predict
@@ -504,8 +544,21 @@ C5.0_train <-
     ctrl_args <- other_args[names(other_args) %in% c_names]
     fit_args <- other_args[names(other_args) %in% f_names]
 
+    n <- nrow(x)
+    if (n == 0) {
+      rlang::abort("There are zero rows in the predictor set.")
+    }
+
+
     ctrl <- call2("C5.0Control", .ns = "C50")
+    if (minCases > n) {
+      msg <- paste0(minCases, " samples were requested but there were ",
+                    n, " rows in the data. ", n, " will be used.")
+      rlang::warn(msg)
+      minCases <- n
+    }
     ctrl$minCases <- minCases
+
     ctrl$sample <- sample
     ctrl <- rlang::call_modify(ctrl, !!!ctrl_args)
 

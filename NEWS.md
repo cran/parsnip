@@ -1,3 +1,13 @@
+# parsnip 0.1.4
+
+* `show_engines()` will provide information on the current set for a model. 
+
+* For three models (`glmnet`, `xgboost`, and `ranger`), enable sparse matrix use via `fit_xy()` (#373).
+
+* Some added protections were added for function arguments that are dependent on the data dimensions (e.g., `mtry`, `neighbors`, `min_n`, etc). (#184)
+
+* Infrastructure was improved for running `parsnip` models in parallel using PSOCK clusters on Windows. 
+
 # parsnip 0.1.3
 
  * A `glance()` method for `model_fit` objects was added (#325)
@@ -111,7 +121,7 @@ Unplanned release based on CRAN requirements for Solaris.
 
 ## Breaking Changes
 
- * The method that `parsnip` stores the model information has changed. Any custom models from previous versions will need to use the new method for registering models. The methods are detailed in `?get_model_env` and the [package vignette for adding models](https://tidymodels.github.io/parsnip/articles/articles/Scratch.html).
+ * The method that `parsnip` stores the model information has changed. Any custom models from previous versions will need to use the new method for registering models. The methods are detailed in `?get_model_env` and the [package vignette for adding models](https://parsnip.tidymodels.org/articles/articles/Scratch.html).
 
  * The mode needs to be declared for models that can be used for more than one mode prior to fitting and/or translation. 
 

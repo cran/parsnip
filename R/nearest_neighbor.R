@@ -18,7 +18,7 @@
 #'   and the Euclidean distance with `dist_power = 2`.
 #' }
 #' These arguments are converted to their specific names at the
-#'  time that the model is fit. Other options and argument can be
+#'  time that the model is fit. Other options and arguments can be
 #'  set using `set_engine()`. If left to their defaults
 #'  here (`NULL`), the values are taken from the underlying model
 #'  functions. If parameters need to be modified, `update()` can be used
@@ -51,6 +51,8 @@
 #' @seealso [fit()]
 #'
 #' @examples
+#' show_engines("nearest_neighbor")
+#'
 #' nearest_neighbor(neighbors = 11)
 #'
 #' @export
@@ -166,12 +168,25 @@ translate.nearest_neighbor <- function(x, engine = x$engine, ...) {
   }
   x <- translate.default(x, engine, ...)
 
+  arg_vals <- x$method$fit$args
+
   if (engine == "kknn") {
-    if (!any(names(x$method$fit$args) == "ks") ||
-        is_missing_arg(x$method$fit$args$ks)) {
-      x$method$fit$args$ks <- 5
+
+    if (!any(names(arg_vals) == "ks") || is_missing_arg(arg_vals$ks)) {
+      arg_vals$ks <- 5
+    }
+
+    ## -----------------------------------------------------------------------------
+    # Protect some arguments based on data dimensions
+
+    if (any(names(arg_vals) == "ks")) {
+      arg_vals$ks <-
+        rlang::call2("min_rows", rlang::eval_tidy(arg_vals$ks), expr(data), 5)
     }
   }
+
+  x$method$fit$args <- arg_vals
+
   x
 }
 

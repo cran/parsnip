@@ -43,7 +43,7 @@ distance. This corresponds to the Manhattan distance with \code{dist_power = 1}
 and the Euclidean distance with \code{dist_power = 2}.
 }
 These arguments are converted to their specific names at the
-time that the model is fit. Other options and argument can be
+time that the model is fit. Other options and arguments can be
 set using \code{set_engine()}. If left to their defaults
 here (\code{NULL}), the values are taken from the underlying model
 functions. If parameters need to be modified, \code{update()} can be used
@@ -69,7 +69,7 @@ call. For this type of model, the template of the fit calls are below:
 ## 
 ## Model fit template:
 ## kknn::train.kknn(formula = missing_arg(), data = missing_arg(), 
-##     ks = 5)
+##     ks = min_rows(5, data, 5))
 }\if{html}{\out{<div class="r">}}\preformatted{nearest_neighbor() \%>\% 
   set_engine("kknn") \%>\% 
   set_mode("classification") \%>\% 
@@ -80,7 +80,7 @@ call. For this type of model, the template of the fit calls are below:
 ## 
 ## Model fit template:
 ## kknn::train.kknn(formula = missing_arg(), data = missing_arg(), 
-##     ks = 5)
+##     ks = min_rows(5, data, 5))
 }
 
 For \code{kknn}, the underlying modeling function used is a restricted
@@ -88,6 +88,10 @@ version of \code{train.kknn()} and not \code{kknn()}. It is set up in this way s
 that \code{parsnip} can utilize the underlying \code{predict.train.kknn} method to
 predict on new data. This also means that a single value of that
 function’s \code{kernel} argument (a.k.a \code{weight_func} here) can be supplied
+
+For this engine, tuning over \code{neighbors} is very efficient since the
+same model object can be used to make predictions over multiple values
+of \code{neighbors}.
 }
 
 \subsection{Parameter translations}{
@@ -106,6 +110,8 @@ parameter.\tabular{ll}{
 }
 
 \examples{
+show_engines("nearest_neighbor")
+
 nearest_neighbor(neighbors = 11)
 
 }

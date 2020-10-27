@@ -38,6 +38,16 @@ test_that('ranger classification execution', {
   expect_output(print(res), "parsnip model object")
 
   expect_error(
+    res <- fit(
+      lc_ranger,
+      funded_amnt ~ Class + term,
+      data = lending_club,
+      control = ctrl
+    ),
+    regexp = "For a classification model"
+  )
+
+  expect_error(
     res <- fit_xy(
       lc_ranger,
       x = lending_club[, num_pred],
@@ -439,3 +449,69 @@ test_that('ranger classification intervals', {
 
 })
 
+
+
+test_that('ranger and sparse matrices', {
+  skip_if_not_installed("ranger")
+
+  mtcar_x <- mtcars[, -1]
+  mtcar_mat <- as.matrix(mtcar_x)
+  mtcar_smat <- Matrix::Matrix(mtcar_mat, sparse = TRUE)
+
+  rf_spec <-
+    rand_forest(trees = 10) %>%
+    set_engine("ranger", seed = 2) %>%
+    set_mode("regression")
+
+  set.seed(1)
+  from_df <- rf_spec %>% fit_xy(mtcar_x, mtcars$mpg)
+  set.seed(1)
+  from_mat <- rf_spec %>% fit_xy(mtcar_mat, mtcars$mpg)
+  set.seed(1)
+  from_sparse <- rf_spec %>% fit_xy(mtcar_smat, mtcars$mpg)
+
+  expect_equal(from_df$fit, from_mat$fit)
+  expect_equal(from_df$fit, from_sparse$fit)
+
+  rf_spec <-
+    rand_forest(trees = 10) %>%
+    set_engine("randomForest", seed = 2) %>%
+    set_mode("regression")
+  expect_error(
+    rf_spec %>% fit_xy(mtcar_smat, mtcars$mpg),
+    "Sparse matrices not supported"
+  )
+
+})
+
+
+## -----------------------------------------------------------------------------
+
+test_that('argument checks for data dimensions', {
+
+  skip_if_not_installed("ranger")
+
+  data(penguins, package = "modeldata")
+  penguins <- na.omit(penguins)
+
+  spec <-
+    rand_forest(mtry = 1000, min_n = 1000, trees = 5) %>%
+    set_engine("ranger") %>%
+    set_mode("regression")
+
+  expect_warning(
+    f_fit  <- spec %>% fit(body_mass_g ~ ., data = penguins),
+    "(1000 samples)|(1000 columns)"
+  )
+  expect_warning(
+    xy_fit <- spec %>% fit_xy(x = penguins[, -6], y = penguins$body_mass_g),
+    "(1000 samples)|(1000 columns)"
+  )
+
+
+  expect_equal(f_fit$fit$mtry, 6)
+  expect_equal(f_fit$fit$min.node.size, nrow(penguins))
+  expect_equal(xy_fit$fit$mtry, 6)
+  expect_equal(xy_fit$fit$min.node.size, nrow(penguins))
+
+})
