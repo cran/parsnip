@@ -2,20 +2,9 @@
 % Please edit documentation in R/svm_rbf.R
 \name{svm_rbf}
 \alias{svm_rbf}
-\alias{update.svm_rbf}
 \title{General interface for radial basis function support vector machines}
 \usage{
 svm_rbf(mode = "unknown", cost = NULL, rbf_sigma = NULL, margin = NULL)
-
-\method{update}{svm_rbf}(
-  object,
-  parameters = NULL,
-  cost = NULL,
-  rbf_sigma = NULL,
-  margin = NULL,
-  fresh = FALSE,
-  ...
-)
 }
 \arguments{
 \item{mode}{A single character string for the type of model.
@@ -29,18 +18,6 @@ or on the wrong side of the margin}
 
 \item{margin}{A positive number for the epsilon in the SVM insensitive
 loss function (regression only)}
-
-\item{object}{A radial basis function SVM model specification.}
-
-\item{parameters}{A 1-row tibble or named list with \emph{main}
-parameters to update. If the individual arguments are used,
-these will supersede the values in \code{parameters}. Also, using
-engine arguments in this object will result in an error.}
-
-\item{fresh}{A logical for whether the arguments should be
-modified in-place of or replaced wholesale.}
-
-\item{...}{Not used for \code{update()}.}
 }
 \description{
 \code{svm_rbf()} is a way to generate a \emph{specification} of a model
@@ -67,7 +44,6 @@ The model can be created using the \code{fit()} function using the
 following \emph{engines}:
 \itemize{
 \item \pkg{R}:  \code{"kernlab"} (the default)
-\item \pkg{R}:  \code{"liquidSVM"}
 }
 }
 \section{Engine Details}{
@@ -100,46 +76,6 @@ call. For this type of model, the template of the fit calls are below:
 formula method can create dummy variables as-needed.
 }
 
-\subsection{liquidSVM}{\if{html}{\out{<div class="r">}}\preformatted{svm_rbf() \%>\% 
-  set_engine("liquidSVM") \%>\% 
-  set_mode("regression") \%>\% 
-  translate()
-}\if{html}{\out{</div>}}\preformatted{## Radial Basis Function Support Vector Machine Specification (regression)
-## 
-## Computational engine: liquidSVM 
-## 
-## Model fit template:
-## liquidSVM::svm(x = missing_arg(), y = missing_arg(), folds = 1, 
-##     threads = 0)
-}\if{html}{\out{<div class="r">}}\preformatted{svm_rbf() \%>\% 
-  set_engine("liquidSVM") \%>\% 
-  set_mode("classification") \%>\% 
-  translate()
-}\if{html}{\out{</div>}}\preformatted{## Radial Basis Function Support Vector Machine Specification (classification)
-## 
-## Computational engine: liquidSVM 
-## 
-## Model fit template:
-## liquidSVM::svm(x = missing_arg(), y = missing_arg(), folds = 1, 
-##     threads = 0)
-}
-
-Note that models created using the \code{liquidSVM} engine cannot be saved
-like conventional R objects. The \code{fit} slot of the \code{model_fit} object
-has to be saved separately using the \code{liquidSVM::write.liquidSVM()}
-function. Likewise to restore a model, the \code{fit} slot has to be replaced
-with the model that is read using the \code{liquidSVM::read.liquidSVM()}
-function.
-
-\code{liquidSVM} parameterizes the kernel parameter differently than
-\code{kernlab}. To translate between engines, \code{sigma = 1/gammas^2}. Users
-will be specifying \code{sigma} and the function translates the value to
-\code{gamma}.
-
-\code{fit()} passes the data directly to \code{liquidSVM::svm()} so that its
-formula method can create dummy variables as-needed.
-}
-
 \subsection{Parameter translations}{
 
 The standardized parameter names in parsnip can be mapped to their
@@ -147,8 +83,8 @@ original names in each engine that has main parameters. Each engine
 typically has a different default value (shown in parentheses) for each
 parameter.\tabular{lll}{
    \strong{parsnip} \tab \strong{kernlab} \tab \strong{liquidSVM} \cr
-   cost \tab C (1) \tab lambdas (varies) \cr
-   rbf_sigma \tab sigma (varies) \tab gammas (varies) \cr
+   cost \tab C (1) \tab lambdas \cr
+   rbf_sigma \tab sigma (varies) \tab gammas \cr
    margin \tab epsilon (0.1) \tab NA \cr
 }
 
@@ -161,11 +97,7 @@ show_engines("svm_rbf")
 svm_rbf(mode = "classification", rbf_sigma = 0.2)
 # Parameters can be represented by a placeholder:
 svm_rbf(mode = "regression", cost = varying())
-model <- svm_rbf(cost = 10, rbf_sigma = 0.1)
-model
-update(model, cost = 1)
-update(model, cost = 1, fresh = TRUE)
 }
 \seealso{
-\code{\link[=fit]{fit()}}
+\code{\link[=fit]{fit()}}, \code{\link[=set_engine]{set_engine()}}, \code{\link[=update]{update()}}
 }

@@ -16,7 +16,6 @@
 #'  here (`NULL`), the values are taken from the underlying model
 #'  functions. If parameters need to be modified, `update()` can be used
 #'  in lieu of recreating the object from scratch.
-#' @inheritParams boost_tree
 #' @param mode A single character string for the type of model.
 #'  The only possible value for this model is "regression".
 #' @param penalty A non-negative number representing the total
@@ -60,7 +59,7 @@
 #'  separately saved to disk. In a new session, the object can be
 #'  reloaded and reattached to the `parsnip` object.
 #'
-#' @seealso [fit()], [set_engine()]
+#' @seealso [fit()], [set_engine()], [update()]
 #' @examples
 #' show_engines("linear_reg")
 #'
@@ -108,28 +107,31 @@ translate.linear_reg <- function(x, engine = x$engine, ...) {
   x <- translate.default(x, engine, ...)
 
   if (engine == "glmnet") {
-    # See discussion in https://github.com/tidymodels/parsnip/issues/195
-    x$method$fit$args$lambda <- NULL
+    check_glmnet_penalty(x)
+    if (any(names(x$eng_args) == "path_values")) {
+      # Since we decouple the parsnip `penalty` argument from being the same
+      # as the glmnet `lambda` value, `path_values` allows users to set the
+      # path differently from the default that glmnet uses. See
+      # https://github.com/tidymodels/parsnip/issues/431
+      x$method$fit$args$lambda <- x$eng_args$path_values
+      x$eng_args$path_values <- NULL
+      x$method$fit$args$path_values <- NULL
+    } else {
+      # See discussion in https://github.com/tidymodels/parsnip/issues/195
+      x$method$fit$args$lambda <- NULL
+    }
     # Since the `fit` information is gone for the penalty, we need to have an
     # evaluated value for the parameter.
     x$args$penalty <- rlang::eval_tidy(x$args$penalty)
   }
-
   x
 }
 
 
 # ------------------------------------------------------------------------------
 
-#' @inheritParams update.boost_tree
-#' @param object A linear regression model specification.
-#' @examples
-#' model <- linear_reg(penalty = 10, mixture = 0.1)
-#' model
-#' update(model, penalty = 1)
-#' update(model, penalty = 1, fresh = TRUE)
 #' @method update linear_reg
-#' @rdname linear_reg
+#' @rdname parsnip_update
 #' @export
 update.linear_reg <-
   function(object,

@@ -2,46 +2,25 @@
 % Please edit documentation in R/logistic_reg.R
 \name{logistic_reg}
 \alias{logistic_reg}
-\alias{update.logistic_reg}
 \title{General Interface for Logistic Regression Models}
 \usage{
 logistic_reg(mode = "classification", penalty = NULL, mixture = NULL)
-
-\method{update}{logistic_reg}(
-  object,
-  parameters = NULL,
-  penalty = NULL,
-  mixture = NULL,
-  fresh = FALSE,
-  ...
-)
 }
 \arguments{
 \item{mode}{A single character string for the type of model.
 The only possible value for this model is "classification".}
 
 \item{penalty}{A non-negative number representing the total
-amount of regularization (\code{glmnet}, \code{keras}, and \code{spark} only).
+amount of regularization (\code{glmnet}, \code{LiblineaR}, \code{keras}, and \code{spark} only).
 For \code{keras} models, this corresponds to purely L2 regularization
-(aka weight decay) while the other models can be a combination
+(aka weight decay) while the other models can be either or a combination
 of L1 and L2 (depending on the value of \code{mixture}).}
 
 \item{mixture}{A number between zero and one (inclusive) that is the
 proportion of L1 regularization (i.e. lasso) in the model. When
 \code{mixture = 1}, it is a pure lasso model while \code{mixture = 0} indicates that
-ridge regression is being used. (\code{glmnet} and \code{spark} only).}
-
-\item{object}{A logistic regression model specification.}
-
-\item{parameters}{A 1-row tibble or named list with \emph{main}
-parameters to update. If the individual arguments are used,
-these will supersede the values in \code{parameters}. Also, using
-engine arguments in this object will result in an error.}
-
-\item{fresh}{A logical for whether the arguments should be
-modified in-place of or replaced wholesale.}
-
-\item{...}{Not used for \code{update()}.}
+ridge regression is being used. (\code{glmnet}, \code{LiblineaR}, and \code{spark} only).
+For \code{LiblineaR} models, \code{mixture} must be exactly 0 or 1 only.}
 }
 \description{
 \code{logistic_reg()} is a way to generate a \emph{specification} of a model
@@ -67,7 +46,7 @@ For \code{logistic_reg()}, the mode will always be "classification".
 The model can be created using the \code{fit()} function using the
 following \emph{engines}:
 \itemize{
-\item \pkg{R}:  \code{"glm"}  (the default) or \code{"glmnet"}
+\item \pkg{R}:  \code{"glm"}  (the default), \code{"glmnet"}, or \code{"LiblineaR"}
 \item \pkg{Stan}:  \code{"stan"}
 \item \pkg{Spark}: \code{"spark"}
 \item \pkg{keras}: \code{"keras"}
@@ -95,7 +74,6 @@ Engines may have pre-set default arguments when executing the model fit
 call. For this type of model, the template of the fit calls are below.
 \subsection{glm}{\if{html}{\out{<div class="r">}}\preformatted{logistic_reg() \%>\% 
   set_engine("glm") \%>\% 
-  set_mode("classification") \%>\% 
   translate()
 }\if{html}{\out{</div>}}\preformatted{## Logistic Regression Model Specification (classification)
 ## 
@@ -107,11 +85,13 @@ call. For this type of model, the template of the fit calls are below.
 }
 }
 
-\subsection{glmnet}{\if{html}{\out{<div class="r">}}\preformatted{logistic_reg() \%>\% 
+\subsection{glmnet}{\if{html}{\out{<div class="r">}}\preformatted{logistic_reg(penalty = 0.1) \%>\% 
   set_engine("glmnet") \%>\% 
-  set_mode("classification") \%>\% 
   translate()
 }\if{html}{\out{</div>}}\preformatted{## Logistic Regression Model Specification (classification)
+## 
+## Main Arguments:
+##   penalty = 0.1
 ## 
 ## Computational engine: glmnet 
 ## 
@@ -120,20 +100,64 @@ call. For this type of model, the template of the fit calls are below.
 ##     family = "binomial")
 }
 
-For \code{glmnet} models, the full regularization path is always fit
-regardless of the value given to \code{penalty}. Also, there is the option to
-pass multiple values (or no values) to the \code{penalty} argument. When
-using the \code{predict()} method in these cases, the return value depends on
-the value of \code{penalty}. When using \code{predict()}, only a single value of
-the penalty can be used. When predicting on multiple penalties, the
-\code{multi_predict()} function can be used. It returns a tibble with a list
-column called \code{.pred} that contains a tibble with all of the penalty
-results.
+The glmnet engine requires a single value for the \code{penalty} argument (a
+number or \code{tune()}), but the full regularization path is always fit
+regardless of the value given to \code{penalty}. To pass in a custom sequence
+of values for glmnet’s \code{lambda}, use the argument \code{path_values} in
+\code{set_engine()}. This will assign the value of the glmnet \code{lambda}
+parameter without disturbing the value given of \code{logistic_reg(penalty)}.
+For example:\if{html}{\out{<div class="r">}}\preformatted{logistic_reg(penalty = .1) \%>\% 
+  set_engine("glmnet", path_values = c(0, 10^seq(-10, 1, length.out = 20))) \%>\% 
+  translate()
+}\if{html}{\out{</div>}}\preformatted{## Logistic Regression Model Specification (classification)
+## 
+## Main Arguments:
+##   penalty = 0.1
+## 
+## Computational engine: glmnet 
+## 
+## Model fit template:
+## glmnet::glmnet(x = missing_arg(), y = missing_arg(), weights = missing_arg(), 
+##     lambda = c(0, 10^seq(-10, 1, length.out = 20)), family = "binomial")
+}
+
+When fitting a pure ridge regression model (i.e., \code{penalty = 0}), we
+\emph{strongly suggest} that you pass in a vector for \code{path_values} that
+includes zero. See \href{https://github.com/tidymodels/parsnip/issues/431}{issue #431} for a
+discussion.
+
+When using \code{predict()}, the single \code{penalty} value used for prediction
+is the one specified in \code{logistic_reg()}.
+
+To predict on multiple penalties, use the \code{multi_predict()} function.
+This function returns a tibble with a list column called \code{.pred}
+containing all of the penalty results.
+}
+
+\subsection{LiblineaR}{\if{html}{\out{<div class="r">}}\preformatted{logistic_reg() \%>\% 
+  set_engine("LiblineaR") \%>\% 
+  translate()
+}\if{html}{\out{</div>}}\preformatted{## Logistic Regression Model Specification (classification)
+## 
+## Computational engine: LiblineaR 
+## 
+## Model fit template:
+## LiblineaR::LiblineaR(x = missing_arg(), y = missing_arg(), wi = missing_arg(), 
+##     verbose = FALSE)
+}
+
+For \code{LiblineaR} models, the value for \code{mixture} can either be 0 (for
+ridge) or 1 (for lasso) but not other intermediate values. In the
+\code{LiblineaR} documentation, these correspond to types 0 (L2-regularized)
+and 6 (L1-regularized).
+
+Be aware that the \code{LiblineaR} engine regularizes the intercept. Other
+regularized regression models do not, which will result in different
+parameter estimates.
 }
 
 \subsection{stan}{\if{html}{\out{<div class="r">}}\preformatted{logistic_reg() \%>\% 
   set_engine("stan") \%>\% 
-  set_mode("classification") \%>\% 
   translate()
 }\if{html}{\out{</div>}}\preformatted{## Logistic Regression Model Specification (classification)
 ## 
@@ -145,7 +169,7 @@ results.
 }
 
 Note that the \code{refresh} default prevents logging of the estimation
-process. Change this value in \code{set_engine()} will show the logs.
+process. Change this value in \code{set_engine()} to show the logs.
 
 For prediction, the \code{stan} engine can compute posterior intervals
 analogous to confidence and prediction intervals. In these instances,
@@ -156,7 +180,6 @@ predictive distribution as appropriate) is returned.
 
 \subsection{spark}{\if{html}{\out{<div class="r">}}\preformatted{logistic_reg() \%>\% 
   set_engine("spark") \%>\% 
-  set_mode("classification") \%>\% 
   translate()
 }\if{html}{\out{</div>}}\preformatted{## Logistic Regression Model Specification (classification)
 ## 
@@ -170,7 +193,6 @@ predictive distribution as appropriate) is returned.
 
 \subsection{keras}{\if{html}{\out{<div class="r">}}\preformatted{logistic_reg() \%>\% 
   set_engine("keras") \%>\% 
-  set_mode("classification") \%>\% 
   translate()
 }\if{html}{\out{</div>}}\preformatted{## Logistic Regression Model Specification (classification)
 ## 
@@ -187,10 +209,10 @@ predictive distribution as appropriate) is returned.
 The standardized parameter names in parsnip can be mapped to their
 original names in each engine that has main parameters. Each engine
 typically has a different default value (shown in parentheses) for each
-parameter.\tabular{llll}{
-   \strong{parsnip} \tab \strong{glmnet} \tab \strong{spark} \tab \strong{keras} \cr
-   penalty \tab lambda \tab reg_param (0) \tab penalty (0) \cr
-   mixture \tab alpha (1) \tab elastic_net_param (0) \tab NA \cr
+parameter.\tabular{lllll}{
+   \strong{parsnip} \tab \strong{glmnet} \tab \strong{LiblineaR} \tab \strong{spark} \tab \strong{keras} \cr
+   penalty \tab lambda \tab cost \tab reg_param (0) \tab penalty (0) \cr
+   mixture \tab alpha (1) \tab type (0) \tab elastic_net_param (0) \tab NA \cr
 }
 
 }
@@ -202,11 +224,7 @@ show_engines("logistic_reg")
 logistic_reg()
 # Parameters can be represented by a placeholder:
 logistic_reg(penalty = varying())
-model <- logistic_reg(penalty = 10, mixture = 0.1)
-model
-update(model, penalty = 1)
-update(model, penalty = 1, fresh = TRUE)
 }
 \seealso{
-\code{\link[=fit]{fit()}}
+\code{\link[=fit]{fit()}}, \code{\link[=set_engine]{set_engine()}}, \code{\link[=update]{update()}}
 }

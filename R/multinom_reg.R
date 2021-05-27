@@ -16,7 +16,6 @@
 #'  here (`NULL`), the values are taken from the underlying model
 #'  functions. If parameters need to be modified, `update()` can be used
 #'  in lieu of recreating the object from scratch.
-#' @inheritParams boost_tree
 #' @param mode A single character string for the type of model.
 #'  The only possible value for this model is "classification".
 #' @param penalty A non-negative number representing the total
@@ -35,7 +34,7 @@
 #'  following _engines_:
 #' \itemize{
 #' \item \pkg{R}:   `"glmnet"`  (the default), `"nnet"`
-#' \item \pkg{Stan}:  `"stan"`
+#' \item \pkg{Spark}: `"spark"`
 #' \item \pkg{keras}: `"keras"`
 #' }
 #'
@@ -54,7 +53,7 @@
 #'  separately saved to disk. In a new session, the object can be
 #'  reloaded and reattached to the `parsnip` object.
 #'
-#' @seealso [fit()]
+#' @seealso [fit()], [set_engine()], [update()]
 #' @examples
 #' show_engines("multinom_reg")
 #'
@@ -101,15 +100,8 @@ translate.multinom_reg <- translate.linear_reg
 
 # ------------------------------------------------------------------------------
 
-#' @inheritParams update.boost_tree
-#' @param object A multinomial regression model specification.
-#' @examples
-#' model <- multinom_reg(penalty = 10, mixture = 0.1)
-#' model
-#' update(model, penalty = 1)
-#' update(model, penalty = 1, fresh = TRUE)
 #' @method update multinom_reg
-#' @rdname multinom_reg
+#' @rdname parsnip_update
 #' @export
 update.multinom_reg <-
   function(object,
@@ -168,13 +160,24 @@ check_args.multinom_reg <- function(object) {
 
 # ------------------------------------------------------------------------------
 
+#' @importFrom vctrs vec_size
 organize_multnet_class <- function(x, object) {
-  x[,1]
+  if (vec_size(x) > 1) {
+    x <- x[,1]
+  } else {
+    x <- as.character(x)
+  }
+  x
 }
 
+#' @importFrom vctrs vec_size
 organize_multnet_prob <- function(x, object) {
-  x <- x[,,1]
-  as_tibble(x)
+  if (vec_size(x) > 1) {
+    x <- as_tibble(x[,,1])
+  } else {
+    x <- tibble::as_tibble_row(x[,,1])
+  }
+  x
 }
 
 organize_nnet_prob <- function(x, object) {
