@@ -3,13 +3,14 @@
 #' `augment()` will add column(s) for predictions to the given data.
 #'
 #' For regression models, a `.pred` column is added. If `x` was created using
-#' [fit()] and `new_data` contains the outcome column, a `.resid` column is
+#' [fit.model_spec()] and `new_data` contains the outcome column, a `.resid` column is
 #' also added.
 #'
 #' For classification models, the results can include a column called
 #'  `.pred_class` as well as class probability columns named `.pred_{level}`.
 #'  This depends on what type of prediction types are available for the model.
-#' @param x A `model_fit` object produced by [fit()] or [fit_xy()].
+#' @param x A `model_fit` object produced by [fit.model_spec()] or
+#' [fit_xy.model_spec()] .
 #' @param new_data A data frame or matrix.
 #' @param ... Not currently used.
 #' @rdname augment
@@ -56,34 +57,35 @@
 #' augment(cls_xy, cls_tst[, -3])
 #'
 augment.model_fit <- function(x, new_data, ...) {
+  ret <- new_data
   if (x$spec$mode == "regression") {
     check_spec_pred_type(x, "numeric")
-    new_data <-
-      new_data %>%
+    ret <-
+      ret %>%
       dplyr::bind_cols(
         predict(x, new_data = new_data)
       )
     if (length(x$preproc$y_var) > 0) {
       y_nm <- x$preproc$y_var
       if (any(names(new_data) == y_nm)) {
-        new_data <- dplyr::mutate(new_data, .resid = !!rlang::sym(y_nm) - .pred)
+        ret <- dplyr::mutate(ret, .resid = !!rlang::sym(y_nm) - .pred)
       }
     }
   } else if (x$spec$mode == "classification") {
     if (spec_has_pred_type(x, "class")) {
-      new_data <- dplyr::bind_cols(
-        new_data,
+      ret <- dplyr::bind_cols(
+        ret,
         predict(x, new_data = new_data, type = "class")
       )
     }
     if (spec_has_pred_type(x, "prob")) {
-      new_data <- dplyr::bind_cols(
-        new_data,
+      ret <- dplyr::bind_cols(
+        ret,
         predict(x, new_data = new_data, type = "prob")
       )
     }
   } else {
     rlang::abort(paste("Unknown mode:", x$spec$mode))
   }
-  as_tibble(new_data)
+  as_tibble(ret)
 }

@@ -1,3 +1,22 @@
+# parsnip 0.1.7
+
+## Model Specification Changes
+
+* A model function (`gen_additive_mod()`) was added for generalized additive models. 
+
+* Each model now has a default engine that is used when the model is defined. The default for each model is listed in the help documents. This also adds functionality to declare an engine in the model specification function. `set_engine()` is still required if engine-specific arguments need to be added. (#513)
+
+* parsnip now checks for a valid combination of engine and mode (#529)
+
+* The default engine for `multinom_reg()` was changed to `nnet`. 
+
+## Other Changes
+
+* The helper functions `.convert_form_to_xy_fit()`, `.convert_form_to_xy_new()`, `.convert_xy_to_form_fit()`, and  `.convert_xy_to_form_new()` for converting between formula and matrix interface are now exported for developer use (#508).
+
+* Fix bug in `augment()` when non-predictor, non-outcome variables are included in data (#510).
+
+
 # parsnip 0.1.6
 
 ## Model Specification Changes
@@ -15,21 +34,25 @@
 
 * For xgboost, `mtry` and `colsample_bytree` can be passed as integer counts or proportions, while `subsample` and `validation` should always be proportions. `xgb_train()` now has a new option `counts` (`TRUE` or `FALSE`) that states which scale for `mtry` and `colsample_bytree` is being used. (#461)  
 
-* xgboost engines now respect the `event_level` option for predictions (#460).  
-
 ## Other Changes
 
 * Re-licensed package from GPL-2 to MIT. See [consent from copyright holders here](https://github.com/tidymodels/parsnip/issues/462).
 
 * `set_mode()` now checks if `mode` is compatible with the model class, similar to `new_model_spec()` (@jtlandis, #467). Both `set_mode()` and `set_engine()` now error for `NULL` or missing arguments (#503).
 
-* Re-organized model documentation for `update` methods (#479).
+* Re-organized model documentation:
+
+   * `update` methods were moved out of the model help files (#479).
+   * Each model/engine combination has its own help page. 
+   * The model help page has a dynamic bulleted list of the engines with links to the individual help pages. 
 
 * `generics::required_pkgs()` was extended for `parsnip` objects. 
 
 * Prediction functions now give a consistent error when a user uses an unavailable value of `type` (#489)
 
 * The `augment()` method was changed to avoid failing if the model does not enable class probabilities. The method now returns tibbles despite the input data class (#487) (#478)
+
+* xgboost engines now respect the `event_level` option for predictions (#460).  
 
 
 # parsnip 0.1.5
