@@ -26,7 +26,7 @@ columns. For a data frame \code{x}, the default is
 \code{\link[earth:earth]{earth::earth()}} and the reference below).
 }
 
-\subsection{Translation from parsnip to the original package (regression)}{\if{html}{\out{<div class="r">}}\preformatted{mars(num_terms = integer(1), prod_degree = integer(1), prune_method = character(1)) \%>\% 
+\subsection{Translation from parsnip to the original package (regression)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{mars(num_terms = integer(1), prod_degree = integer(1), prune_method = character(1)) \%>\% 
   set_engine("earth") \%>\% 
   set_mode("regression") \%>\% 
   translate()
@@ -46,7 +46,7 @@ columns. For a data frame \code{x}, the default is
 }
 }
 
-\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="r">}}\preformatted{mars(num_terms = integer(1), prod_degree = integer(1), prune_method = character(1)) \%>\% 
+\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{mars(num_terms = integer(1), prod_degree = integer(1), prune_method = character(1)) \%>\% 
   set_engine("earth") \%>\% 
   set_mode("classification") \%>\% 
   translate()
@@ -69,16 +69,15 @@ columns. For a data frame \code{x}, the default is
 }
 
 An alternate method for using MARs for categorical outcomes can be found
-in \code{\link[discrim:discrim_flexible]{discrim::discrim_flexible()}}.
+in \code{\link[=discrim_flexible]{discrim_flexible()}}.
 }
 
 \subsection{Preprocessing requirements}{
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via
-\code{\link[=fit.model_spec]{fit.model_spec()}}, parsnip will
-convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
+will convert factor columns to indicators.
 }
 
 \subsection{Examples}{

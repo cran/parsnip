@@ -4,10 +4,8 @@
 #'
 #' @description
 #' `decision_tree()` defines a model as a set of `if/then` statements that
-#' creates a tree-based structure.
-#'
-#' There are different ways to fit this model. See the engine-specific pages
-#' for more details:
+#' creates a tree-based structure. This function can fit classification,
+#' regression, and censored regression models.
 #'
 #' \Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("decision_tree")}
 #'

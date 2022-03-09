@@ -6,10 +6,8 @@
 #'
 #' `boost_tree()` defines a model that creates a series of decision trees
 #' forming an ensemble. Each tree depends on the results of previous trees.
-#' All trees in the ensemble are combined to produce a final prediction.
-#'
-#' There are different ways to fit this model. See the engine-specific pages
-#' for more details:
+#' All trees in the ensemble are combined to produce a final prediction. This
+#' function can fit classification, regression, and censored regression models.
 #'
 #' \Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("boost_tree")}
 #'
@@ -52,7 +50,6 @@
 #'
 #' boost_tree(mode = "classification", trees = 20)
 #' @export
-#' @importFrom purrr map_lgl
 boost_tree <-
   function(mode = "unknown",
            engine = "xgboost",
@@ -386,7 +383,6 @@ maybe_proportion <- function(x, nm) {
   }
 }
 
-#' @importFrom stats binomial
 xgb_pred <- function(object, newdata, ...) {
   if (!inherits(newdata, "xgb.DMatrix")) {
     newdata <- maybe_matrix(newdata)
@@ -456,7 +452,6 @@ get_event_level <- function(model_spec){
   event_level
 }
 
-#' @importFrom purrr map_df
 #' @export
 #' @rdname multi_predict
 #' @param trees An integer vector for the number of trees in the ensemble.
@@ -487,7 +482,12 @@ multi_predict._xgb.Booster <-
   }
 
 xgb_by_tree <- function(tree, object, new_data, type, ...) {
-  pred <- xgb_pred(object$fit, newdata = new_data, ntreelimit = tree)
+  pred <- xgb_pred(
+    object$fit,
+    newdata = new_data,
+    iterationrange = c(1, tree + 1),
+    ntreelimit = NULL
+  )
 
   # switch based on prediction type
   if (object$spec$mode == "regression") {

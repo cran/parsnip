@@ -20,7 +20,7 @@ For \code{penalty}, the amount of regularization is \emph{only} L2 penalty (i.e.
 ridge or weight decay).
 }
 
-\subsection{Translation from parsnip to the original package}{\if{html}{\out{<div class="r">}}\preformatted{multinom_reg(penalty = double(1)) \%>\% 
+\subsection{Translation from parsnip to the original package}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{multinom_reg(penalty = double(1)) \%>\% 
   set_engine("keras") \%>\% 
   translate()
 }\if{html}{\out{</div>}}\preformatted{## Multinomial Regression Model Specification (classification)
@@ -44,9 +44,8 @@ single hidden unit.
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via
-\code{\link[=fit.model_spec]{fit.model_spec()}}, parsnip will
-convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
+will convert factor columns to indicators.
 
 Predictors should have the same scale. One way to achieve this is to
 center and scale each so that each predictor has mean zero and a

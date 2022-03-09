@@ -9,7 +9,6 @@ ranger_class_pred <-
     res
   }
 
-#' @importFrom stats qnorm
 ranger_num_confint <- function(object, new_data, ...) {
   hf_lvl <- (1 - object$spec$method$pred$conf_int$extras$level)/2
   const <- qnorm(hf_lvl, lower.tail = FALSE)
@@ -82,13 +81,15 @@ set_new_model("rand_forest")
 
 set_model_mode("rand_forest", "classification")
 set_model_mode("rand_forest", "regression")
+set_model_mode("rand_forest", "censored regression")
 
 # ------------------------------------------------------------------------------
 # ranger components
 
 set_model_engine("rand_forest", "classification", "ranger")
 set_model_engine("rand_forest", "regression", "ranger")
-set_dependency("rand_forest", "ranger", "ranger")
+set_dependency("rand_forest", "ranger", "ranger", mode = "classification")
+set_dependency("rand_forest", "ranger", "ranger", mode = "regression")
 
 set_model_arg(
   model = "rand_forest",
@@ -322,7 +323,8 @@ set_pred(
 
 set_model_engine("rand_forest", "classification", "randomForest")
 set_model_engine("rand_forest", "regression",     "randomForest")
-set_dependency("rand_forest", "randomForest", "randomForest")
+set_dependency("rand_forest", "randomForest", "randomForest", mode = "regression")
+set_dependency("rand_forest", "randomForest", "randomForest", mode = "classification")
 
 set_model_arg(
   model = "rand_forest",

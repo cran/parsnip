@@ -3,10 +3,8 @@
 #' @description
 #'
 #' `nearest_neighbor()` defines a model that uses the `K` most similar data
-#' points from the training set to predict new samples.
-#'
-#' There are different ways to fit this model. See the engine-specific pages
-#' for more details:
+#' points from the training set to predict new samples. This function can
+#' fit classification and regression models.
 #'
 #' \Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("nearest_neighbor")}
 #'
@@ -175,8 +173,6 @@ translate.nearest_neighbor <- function(x, engine = x$engine, ...) {
 
 # ------------------------------------------------------------------------------
 
-#' @importFrom purrr map_df
-#' @importFrom dplyr starts_with
 #' @rdname multi_predict
 #' @param neighbors An integer vector for the number of nearest neighbors.
 #' @export

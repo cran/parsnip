@@ -38,7 +38,7 @@ See \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} and
 and other options.
 }
 
-\subsection{Translation from parsnip to the original package}{\if{html}{\out{<div class="r">}}\preformatted{logistic_reg() \%>\% 
+\subsection{Translation from parsnip to the original package}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{logistic_reg() \%>\% 
   set_engine("stan") \%>\% 
   translate()
 }\if{html}{\out{</div>}}\preformatted{## Logistic Regression Model Specification (classification)
@@ -58,9 +58,8 @@ process. Change this value in \code{set_engine()} to show the MCMC logs.
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via
-\code{\link[=fit.model_spec]{fit.model_spec()}}, parsnip will
-convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
+will convert factor columns to indicators.
 }
 
 \subsection{Other details}{

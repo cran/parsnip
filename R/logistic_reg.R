@@ -3,10 +3,7 @@
 #' @description
 #' [logistic_reg()] defines a generalized linear model for binary outcomes. A
 #' linear combination of the predictors is used to model the log odds of an
-#' event.
-#'
-#' There are different ways to fit this model. See the engine-specific pages
-#' for more details:
+#' event. This function can fit classification models.
 #'
 #' \Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("logistic_reg")}
 #'
@@ -31,6 +28,9 @@
 #'
 #' @template spec-details
 #'
+#' @details This model fits a classification model for binary outcomes; for
+#' multiclass outcomes, see [multinom_reg()].
+#'
 #' @template spec-references
 #'
 #' @seealso \Sexpr[stage=render,results=rd]{parsnip:::make_seealso_list("logistic_reg")}
@@ -40,7 +40,6 @@
 #'
 #' logistic_reg()
 #' @export
-#' @importFrom purrr map_lgl
 logistic_reg <-
   function(mode = "classification",
            engine = "glm",
@@ -278,8 +277,6 @@ predict._lognet <- function(object, new_data, type = NULL, opts = list(), penalt
 }
 
 
-#' @importFrom dplyr full_join as_tibble arrange
-#' @importFrom tidyr gather
 #' @export
 #' @rdname multi_predict
 multi_predict._lognet <-

@@ -6,7 +6,7 @@ set_model_mode("gen_additive_mod", "regression")
 # ------------------------------------------------------------------------------
 #### REGRESION ----
 set_model_engine(model = "gen_additive_mod", mode = "regression", eng = "mgcv")
-set_dependency(model = "gen_additive_mod", eng = "mgcv", pkg = "mgcv")
+set_dependency(model = "gen_additive_mod", eng = "mgcv", pkg = "mgcv", mode = "regression")
 
 #Args
 
@@ -107,8 +107,7 @@ set_pred(
 # ------------------------------------------------------------------------------
 #### CLASSIFICATION
 set_model_engine(model = "gen_additive_mod", mode = "classification", eng = "mgcv")
-set_dependency(model = "gen_additive_mod", eng = "mgcv", pkg = "mgcv")
-
+set_dependency(model = "gen_additive_mod", eng = "mgcv", pkg = "mgcv", mode = "classification")
 
 set_encoding(
   model = "gen_additive_mod",
@@ -144,6 +143,9 @@ set_pred(
   value  = list(
     pre  = NULL,
     post = function(x, object) {
+      if (is.array(x)) {
+        x <- as.vector(x)
+      }
       x <- ifelse(x >= 0.5, object$lvl[2], object$lvl[1])
       unname(x)
     },

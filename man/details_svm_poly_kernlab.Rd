@@ -22,7 +22,7 @@ This model has 4 tuning parameters:
 }
 }
 
-\subsection{Translation from parsnip to the original package (regression)}{\if{html}{\out{<div class="r">}}\preformatted{svm_poly(
+\subsection{Translation from parsnip to the original package (regression)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{svm_poly(
   cost = double(1),
   degree = integer(1),
   scale_factor = double(1), 
@@ -48,7 +48,7 @@ This model has 4 tuning parameters:
 }
 }
 
-\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="r">}}\preformatted{svm_poly(
+\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{svm_poly(
   cost = double(1),
   degree = integer(1),
   scale_factor = double(1)
@@ -85,9 +85,8 @@ by R’s random number stream.
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via
-\code{\link[=fit.model_spec]{fit.model_spec()}}, parsnip will
-convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
+will convert factor columns to indicators.
 
 Predictors should have the same scale. One way to achieve this is to
 center and scale each so that each predictor has mean zero and a

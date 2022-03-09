@@ -14,7 +14,6 @@ maybe_multivariate <- function(results, object) {
 }
 
 #' Convenience function for intervals
-#' @importFrom stats quantile
 #' @export
 #' @keywords internal
 #' @param x A fitted model object
@@ -32,7 +31,6 @@ convert_stan_interval <- function(x, level = 0.95, lower = TRUE) {
 
 # ------------------------------------------------------------------------------
 
-#' @importFrom stats qt
 # used by logistic_reg() and gen_additive_mod()
 logistic_lp_to_conf_int <- function(results, object) {
   hf_lvl <- (1 - object$spec$method$pred$conf_int$extras$level)/2
@@ -58,7 +56,7 @@ logistic_lp_to_conf_int <- function(results, object) {
   res
 }
 
-# used by gen_additive_mod()
+# used by linear_reg() and gen_additive_mod()
 linear_lp_to_conf_int <-
 function(results, object) {
   hf_lvl <- (1 - object$spec$method$pred$conf_int$extras$level)/2
@@ -84,16 +82,22 @@ function(results, object) {
 }
 
 # ------------------------------------------------------------------------------
-# nocov
+# nocov start
 
-#' @importFrom utils globalVariables
 utils::globalVariables(
   c('.', '.label', '.pred', '.row', 'data', 'engine', 'engine2', 'group',
     'lab', 'original', 'predicted_label', 'prediction', 'value', 'type',
     "neighbors", ".submodels", "has_submodel", "max_neighbor", "max_penalty",
     "max_terms", "max_tree", "model", "name", "num_terms", "penalty", "trees",
     "sub_neighbors", ".pred_class", "x", "y", "predictor_indicators",
-    "compute_intercept", "remove_intercept", "estimate", "term")
+    "compute_intercept", "remove_intercept", "estimate", "term",
+    "call_info", "component", "component_id", "func", "tunable", "label",
+    "pkg", ".order", "item", "tunable", "has_ext"
+   )
 )
+
+release_bullets <- function() {
+  c("Run `knit_engine_docs()` and `devtools::document()` to update docs")
+}
 
 # nocov end

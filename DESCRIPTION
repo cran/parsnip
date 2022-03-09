@@ -1,21 +1,12 @@
 Package: parsnip
 Title: A Common API to Modeling and Analysis Functions
-Version: 0.1.7
-Authors@R: 
-    c(person(given = "Max",
-             family = "Kuhn",
-             role = c("aut", "cre"),
-             email = "max@rstudio.com"),
-      person(given = "Davis",
-             family = "Vaughan",
-             role = "aut",
-             email = "davis@rstudio.com"),
-      person(given = "Emil",
-             family = "Hvitfeldt",
-             role = "ctb",
-             email = "emilhhvitfeldt@gmail.com"),
-      person(given = "RStudio",
-             role = "cph"))
+Version: 0.2.0
+Authors@R: c(
+    person("Max", "Kuhn", , "max@rstudio.com", role = c("aut", "cre")),
+    person("Davis", "Vaughan", , "davis@rstudio.com", role = "aut"),
+    person("Emil", "Hvitfeldt", , "emilhhvitfeldt@gmail.com", role = "ctb"),
+    person("RStudio", role = c("cph", "fnd"))
+  )
 Maintainer: Max Kuhn <max@rstudio.com>
 Description: A common interface is provided to allow users to specify a
     model without having to remember the different argument names across
@@ -26,27 +17,30 @@ URL: https://parsnip.tidymodels.org,
         https://github.com/tidymodels/parsnip
 BugReports: https://github.com/tidymodels/parsnip/issues
 Depends: R (>= 2.10)
-Imports: dplyr (>= 0.8.0.1), generics (>= 0.1.0), globals, glue,
-        hardhat (>= 0.1.5.9000), lifecycle, magrittr, prettyunits,
-        purrr, rlang (>= 0.3.1), stats, tibble (>= 2.1.1), tidyr (>=
-        1.0.0), utils, vctrs (>= 0.2.0)
-Suggests: C50, covr, dials, earth, keras, kernlab, kknn, knitr,
-        LiblineaR, MASS, Matrix, mgcv, modeldata, nlme, randomForest,
-        ranger (>= 0.12.0), rmarkdown, rpart, sparklyr (>= 1.0.0),
-        survival, testthat, xgboost
+Imports: cli, dplyr (>= 0.8.0.1), generics (>= 0.1.0.9000), ggplot2,
+        globals, glue, hardhat (>= 0.1.6.9001), lifecycle, magrittr,
+        prettyunits, purrr, rlang (>= 0.3.1), stats, tibble (>= 2.1.1),
+        tidyr (>= 1.0.0), utils, vctrs (>= 0.2.0), withr
+Suggests: C50, covr, dials (>= 0.0.10.9001), earth, tensorflow,
+        ggrepel, keras, kernlab, kknn, knitr, LiblineaR, MASS, Matrix,
+        mgcv, modeldata, nlme, ranger (>= 0.12.0), remotes, rmarkdown,
+        rpart, sparklyr (>= 1.0.0), survival, testthat, xgboost (>=
+        1.5.0.1)
 VignetteBuilder: knitr
 ByteCompile: true
-Config/Needs/website: C50, earth, glmnet, keras, kernlab, kknn,
+Config/Needs/website: C50, dbarts, earth, glmnet, keras, kernlab, kknn,
         LiblineaR, mgcv, nnet, parsnip, randomForest, ranger, rpart,
-        rstanarm, tidymodels, tidyverse/tidytemplate, xgboost
+        rstanarm, tidymodels/tidymodels, tidyverse/tidytemplate,
+        xgboost
+Config/rcmdcheck/ignore-inconsequential-notes: true
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1.9001
+RoxygenNote: 7.1.2
 NeedsCompilation: no
-Packaged: 2021-07-20 15:25:18 UTC; max
+Packaged: 2022-02-25 02:38:49 UTC; max
 Author: Max Kuhn [aut, cre],
   Davis Vaughan [aut],
   Emil Hvitfeldt [ctb],
-  RStudio [cph]
+  RStudio [cph, fnd]
 Repository: CRAN
-Date/Publication: 2021-07-21 09:40:06 UTC
+Date/Publication: 2022-03-09 09:30:02 UTC

@@ -24,7 +24,7 @@ The implementation of C5.0 limits the number of trees to be between 1
 and 100.
 }
 
-\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="r">}}\preformatted{boost_tree(trees = integer(), min_n = integer(), sample_size = numeric()) \%>\% 
+\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{boost_tree(trees = integer(), min_n = integer(), sample_size = numeric()) \%>\% 
   set_engine("C5.0") \%>\% 
   set_mode("classification") \%>\% 
   translate()
@@ -59,8 +59,8 @@ are not required for this model.
 
 By default, early stopping is used. To use the complete set of boosting
 iterations, pass \code{earlyStopping = FALSE} to
-\code{\link[=set_engine]{set_engine()}}. Also, it is unlikely that early
-stopping will occur if \code{sample_size = 1}.
+\code{\link[=set_engine]{set_engine()}}. Also, it is unlikely that early stopping
+will occur if \code{sample_size = 1}.
 }
 
 }

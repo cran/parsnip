@@ -6,57 +6,32 @@
 #' This function is soft-deprecated in favor of `survival_reg()` which uses the
 #' `"censored regression"` mode.
 #'
-#' `surv_reg()` is a way to generate a _specification_ of a model
-#'  before fitting and allows the model to be created using
-#'  R. The main argument for the
-#'  model is:
-#' \itemize{
-#'   \item \code{dist}: The probability distribution of the outcome.
-#' }
-#' This argument is converted to its specific names at the
-#'  time that the model is fit. Other options and arguments can be
-#'  set using `set_engine()`. If left to its default
-#'  here (`NULL`), the value is taken from the underlying model
-#'  functions.
+#' `surv_reg()` defines a parametric survival model.
+
 #'
-#' The data given to the function are not saved and are only used
-#'  to determine the _mode_ of the model. For `surv_reg()`,the
-#'  mode will always be "regression".
+#' \Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("surv_reg")}
 #'
-#'  Since survival models typically involve censoring (and require the use of
-#'  [survival::Surv()] objects), the [fit.model_spec()] function will require that the
-#'  survival model be specified via the formula interface.
+#' More information on how \pkg{parsnip} is used for modeling is at
+#' \url{https://www.tidymodels.org/}.
 #'
-#' Also, for the `flexsurv::flexsurvfit` engine, the typical
-#'  `strata` function cannot be used. To achieve the same effect,
-#'  the extra parameter roles can be used (as described above).
-#'
+#' @inheritParams boost_tree
 #' @param mode A single character string for the prediction outcome mode.
 #'  The only possible value for this model is "regression".
-#'  @param engine A single character string specifying what computational engine
-#'  to use for fitting. Possible engines are listed below. The default for this
-#'  model is `"survival"`.
-#' @param dist A character string for the outcome distribution. "weibull" is
-#'  the default.
-#' @details
-#' For `surv_reg()`, the mode will always be "regression".
+#' @param dist A character string for the probability distribution of the
+#'  outcome. The default is "weibull".
 #'
-#' The model can be created using the `fit()` function using the
-#'  following _engines_:
-#' \itemize{
-#' \item \pkg{R}:  `"flexsurv"`, `"survival"` (the default)
-#' }
+#' @template spec-details
 #'
-#' @includeRmd man/rmd/surv-reg.Rmd details
+#' @template spec-survival
 #'
-#' @seealso [fit.model_spec()], [survival::Surv()], [set_engine()], [update()]
-#' @references Jackson, C. (2016). `flexsurv`: A Platform for Parametric Survival
-#'  Modeling in R. _Journal of Statistical Software_, 70(8), 1 - 33.
+#' @template spec-references
+#'
+#' @seealso \Sexpr[stage=render,results=rd]{parsnip:::make_seealso_list("surv_reg")}
+#'
 #' @examples
 #' show_engines("surv_reg")
 #'
-#' surv_reg()
-#'
+#' surv_reg(mode = "regression", dist = "weibull")
 #' @keywords internal
 #' @export
 surv_reg <- function(mode = "regression", engine = "survival", dist = NULL) {
@@ -163,8 +138,6 @@ check_args.surv_reg <- function(object) {
 
 # ------------------------------------------------------------------------------
 
-#' @importFrom stats setNames
-#' @importFrom dplyr mutate
 survreg_quant <- function(results, object) {
   pctl <- object$spec$method$pred$quantile$args$p
   n <- nrow(results)
@@ -189,14 +162,12 @@ survreg_quant <- function(results, object) {
 
 # ------------------------------------------------------------------------------
 
-#' @importFrom dplyr bind_rows
 flexsurv_mean <- function(results, object) {
   results <- unclass(results)
   results <- bind_rows(results)
   results$est
 }
 
-#' @importFrom stats setNames
 flexsurv_quant <- function(results, object) {
   results <- map(results, as_tibble)
   names(results) <- NULL

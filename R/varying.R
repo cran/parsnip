@@ -1,17 +1,23 @@
 #' A placeholder function for argument values
 #'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#'
 #' [varying()] is used when a parameter will be specified at a later date.
 #' @export
 #' @keywords internal
 varying <- function() {
+  lifecycle::deprecate_soft("0.1.8", "varying()", "hardhat::tune()")
   quote(varying())
 }
 
-#' @importFrom generics varying_args
 #' @export
 generics::varying_args
 
 #' Determine varying arguments
+#'
+#' @description
+#' `r lifecycle::badge("deprecated")`
 #'
 #' `varying_args()` takes a model specification or a recipe and returns a tibble
 #' of information on all possible varying arguments and whether or not they
@@ -58,10 +64,11 @@ generics::varying_args
 #'   ) %>%
 #'   varying_args()
 #'
-#' @importFrom purrr map map_lgl
 #' @rdname varying_args
+#' @keywords internal
 #' @export
 varying_args.model_spec <- function(object, full = TRUE, ...) {
+  lifecycle::deprecate_soft("0.1.8", "varying_args()", "tune_args()")
 
   # use the model_spec top level class as the id
   id <- class(object)[1]
@@ -94,10 +101,10 @@ varying_args.model_spec <- function(object, full = TRUE, ...) {
 # Maybe use this data as substrate to make a new object type (param_set?) that
 #  would have its own methods for grids and random sampling.
 
-#' @importFrom purrr map2_dfr map_chr
 #' @export
 #' @rdname varying_args
 varying_args.recipe <- function(object, full = TRUE, ...) {
+  lifecycle::deprecate_soft("0.1.8", "varying_args()", "tune_args()")
 
   steps <- object$steps
 
@@ -108,10 +115,10 @@ varying_args.recipe <- function(object, full = TRUE, ...) {
   map_dfr(object$steps, varying_args, full = full)
 }
 
-#' @importFrom purrr map map_lgl
 #' @export
 #' @rdname varying_args
 varying_args.step <- function(object, full = TRUE, ...) {
+  lifecycle::deprecate_soft("0.1.8", "varying_args()", "tune_args()")
 
   # Unique step id
   id <- object$id

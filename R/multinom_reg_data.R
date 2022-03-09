@@ -234,12 +234,10 @@ set_pred(
   type = "class",
   value = list(
     pre = NULL,
-    post = function(x, object) {
-      object$lvl[x + 1]
-    },
-    func = c(pkg = "keras", fun = "predict_classes"),
+    post = NULL,
+    func = c(pkg = "parsnip", fun = "keras_predict_classes"),
     args =
-      list(object = quote(object$fit),
+      list(object = quote(object),
            x = quote(as.matrix(new_data)))
   )
 )
@@ -256,7 +254,7 @@ set_pred(
       x <- as_tibble(x)
       x
     },
-    func = c(pkg = "keras", fun = "predict_proba"),
+    func = c(fun = "predict"),
     args =
       list(object = quote(object$fit),
            x = quote(as.matrix(new_data)))
@@ -355,3 +353,125 @@ set_pred(
   )
 )
 
+
+# ------------------------------------------------------------------------------
+
+
+set_model_engine("multinom_reg", "classification", "brulee")
+set_dependency("multinom_reg", "brulee", "brulee")
+
+
+set_model_arg(
+  model = "multinom_reg",
+  eng = "brulee",
+  parsnip = "penalty",
+  original = "penalty",
+  func = list(pkg = "dials", fun = "penalty"),
+  has_submodel = FALSE
+)
+
+set_model_arg(
+  model = "multinom_reg",
+  eng = "brulee",
+  parsnip = "mixture",
+  original = "mixture",
+  func = list(pkg = "dials", fun = "mixture"),
+  has_submodel = FALSE
+)
+
+set_model_arg(
+  model = "multinom_reg",
+  eng = "brulee",
+  parsnip = "epochs",
+  original = "epochs",
+  func = list(pkg = "dials", fun = "epochs"),
+  has_submodel = FALSE
+)
+
+set_model_arg(
+  model = "multinom_reg",
+  eng = "brulee",
+  parsnip = "learn_rate",
+  original = "learn_rate",
+  func = list(pkg = "dials", fun = "learn_rate"),
+  has_submodel = FALSE
+)
+
+set_model_arg(
+  model = "multinom_reg",
+  eng = "brulee",
+  parsnip = "momentum",
+  original = "momentum",
+  func = list(pkg = "dials", fun = "momentum"),
+  has_submodel = FALSE
+)
+
+
+set_model_arg(
+  model = "multinom_reg",
+  eng = "brulee",
+  parsnip = "stop_iter",
+  original = "stop_iter",
+  func = list(pkg = "dials", fun = "stop_iter"),
+  has_submodel = FALSE
+)
+
+set_fit(
+  model = "multinom_reg",
+  eng = "brulee",
+  mode = "classification",
+  value = list(
+    interface = "data.frame",
+    protect = c("x", "y"),
+    func = c(pkg = "brulee", fun = "brulee_multinomial_reg"),
+    defaults = list()
+  )
+)
+
+set_encoding(
+  model = "multinom_reg",
+  eng = "brulee",
+  mode = "classification",
+  options = list(
+    predictor_indicators = "none",
+    compute_intercept = FALSE,
+    remove_intercept = FALSE,
+    allow_sparse_x = FALSE
+  )
+)
+
+set_pred(
+  model = "multinom_reg",
+  eng = "brulee",
+  mode = "classification",
+  type = "class",
+  value = list(
+    pre = NULL,
+    post = NULL,
+    func = c(fun = "predict"),
+    args =
+      list(
+        object = quote(object$fit),
+        new_data = quote(new_data),
+        type = "class"
+      )
+  )
+)
+
+set_pred(
+  model = "multinom_reg",
+  eng = "brulee",
+  mode = "classification",
+  type = "prob",
+  value = list(
+    pre = NULL,
+    post = NULL,
+    func = c(fun = "predict"),
+    args =
+      list(
+        object = quote(object$fit),
+        new_data = quote(new_data),
+        type = "prob"
+      )
+  )
+)

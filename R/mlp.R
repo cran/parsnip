@@ -2,10 +2,8 @@
 #'
 #' @description
 #' `mlp()` defines a multilayer perceptron model (a.k.a. a single layer,
-#' feed-forward neural network).
-#'
-#' There are different ways to fit this model. See the engine-specific pages
-#' for more details:
+#' feed-forward neural network). This function can fit classification and
+#' regression models.
 #'
 #' \Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("mlp")}
 #'
@@ -40,14 +38,15 @@
 mlp <-
   function(mode = "unknown", engine = "nnet",
            hidden_units = NULL, penalty = NULL, dropout = NULL, epochs = NULL,
-           activation = NULL) {
+           activation = NULL, learn_rate = NULL) {
 
     args <- list(
       hidden_units = enquo(hidden_units),
       penalty      = enquo(penalty),
       dropout      = enquo(dropout),
       epochs       = enquo(epochs),
-      activation   = enquo(activation)
+      activation   = enquo(activation),
+      learn_rate   = enquo(learn_rate)
     )
 
     new_model_spec(
@@ -81,7 +80,7 @@ update.mlp <-
   function(object,
            parameters = NULL,
            hidden_units = NULL, penalty = NULL, dropout = NULL,
-           epochs = NULL, activation = NULL,
+           epochs = NULL, activation = NULL, learn_rate = NULL,
            fresh = FALSE, ...) {
 
     eng_args <- update_engine_parameters(object$eng_args, ...)
@@ -95,7 +94,8 @@ update.mlp <-
       penalty      = enquo(penalty),
       dropout      = enquo(dropout),
       epochs       = enquo(epochs),
-      activation   = enquo(activation)
+      activation   = enquo(activation),
+      learn_rate   = enquo(learn_rate)
     )
 
     args <- update_main_parameters(args, parameters)
@@ -171,12 +171,21 @@ check_args.mlp <- function(object) {
     if (args$dropout > 0 & args$penalty > 0)
       rlang::abort("Both weight decay and dropout should not be specified.")
 
-  act_funs <- c("linear", "softmax", "relu", "elu")
 
-  if (is.character(args$activation))
-    if (!any(args$activation %in% c(act_funs)))
-      rlang::abort(glue::glue("`activation` should be one of: ",
-                   glue::glue_collapse(glue::glue("'{act_funs}'"), sep = ", ")))
+  if (object$engine == "brulee") {
+    act_funs <- c("linear", "relu", "elu", "tanh")
+  } else if (object$engine == "keras") {
+    act_funs <- c("linear", "softmax", "relu", "elu")
+  }
+
+  if (is.character(args$activation)) {
+    if (!any(args$activation %in% c(act_funs))) {
+      rlang::abort(
+        glue::glue("`activation` should be one of: ",
+                   glue::glue_collapse(glue::glue("'{act_funs}'"), sep = ", "))
+      )
+    }
+  }
 
   invisible(object)
 }
@@ -375,4 +384,92 @@ mlp_num_weights <- function(p, hidden_units, classes) {
   ((p + 1) * hidden_units) + ((hidden_units+1) * classes)
 }
 
+## -----------------------------------------------------------------------------
 
+#' @importFrom purrr map_df map
+#' @importFrom dplyr arrange select
+#' @rdname multi_predict
+#' @param epochs An integer vector for the number of training epochs.
+#' @export
+multi_predict._torch_mlp <-
+  function(object, new_data, type = NULL, epochs = NULL, ...) {
+    if (any(names(enquos(...)) == "newdata"))
+      rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
+
+    load_libs(object, quiet = TRUE, attach = TRUE)
+
+    if (is.null(epochs))
+      epochs <- length(object$fit$models)
+
+    epochs <- sort(epochs)
+
+    if (is.null(type)) {
+      if (object$spec$mode == "classification")
+        type <- "class"
+      else
+        type <- "numeric"
+    }
+
+    res <-
+      purrr::map(epochs,
+                 ~ predict(object, new_data, type, epochs = .x) %>%
+                   dplyr::mutate(epochs = .x)) %>%
+      purrr::map_dfr(~ .x %>% dplyr::mutate(.row = 1:nrow(new_data))) %>%
+      dplyr::arrange(.row, epochs)
+    res <- split(dplyr::select(res, -.row), res$.row)
+    names(res) <- NULL
+    tibble(.pred = res)
+  }
+
+
+reformat_torch_num <- function(results, object) {
+
+  if (isTRUE(ncol(results) > 1)) {
+    nms <- colnames(results)
+    results <- as_tibble(results, .name_repair = "minimal")
+    if (length(nms) == 0 && length(object$preproc$y_var) == ncol(results)) {
+      names(results) <- object$preproc$y_var
+    }
+  }  else {
+    results <- unname(results[[1]])
+  }
+  results
+}
+
+#' Wrapper for keras class predictions
+#' @param object A keras model fit
+#' @param x A data set.
+#' @export
+#' @keywords internal
+keras_predict_classes <- function(object, x) {
+  if (utils::packageVersion("keras") >= package_version("2.6")) {
+    preds <- predict(object$fit, x)
+    if (tensorflow::tf_version() <= package_version("2.0.0")) {
+      # -1 to assign with keras' zero indexing
+      index <- apply(preds, 1, which.max) - 1
+    } else {
+      index <- preds %>% keras::k_argmax() %>% as.integer()
+    }
+  } else {
+    index <- keras::predict_classes(object$fit, x)
+  }
+  object$lvl[index + 1]
+}
+
+#' Set seed in R and TensorFlow at the same time
+#'
+#' Some Keras models requires seeds to be set in both R and TensorFlow to
+#' achieve reproducible results. This function sets these seeds at the same
+#' time using version appropriate functions.
+#'
+#' @param seed 1 integer value.
+#' @export
+#' @keywords internal
+set_tf_seed <- function(seed) {
+  set.seed(seed)
+  if (tensorflow::tf_version() >= package_version("2.0")) {
+    tensorflow::tf$random$set_seed(seed)
+  } else {
+    tensorflow::tf$random$set_random_seed(seed)
+  }
+}

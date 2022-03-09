@@ -34,10 +34,8 @@ calculating Minkowski distance.}
 }
 \description{
 \code{nearest_neighbor()} defines a model that uses the \code{K} most similar data
-points from the training set to predict new samples.
-
-There are different ways to fit this model. See the engine-specific pages
-for more details:
+points from the training set to predict new samples. This function can
+fit classification and regression models.
 
 \Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("nearest_neighbor")}
 
@@ -46,9 +44,11 @@ More information on how \pkg{parsnip} is used for modeling is at
 }
 \details{
 This function only defines what \emph{type} of model is being fit. Once an engine
-is specified, the \emph{method} to fit the model is also defined.
+is specified, the \emph{method} to fit the model is also defined. See
+\code{\link[=set_engine]{set_engine()}} for more on setting the engine, including how to set engine
+arguments.
 
-The model is not trained or fit until the \code{\link[=fit.model_spec]{fit.model_spec()}} function is used
+The model is not trained or fit until the \code{\link[=fit.model_spec]{fit()}} function is used
 with the data.
 }
 \examples{
@@ -58,7 +58,7 @@ nearest_neighbor(neighbors = 11)
 
 }
 \references{
-\url{https://www.tidymodels.org}, \href{https://www.tmwr.org/}{\emph{Tidy Models with R}}
+\url{https://www.tidymodels.org}, \href{https://www.tmwr.org/}{\emph{Tidy Modeling with R}}, \href{https://www.tidymodels.org/find/parsnip/}{searchable table of parsnip models}
 }
 \seealso{
 \Sexpr[stage=render,results=rd]{parsnip:::make_seealso_list("nearest_neighbor")}

@@ -2,12 +2,14 @@ set_new_model("decision_tree")
 
 set_model_mode("decision_tree", "classification")
 set_model_mode("decision_tree", "regression")
+set_model_mode("decision_tree", "censored regression")
 
 # ------------------------------------------------------------------------------
 
 set_model_engine("decision_tree", "classification", "rpart")
 set_model_engine("decision_tree", "regression", "rpart")
-set_dependency("decision_tree", "rpart", "rpart")
+set_dependency("decision_tree", "rpart", "rpart", mode = "classification")
+set_dependency("decision_tree", "rpart", "rpart", mode = "regression")
 
 set_model_arg(
   model = "decision_tree",
@@ -159,7 +161,7 @@ set_pred(
 # ------------------------------------------------------------------------------
 
 set_model_engine("decision_tree", "classification", "C5.0")
-set_dependency("decision_tree", "C5.0", "C50")
+set_dependency("decision_tree", "C5.0", "C50", mode = "classification")
 
 set_model_arg(
   model = "decision_tree",

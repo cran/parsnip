@@ -86,35 +86,6 @@ test_that("numeric x and y, weights", {
   expect_null(observed$offset)
 })
 
-test_that("numeric x and y, offset", {
-  expected <- lm(
-    mpg ~ . - disp,
-    data = mtcars,
-    offset = disp,
-    x = TRUE,
-    y = TRUE
-  )
-  observed <-
-    .convert_form_to_xy_fit(
-      mpg ~ . - disp,
-      data = mtcars,
-      offset = log(disp),
-      indicators = "traditional",
-      remove_intercept = TRUE
-    )
-  expect_equal(format_x_for_test(expected$x), observed$x)
-  expect_equivalent(mtcars$mpg, observed$y)
-  expect_equal(expected$terms, observed$terms)
-  expect_equal(expected$xlevels, observed$xlevels)
-  expect_equal(log(mtcars$disp), observed$offset)
-  expect_null(observed$weights)
-
-  new_obs <-
-    .convert_form_to_xy_new(observed, new_data = mtcars[1:6, ])
-  expect_equal(mtcars[1:6, -c(1, 3)], new_obs$x)
-  expect_equal(log(mtcars$disp)[1:6], new_obs$offset)
-})
-
 test_that("numeric x and y, offset in-line", {
   expected <- lm(mpg ~ cyl + hp +  offset(log(disp)),
                  data = mtcars,
@@ -402,14 +373,6 @@ test_that("bad args", {
       remove_intercept = TRUE
     )
   )
-  expect_error(
-    .convert_form_to_xy_fit(
-      mpg ~ ., data = mtcars,
-      offset = 1:10,
-      indicators = "traditional",
-      remove_intercept = TRUE
-    )
-  )
 })
 
 test_that("numeric x and y, matrix composition", {
@@ -454,6 +417,30 @@ test_that("numeric x and multivariate y, matrix composition", {
                                      new_data = head(mtcars),
                                      composition = "matrix")
   expect_equal(as.matrix(mtcars[1:6,-(1:2)]), new_obs$x)
+})
+
+test_that("global `contrasts` option is respected", {
+  contrasts <- getOption("contrasts")
+  contrasts["unordered"] <- "contr.helmert"
+
+  rlang::local_options(contrasts = contrasts)
+
+  # Fit time
+  fit_result <- .convert_form_to_xy_fit(
+    num_pending ~ class + compounds,
+    data = hpc
+  )
+  fit_data <- fit_result$x
+
+  expect_identical(names(fit_data), c("class1", "class2", "class3", "compounds"))
+  expect_true(all(fit_data$class1 %in% c(-1, 0, 1)))
+
+  # Predict time
+  predict_result <- .convert_form_to_xy_new(fit_result, hpc)
+  predict_data <- predict_result$x
+
+  expect_identical(names(predict_data), c("class1", "class2", "class3", "compounds"))
+  expect_true(all(predict_data$class1 %in% c(-1, 0, 1)))
 })
 
 # ------------------------------------------------------------------------------
@@ -629,5 +616,17 @@ test_that("convert to matrix", {
   expect_true(
     inherits(parsnip::maybe_matrix(Matrix::Matrix(as.matrix(mtcars), sparse = TRUE)),
              "dgCMatrix")
+  )
+
+  data(ames, package = "modeldata")
+  expect_error(
+    parsnip::maybe_matrix(ames[, c("Year_Built", "Neighborhood")]),
+    "Some columns are non-numeric. The data cannot be converted to numeric matrix: 'Neighborhood'."
+  )
+  # Also for date columns
+  data(Chicago, package = "modeldata")
+  expect_error(
+    parsnip::maybe_matrix(Chicago[, c("ridership", "date")]),
+    "Some columns are non-numeric. The data cannot be converted to numeric matrix: 'date'."
   )
 })

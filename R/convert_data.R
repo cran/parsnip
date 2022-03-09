@@ -19,8 +19,7 @@
 #'
 #' @param data A data frame containing all relevant variables (e.g. outcome(s),
 #'   predictors, case weights, etc).
-#' @param ... Additional arguments passed to [stats::model.frame()] and
-#'   specification of `offset` and `contrasts`.
+#' @param ... Additional arguments passed to [stats::model.frame()].
 #' @param na.action A function which indicates what should happen when the data
 #'   contain NAs.
 #' @param indicators A string describing whether and how to create
@@ -35,8 +34,6 @@
 #' @keywords internal
 #' @export
 #'
-#' @importFrom stats .checkMFClasses .getXlevels delete.response
-#' @importFrom stats model.offset model.weights na.omit na.pass
 .convert_form_to_xy_fit <- function(formula,
                                     data,
                                     ...,
@@ -55,20 +52,6 @@
   check_form_dots(dots)
   for (i in seq_along(dots)) {
     mf_call[[names(dots)[i]]] <- get_expr(dots[[i]])
-  }
-
-  # setup contrasts
-  if (any(names(dots) == "contrasts")) {
-    contrasts <- eval_tidy(dots[["contrasts"]])
-  } else {
-    contrasts <- NULL
-  }
-
-  # For new data, save the expression to create offsets (if any)
-  if (any(names(dots) == "offset")) {
-    offset_expr <- get_expr(dots[["offset"]])
-  } else {
-    offset_expr <- NULL
   }
 
   mod_frame <- eval_tidy(mf_call)
@@ -90,24 +73,16 @@
     rlang::abort("`weights` must be a numeric vector")
   }
 
-  offset <- as.vector(model.offset(mod_frame))
-  if (!is.null(offset)) {
-    if (length(offset) != nrow(mod_frame)) {
-      rlang::abort(
-        glue::glue("The offset data should have {nrow(mod_frame)} elements.")
-      )
-    }
-  }
+  # TODO: Do we actually use the offset when fitting?
+  # Extract any inline offsets specified in the formula from the model frame
+  offset <- model.offset(mod_frame)
 
   if (indicators != "none") {
     if (indicators == "one_hot") {
-      old_contr <- options("contrasts")$contrasts
-      on.exit(options(contrasts = old_contr))
-      new_contr <- old_contr
-      new_contr["unordered"] <- "contr_one_hot"
-      options(contrasts = new_contr)
+      local_one_hot_contrasts()
     }
-    x <- model.matrix(mod_terms, mod_frame, contrasts)
+
+    x <- model.matrix(mod_terms, mod_frame)
   } else {
     # this still ignores -vars in formula
     x <- model.frame(mod_terms, data)
@@ -124,7 +99,6 @@
     list(
       indicators = indicators,
       composition = composition,
-      contrasts = contrasts,
       remove_intercept = remove_intercept
     )
 
@@ -140,7 +114,6 @@
         offset = offset,
         terms = mod_terms,
         xlevels = .getXlevels(mod_terms, mod_frame),
-        offset_expr = offset_expr,
         options = options
       )
   } else {
@@ -157,7 +130,6 @@
         offset = offset,
         terms = mod_terms,
         xlevels = .getXlevels(mod_terms, mod_frame),
-        offset_expr = offset_expr,
         options = options
       )
   }
@@ -181,33 +153,6 @@
   mod_terms <- object$terms
   mod_terms <- delete.response(mod_terms)
 
-  # Calculate offset(s). These can show up in-line in the formula
-  # (in multiple places) and might also be as its own argument. If
-  # there is more than one offset, we add them together.
-
-  offset_cols <- attr(mod_terms, "offset")
-
-  # If offset was done at least once in-line
-  if (!is.null(offset_cols)) {
-    offset <- rep(0, nrow(new_data))
-    for (i in offset_cols) {
-      offset <- offset +
-        eval_tidy(
-          attr(mod_terms, "variables")[[i + 1]],
-          new_data
-        ) # use na.action here and below?
-    }
-  } else {
-    offset <- NULL
-  }
-
-  if (!is.null(object$offset_expr)) {
-    if (is.null(offset)) {
-      offset <- rep(0, nrow(new_data))
-    }
-    offset <- offset + eval_tidy(object$offset_expr, new_data)
-  }
-
   new_data <-
     model.frame(
       mod_terms,
@@ -221,16 +166,17 @@
     .checkMFClasses(cl, new_data)
   }
 
+  # TODO: Do we actually use the returned offsets anywhere for prediction?
+  # Extract offset from model frame. Multiple offsets will be added together.
+  # Offsets might have been supplied through the formula.
+  offset <- model.offset(new_data)
+
   if (object$options$indicators != "none") {
     if (object$options$indicators == "one_hot") {
-      old_contr <- options("contrasts")$contrasts
-      on.exit(options(contrasts = old_contr))
-      new_contr <- old_contr
-      new_contr["unordered"] <- "contr_one_hot"
-      options(contrasts = new_contr)
+      local_one_hot_contrasts()
     }
-    new_data <-
-      model.matrix(mod_terms, new_data, contrasts.arg = object$contrasts)
+
+    new_data <- model.matrix(mod_terms, new_data)
   }
 
   if (object$options$remove_intercept) {
@@ -262,7 +208,6 @@
 #' @keywords internal
 #' @export
 #'
-#' @importFrom dplyr bind_cols
 .convert_xy_to_form_fit <- function(x,
                                     y,
                                     weights = NULL,
@@ -332,8 +277,15 @@
 
 # ------------------------------------------------------------------------------
 
+local_one_hot_contrasts <- function(frame = rlang::caller_env()) {
+  contrasts <- getOption("contrasts")
+  contrasts["unordered"] <- "contr_one_hot"
+
+  rlang::local_options(contrasts = contrasts, .frame = frame)
+}
+
 check_form_dots <- function(x) {
-  good_args <- c("subset", "weights", "contrasts", "offset")
+  good_args <- c("subset", "weights")
   good_names <- names(x) %in% good_args
   if (any(!good_names)) {
     rlang::abort(
@@ -404,6 +356,14 @@ check_dup_names <- function(x, y) {
 maybe_matrix <- function(x) {
   inher(x, c("data.frame", "matrix", "dgCMatrix"), cl = match.call())
   if (is.data.frame(x)) {
+    non_num_cols <- vapply(x, function(x) !is.numeric(x), logical(1))
+    if (any(non_num_cols)) {
+      non_num_cols <- names(non_num_cols)[non_num_cols]
+      non_num_cols <- glue::glue_collapse(glue::single_quote(non_num_cols), sep = ", ")
+      msg <- glue::glue("Some columns are non-numeric. The data cannot be ",
+                        "converted to numeric matrix: {non_num_cols}.")
+      rlang::abort(msg)
+    }
     x <- as.matrix(x)
   }
   # leave alone if matrix or sparse matrix

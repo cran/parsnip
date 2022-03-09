@@ -43,6 +43,13 @@
 #' If the model engine has not been set, the model's default engine will be used
 #'  (as discussed on each model page). If the `verbosity` option of
 #'  [control_parsnip()] is greater than zero, a warning will be produced.
+#'
+#' If you would like to use an alternative method for generating contrasts when
+#' supplying a formula to `fit()`, set the global option `contrasts` to your
+#' preferred method. For example, you might set it to:
+#' `options(contrasts = c(unordered = "contr.helmert", ordered = "contr.poly"))`.
+#' See the help page for [stats::contr.treatment()] for more possible contrast
+#' types.
 #' @examples
 #' # Although `glm()` only has a formula interface, different
 #' # methods for specifying the model can be used
@@ -104,6 +111,16 @@ fit.model_spec <-
       rlang::abort("The 'control' argument should have class 'control_parsnip'.")
     }
     dots <- quos(...)
+
+    if (length(possible_engines(object)) == 0) {
+      rlang::abort(
+        glue::glue(
+          "No engines were loaded for `{class(object)[1]}`.",
+          " Please load a parsnip extension package that provides one.",
+          " See https://www.tidymodels.org/find/parsnip/ "
+        )
+      )
+    }
     if (is.null(object$engine)) {
       eng_vals <- possible_engines(object)
       object$engine <- eng_vals[1]
@@ -289,7 +306,6 @@ fit_xy.model_spec <-
 
 # ------------------------------------------------------------------------------
 
-#' @importFrom utils capture.output
 eval_mod <- function(e, capture = FALSE, catch = FALSE, ...) {
   if (capture) {
     if (catch) {
@@ -414,7 +430,9 @@ allow_sparse <- function(x) {
 #' @export
 print.model_fit <- function(x, ...) {
   cat("parsnip model object\n\n")
-  cat("Fit time: ", prettyunits::pretty_sec(x$elapsed[["elapsed"]]), "\n")
+  if (!is.na(x$elapsed[["elapsed"]])) {
+    cat("Fit time: ", prettyunits::pretty_sec(x$elapsed[["elapsed"]]), "\n")
+  }
 
   if (inherits(x$fit, "try-error")) {
     cat("Model fit failed with error:\n", x$fit, "\n")

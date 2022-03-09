@@ -3,10 +3,8 @@
 #' @description
 #'
 #' `multinom_reg()` defines a model that uses linear predictors to predict
-#' multiclass data using the multinomial distribution.
-#'
-#' There are different ways to fit this model. See the engine-specific pages
-#' for more details:
+#' multiclass data using the multinomial distribution. This function can fit
+#' classification models.
 #'
 #' \Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("multinom_reg")}
 #'
@@ -30,6 +28,9 @@
 #'
 #' @template spec-details
 #'
+#' @details This model fits a classification model for multiclass outcomes; for
+#' binary outcomes, see [logistic_reg()].
+#'
 #' @template spec-references
 #'
 #' @seealso \Sexpr[stage=render,results=rd]{parsnip:::make_seealso_list("multinom_reg")}
@@ -39,7 +40,6 @@
 #'
 #' multinom_reg()
 #' @export
-#' @importFrom purrr map_lgl
 multinom_reg <-
   function(mode = "classification",
            engine = "nnet",
@@ -139,7 +139,6 @@ check_args.multinom_reg <- function(object) {
 
 # ------------------------------------------------------------------------------
 
-#' @importFrom vctrs vec_size
 organize_multnet_class <- function(x, object) {
   if (vec_size(x) > 1) {
     x <- x[,1]
@@ -149,7 +148,6 @@ organize_multnet_class <- function(x, object) {
   x
 }
 
-#' @importFrom vctrs vec_size
 organize_multnet_prob <- function(x, object) {
   if (vec_size(x) > 1) {
     x <- as_tibble(x[,,1])
@@ -160,6 +158,11 @@ organize_multnet_prob <- function(x, object) {
 }
 
 organize_nnet_prob <- function(x, object) {
+  if (is.null(nrow(x))) {
+    x_names <- names(x)
+    x <- matrix(x, nrow = 1)
+    colnames(x) <- x_names
+  }
   format_classprobs(x)
 }
 
@@ -213,8 +216,6 @@ predict._multnet <-
     res
   }
 
-#' @importFrom dplyr full_join as_tibble arrange
-#' @importFrom tidyr gather
 #' @export
 #' @rdname multi_predict
 multi_predict._multnet <-

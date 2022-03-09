@@ -1,3 +1,56 @@
+# parsnip 0.2.0
+
+## Model Specification Changes
+
+* Bayesian additive regression trees (BART) were added via the `bart()` function.
+
+* Added the `"glm"` engine for `linear_reg()` for numeric outcomes (#624).
+
+* Added `brulee` engines for `linear_reg()`, `logistic_reg()`, `multinom_reg()` and `mlp()`. 
+
+## Bug fixes
+
+* A bug for class predictions of two-class GAM models was fixed (#541)
+
+* Fixed a bug for `logistic_reg()` with the LiblineaR engine (#552).
+
+* The list column produced when creating survival probability predictions is now always called `.pred` (with `.pred_survival` being used inside of the list column). 
+
+* Fixed outcome type checking affecting a subset of regression models (#625).
+
+* New `extract_parameter_set_dials()` method to extract parameter sets from model specs.
+
+* New `extract_parameter_dials()` method to extract a single parameter from model specs.
+
+* Prediction using `multinom_reg()` with the `nnet` engine with a single row no longer fails (#612).
+
+## Other Changes
+
+* When the xy interface is used and the underlying model expects to use a matrix, a better warning is issued when predictors contain non-numeric columns (including dates). 
+ 
+* The fit time is only calculated when the `verbosity` argument of `control_parsnip()` is 2L or greater. Also, the call to `system.time()` now uses `gcFirst = FALSE`. (#611)
+ 
+* `fit_control()` is soft-deprecated in favor of `control_parsnip()`. 
+
+* Argument `interval` was added for prediction: For types "survival" and "quantile", estimates for the confidence or prediction interval can be added if available (#615).
+
+* `set_dependency()` now allows developers to create package requirements that are specific to the model's mode (#604). 
+* 
+* `varying()` is soft-deprecated in favor of `tune()`.
+
+* `varying_args()` is soft-deprecated in favor of `tune_args()`.
+
+* An `autoplot()` method was added for glmnet objects, showing the coefficient paths versus the penalty values (#642).
+
+* parsnip is now more robust working with keras and tensorflow for a larger range of versions (#596).
+
+* xgboost engines now use the new `iterationrange` parameter instead of the deprecated `ntreelimit` (#656).  
+
+## Developer
+
+* Models information can be re-registered as long as the information being registered is the same. This is helpful for packages that add new engines and use `devtools::load_all()` (#653).
+
+
 # parsnip 0.1.7
 
 ## Model Specification Changes
@@ -16,6 +69,7 @@
 
 * Fix bug in `augment()` when non-predictor, non-outcome variables are included in data (#510).
 
+* New article "Fitting and Predicting with parsnip" which contains examples for various combinations of model type and engine. ( #527)
 
 # parsnip 0.1.6
 
@@ -278,7 +332,7 @@ First CRAN release
 
 * Arguments to modeling functions are now captured as quosures. 
 * `others` has been replaced by `...`
-* Data descriptor names have beemn changed and are now functions. The descriptor definitions for "cols" and "preds" have been switched. 
+* Data descriptor names have been changed and are now functions. The descriptor definitions for "cols" and "preds" have been switched. 
 
 # parsnip 0.0.0.9003
 

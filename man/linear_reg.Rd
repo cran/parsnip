@@ -24,10 +24,7 @@ ridge regression is being used (specific engines only).}
 }
 \description{
 \code{linear_reg()} defines a model that can predict numeric values from
-predictors using a linear function.
-
-There are different ways to fit this model. See the engine-specific pages
-for more details:
+predictors using a linear function. This function can fit regression models.
 
 \Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("linear_reg")}
 
@@ -36,9 +33,11 @@ More information on how \pkg{parsnip} is used for modeling is at
 }
 \details{
 This function only defines what \emph{type} of model is being fit. Once an engine
-is specified, the \emph{method} to fit the model is also defined.
+is specified, the \emph{method} to fit the model is also defined. See
+\code{\link[=set_engine]{set_engine()}} for more on setting the engine, including how to set engine
+arguments.
 
-The model is not trained or fit until the \code{\link[=fit.model_spec]{fit.model_spec()}} function is used
+The model is not trained or fit until the \code{\link[=fit.model_spec]{fit()}} function is used
 with the data.
 }
 \examples{
@@ -47,7 +46,7 @@ show_engines("linear_reg")
 linear_reg()
 }
 \references{
-\url{https://www.tidymodels.org}, \href{https://www.tmwr.org/}{\emph{Tidy Models with R}}
+\url{https://www.tidymodels.org}, \href{https://www.tmwr.org/}{\emph{Tidy Modeling with R}}, \href{https://www.tidymodels.org/find/parsnip/}{searchable table of parsnip models}
 }
 \seealso{
 \Sexpr[stage=render,results=rd]{parsnip:::make_seealso_list("linear_reg")}

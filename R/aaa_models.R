@@ -98,7 +98,8 @@ check_eng_val <- function(eng) {
   invisible(NULL)
 }
 
-
+#' @rdname set_new_model
+#' @export
 check_model_exists <- function(model) {
   if (rlang::is_missing(model) || length(model) != 1 || !is.character(model)) {
     rlang::abort("Please supply a character string for a model name (e.g. `'linear_reg'`)")
@@ -113,6 +114,8 @@ check_model_exists <- function(model) {
   invisible(NULL)
 }
 
+#' @rdname set_new_model
+#' @export
 check_model_doesnt_exist <- function(model) {
   if (rlang::is_missing(model) || length(model) != 1 || !is.character(model)) {
     rlang::abort("Please supply a character string for a model name (e.g. `'linear_reg'`)")
@@ -180,12 +183,21 @@ stop_missing_engine <- function(cls) {
   rlang::abort(msg)
 }
 
+check_mode_for_new_engine <- function(cls, eng, mode) {
+  all_modes <- get_from_env(paste0(cls, "_modes"))
+  if (!(mode %in% all_modes)) {
+    rlang::abort(paste0("'", mode, "' is not a known mode for model `", cls, "()`."))
+  }
+  invisible(NULL)
+}
+
 
 # check if class and mode and engine are compatible
 check_spec_mode_engine_val <- function(cls, eng, mode) {
-  all_modes <- c("unknown", all_modes)
+
+  all_modes <- get_from_env(paste0(cls, "_modes"))
   if (!(mode %in% all_modes)) {
-    rlang::abort(paste0("'", mode, "' is not a known mode."))
+    rlang::abort(paste0("'", mode, "' is not a known mode for model `", cls, "()`."))
   }
 
   model_info <- rlang::env_get(get_model_env(), cls)
@@ -464,7 +476,7 @@ check_interface_val <- function(x) {
 #'  prediction objects.
 #' @keywords internal
 #' @details These functions are available for users to add their
-#'  own models or engines (in package or otherwise) so that they can
+#'  own models or engines (in a package or otherwise) so that they can
 #'  be accessed using `parsnip`. This is more thoroughly documented
 #'  on the package web site (see references below).
 #'
@@ -528,11 +540,11 @@ set_new_model <- function(model) {
 
   current <- get_model_env()
 
-  set_env_val("models", c(current$models, model))
+  set_env_val("models", unique(c(current$models, model)))
   set_env_val(model, dplyr::tibble(engine = character(0), mode = character(0)))
   set_env_val(
     paste0(model, "_pkgs"),
-    dplyr::tibble(engine = character(0), pkg = list())
+    dplyr::tibble(engine = character(0), pkg = list(), mode = character(0))
   )
   set_env_val(paste0(model, "_modes"), "unknown")
   set_env_val(
@@ -592,13 +604,13 @@ set_model_mode <- function(model, mode) {
 
 #' @rdname set_new_model
 #' @keywords internal
-#' @importFrom dplyr %>%
 #' @export
 set_model_engine <- function(model, mode, eng) {
   check_model_exists(model)
   check_mode_val(mode)
   check_eng_val(eng)
   check_mode_val(eng)
+  check_mode_for_new_engine(model, eng, mode)
 
   current <- get_model_env()
 
@@ -617,7 +629,6 @@ set_model_engine <- function(model, mode, eng) {
 
 
 # ------------------------------------------------------------------------------
-#' @importFrom vctrs vec_unique
 #' @rdname set_new_model
 #' @keywords internal
 #' @export
@@ -658,14 +669,16 @@ set_model_arg <- function(model, eng, parsnip, original, func, has_submodel) {
 #' @rdname set_new_model
 #' @keywords internal
 #' @export
-set_dependency <- function(model, eng, pkg= "parsnip") {
+set_dependency <- function(model, eng, pkg = "parsnip", mode = NULL) {
   check_model_exists(model)
   check_eng_val(eng)
   check_pkg_val(pkg)
 
-  current <- get_model_env()
   model_info <- get_from_env(model)
   pkg_info <- get_from_env(paste0(model, "_pkgs"))
+
+  # ----------------------------------------------------------------------------
+  # Check engine
 
   has_engine <-
     model_info %>%
@@ -673,26 +686,49 @@ set_dependency <- function(model, eng, pkg= "parsnip") {
     dplyr::filter(engine == eng) %>%
     nrow()
   if (has_engine != 1) {
-    rlang::abort("The engine '{eng}' has not been registered for model '{model}'.")
+    rlang::abort(
+      glue::glue("The engine '{eng}' has not been registered for model '{model}'.")
+    )
   }
 
-  existing_pkgs <-
-    pkg_info %>%
-    dplyr::filter(engine == eng)
-
-  if (nrow(existing_pkgs) == 0) {
-    pkg_info <-
-      pkg_info %>%
-      dplyr::bind_rows(tibble(engine = eng, pkg = list(pkg)))
-
+  # ----------------------------------------------------------------------------
+  # check mode; if missing assign all modes
+  all_modes <- unique(model_info$mode[model_info$engine == eng])
+  if (is.null(mode)) {
+    # For backward compatibility
+    mode <- all_modes
   } else {
-    old_pkgs <- existing_pkgs
-    existing_pkgs$pkg[[1]] <- c(pkg, existing_pkgs$pkg[[1]])
-    pkg_info <-
-      pkg_info %>%
-      dplyr::filter(engine != eng) %>%
-      dplyr::bind_rows(existing_pkgs)
+    if (length(mode) > 1) {
+      rlang::abort("'mode' should be a single character value or NULL.")
+    }
+    if (!any(mode == all_modes)) {
+      rlang::abort(glue::glue("mode '{mode}' is not a valid mode for '{model}'"))
+    }
   }
+
+  # ----------------------------------------------------------------------------
+
+  new_pkgs <- tibble(engine = eng, pkg = list(pkg), mode = mode)
+
+  # Add the new entry to the existing list for this engine (if any) and
+  # keep unique results
+  eng_pkgs <-
+    pkg_info %>%
+    dplyr::filter(engine == eng) %>%
+    dplyr::bind_rows(new_pkgs) %>%
+    # Take unique combinations in case packages have alread been registered
+    dplyr::distinct() %>%
+    # In case there are existing results (in a list column pkg), aggregate the
+    # list results and re-list their unique values.
+    dplyr::group_by(mode, engine) %>%
+    dplyr::summarize(pkg = list(unique(unlist(pkg))), .groups = "drop") %>%
+    dplyr::select(engine, pkg, mode)
+
+  pkg_info <-
+    pkg_info %>%
+    dplyr::filter(engine != eng) %>%
+    dplyr::bind_rows(eng_pkgs) %>%
+    dplyr::arrange(engine, mode)
 
   set_env_val(paste0(model, "_pkgs"), pkg_info)
 
@@ -714,6 +750,68 @@ get_dependency <- function(model) {
 
 # ------------------------------------------------------------------------------
 
+# This will be used to see if the same information is being registered for the
+# same model/mode/engine (and prediction type). If it already exists and the
+# new information is different, fail with a message. See issue #653
+is_discordant_info <- function(model, mode, eng, candidate,
+                            pred_type = NULL, component = "fit") {
+  current <- get_from_env(paste0(model, "_", component))
+
+  # For older versions of parsnip before set_encoding()
+  new_encoding <- is.null(current) & component == "encoding"
+
+  if (new_encoding) {
+    return(TRUE)
+  } else {
+    current <-  dplyr::filter(current, engine == eng & mode == !!mode)
+  }
+
+  if (component == "predict" & !is.null(pred_type)) {
+
+    current <- dplyr::filter(current, type == pred_type)
+    p_type <- paste0("and prediction type '", pred_type, "'")
+  } else {
+    p_type <- ""
+  }
+
+  if (nrow(current) == 0) {
+    return(TRUE)
+  }
+
+  same_info <- isTRUE(all.equal(current, candidate, check.environment = FALSE))
+
+  if (!same_info) {
+    rlang::abort(
+      glue::glue(
+        "The combination of engine '{eng}' and mode '{mode}' {p_type} already has ",
+        "{component} data for model '{model}' and the new information being ",
+        "registered is different."
+      )
+    )
+  }
+
+  FALSE
+}
+
+# Also check for general registration
+
+check_unregistered <- function(model, mode, eng) {
+  model_info <- get_from_env(model)
+  has_engine <-
+    model_info %>%
+    dplyr::filter(engine == eng & mode == !!mode) %>%
+    nrow()
+  if (has_engine != 1) {
+    rlang::abort(
+      glue::glue("The combination of engine '{eng}' and mode '{mode}' has not ",
+                 "been registered for model '{model}'.")
+    )
+  }
+  invisible(NULL)
+}
+
+
+
 #' @rdname set_new_model
 #' @keywords internal
 #' @export
@@ -722,29 +820,7 @@ set_fit <- function(model, mode, eng, value) {
   check_eng_val(eng)
   check_spec_mode_engine_val(model, eng, mode)
   check_fit_info(value)
-
-  current <- get_model_env()
-  model_info <- get_from_env(model)
-  old_fits <- get_from_env(paste0(model, "_fit"))
-
-  has_engine <-
-    model_info %>%
-    dplyr::filter(engine == eng & mode == !!mode) %>%
-    nrow()
-  if (has_engine != 1) {
-    rlang::abort(glue::glue("The combination of '{eng}' and mode '{mode}' has not ",
-                            "been registered for model '{model}'."))
-  }
-
-  has_fit <-
-    old_fits %>%
-    dplyr::filter(engine == eng & mode == !!mode) %>%
-    nrow()
-
-  if (has_fit > 0) {
-    rlang::abort(glue::glue("The combination of '{eng}' and mode '{mode}' ",
-                            "already has a fit component for model '{model}'."))
-  }
+  check_unregistered(model, mode, eng)
 
   new_fit <-
     dplyr::tibble(
@@ -753,6 +829,11 @@ set_fit <- function(model, mode, eng, value) {
       value = list(value)
     )
 
+  if (!is_discordant_info(model, mode, eng, new_fit)) {
+    return(invisible(NULL))
+  }
+
+  old_fits <- get_from_env(paste0(model, "_fit"))
   updated <- try(dplyr::bind_rows(old_fits, new_fit), silent = TRUE)
   if (inherits(updated, "try-error")) {
     rlang::abort("An error occured when adding the new fit module.")
@@ -788,31 +869,11 @@ set_pred <- function(model, mode, eng, type, value) {
   check_eng_val(eng)
   check_spec_mode_engine_val(model, eng, mode)
   check_pred_info(value, type)
+  check_unregistered(model, mode, eng)
 
-  current <- get_model_env()
   model_info <- get_from_env(model)
-  old_fits <- get_from_env(paste0(model, "_predict"))
 
-  has_engine <-
-    model_info %>%
-    dplyr::filter(engine == eng & mode == !!mode) %>%
-    nrow()
-  if (has_engine != 1) {
-    rlang::abort(glue::glue("The combination of '{eng}' and mode '{mode}'",
-                            "has not been registered for model '{model}'."))
-  }
-
-  has_pred <-
-    old_fits %>%
-    dplyr::filter(engine == eng & mode == !!mode & type == !!type) %>%
-    nrow()
-  if (has_pred > 0) {
-    rlang::abort(glue::glue("The combination of '{eng}', mode '{mode}', ",
-                            "and type '{type}' already has a prediction component",
-                            "for model '{model}'."))
-  }
-
-  new_fit <-
+  new_pred <-
     dplyr::tibble(
       engine = eng,
       mode = mode,
@@ -820,7 +881,13 @@ set_pred <- function(model, mode, eng, type, value) {
       value = list(value)
     )
 
-  updated <- try(dplyr::bind_rows(old_fits, new_fit), silent = TRUE)
+  pred_check <- is_discordant_info(model, mode, eng, new_pred, pred_type = type, component = "predict")
+  if (!pred_check) {
+    return(invisible(NULL))
+  }
+
+  old_pred <- get_from_env(paste0(model, "_predict"))
+  updated <- try(dplyr::bind_rows(old_pred, new_pred), silent = TRUE)
   if (inherits(updated, "try-error")) {
     rlang::abort("An error occured when adding the new fit module.")
   }
@@ -996,24 +1063,14 @@ set_encoding <- function(model, mode, eng, options) {
   options <- tibble::as_tibble(options)
   new_values <- dplyr::bind_cols(keys, options)
 
-
-  current_db_list <- ls(envir = get_model_env())
-  nm <- paste(model, "encoding", sep = "_")
-  if (any(current_db_list == nm)) {
-    current <- get_from_env(nm)
-    dup_check <-
-      current %>%
-      dplyr::inner_join(
-        new_values,
-        by = c("model", "engine", "mode", "predictor_indicators")
-      )
-    if (nrow(dup_check)) {
-      rlang::abort(glue::glue("Engine '{eng}' and mode '{mode}' already have defined encodings for model '{model}'."))
-    }
-
-  } else {
-    current <- NULL
+  enc_check <- is_discordant_info(model, mode, eng, new_values, component = "encoding")
+  if (!enc_check) {
+    return(invisible(NULL))
   }
+
+  # Allow for older versions before set_encoding() was created
+  nm <- paste0(model, "_encoding")
+  current <- get_from_env(nm)
 
   db_values <- dplyr::bind_rows(current, new_values)
   set_env_val(nm, db_values)
@@ -1042,161 +1099,6 @@ get_encoding <- function(model) {
       ) %>%
       dplyr::select(model, engine, mode, predictor_indicators,
                     compute_intercept, remove_intercept)
-  }
-  res
-}
-
-#' Tools for dynamically documenting packages
-#'
-#' @description
-#' These are functions used to create dynamic documentation in Rd files
-#' based on which parsnip-related packages are loaded by the user.
-#'
-#' These functions can be used to make dynamic lists of documentation help
-#'  files. \pkg{parsnip} uses these, along with files contained in `man/rmd`
-#'  containing expanded documentation, for specific model/engine combinations.
-#'  [find_engine_files()] looks for files that have the pattern
-#'  `details_{model}_{engine}.Rd` to link to. These files are generated by files
-#'  named `man/rmd/details_{model}_{engine}.Rmd`. `make_engine_list()` creates a
-#'  list seen at the top of the model Rd files while `make_seealso_list()`
-#'  populates the list seen in "See Also" below. See the details section.
-#'
-#' @param mod A character string for the model file (e.g. "linear_reg")
-#' @param pkg A character string for the package where the function is invoked.
-#' @return
-#' `make_engine_list()` returns a character string that creates a
-#' bulleted list of links to more specific help files.
-#'
-#' `make_seealso_list()` returns a formatted character string of links.
-#'
-#' `find_engine_files()` returns a tibble.
-#' @details
-#' The \pkg{parsnip} documentation is generated _dynamically_. Part of the Rd
-#'  file populates a list of engines that depends on what packages are loaded
-#'  *at the time that the man file is loaded*. For example, if
-#'  another package has a new engine for `linear_reg()`, the
-#'  `parsnip::linear_reg()` help can show a link to a detailed help page in the
-#'  other package.
-#'
-#' To enable this, the process for a package developer is to:
-#'
-#'   1. Create an engine-specific R file in the `R` directory with the name
-#'  `{model}_{engine}.R` (e.g. `boost_tree_C5.0.R`). This has a small amount of
-#'  documentation, as well as the directive
-#'  "`@includeRmd man/rmd/{model}_{engine}.Rmd details`".
-#'
-#'   1. Copy the file in \pkg{parsnip} that is in `man/rmd/setup.Rmd` and put
-#'  it in the same place in your package.
-#'
-#'   1. Write your own `man/rmd/{model}_{engine}.Rmd` file. This can include
-#'  packages that are not listed in the DESCRIPTION file. Those are only
-#'  required when the documentation file is created locally (probably using
-#'  [devtools::document()].
-#'
-#'   1. Run [devtools::document()] so that the Rmd content is included in the
-#'  Rd file.
-#'
-#' The examples in \pkg{parsnip} can provide guidance for how to organize
-#' technical information about the models.
-#' @name doc-tools
-#' @keywords internal
-#' @export
-#' @examples
-#' find_engine_files("linear_reg")
-#' cat(make_engine_list("linear_reg"))
-find_engine_files <- function(mod, pkg = "parsnip") {
-
-  requireNamespace(pkg, quietly = TRUE)
-  # Get available topics
-  topic_names <- search_for_engine_docs(mod)
-  if (length(topic_names) == 0) {
-    return(character(0))
-  }
-
-  # Subset for our model function
-  eng <- strsplit(topic_names, "_")
-  eng <- purrr::map_chr(eng, ~ .x[length(.x)])
-  eng <- tibble::tibble(engine = eng, topic = topic_names)
-
-  # Combine them to keep the order in which they were registered
-  all_eng <- get_from_env(mod) %>% dplyr::distinct(engine)
-  all_eng$.order <- 1:nrow(all_eng)
-  eng <- dplyr::left_join(eng, all_eng, by = "engine")
-  eng <- eng[order(eng$.order),]
-
-  # Determine and label default engine
-  default <- get_default_engine(mod, pkg)
-  eng$default <- ifelse(eng$engine == default, " (default)", "")
-
-  eng
-}
-
-#' @export
-#' @rdname doc-tools
-make_engine_list <- function(mod, pkg = "parsnip") {
-  eng <- find_engine_files(mod, pkg)
-
-  res <-
-    glue::glue("  \\item \\code{\\link[=|eng$topic|]{|eng$engine|} |eng$default| }",
-               .open = "|", .close = "|")
-
-  res <- paste0("\\itemize{\n", paste0(res, collapse = "\n"), "\n}")
-  res
-}
-
-get_default_engine <- function(mod, pkg= "parsnip") {
-  cl <- rlang::call2(mod, .ns = pkg)
-  rlang::eval_tidy(cl)$engine
-}
-
-#' @export
-#' @rdname  doc-tools
-make_seealso_list <- function(mod, pkg= "parsnip") {
-  requireNamespace(pkg, quietly = TRUE)
-  eng <- find_engine_files(mod, pkg)
-
-  res <-
-    glue::glue("\\code{\\link[=|eng$topic|]{|eng$engine| engine details}}",
-               .open = "|", .close = "|")
-
-  if (pkg == "parsnip") {
-    main <- c("\\code{\\link[=fit.model_spec]{fit.model_spec()}}",
-              "\\code{\\link[=set_engine]{set_engine()}}",
-              "\\code{\\link[=update]{update()}}"
-    )
-  } else {
-    main <- NULL
-  }
-  paste0(c(main, res), collapse = ", ")
-}
-
-# These will never have documentation and we can avoid searching them.
-excl_pkgs <-
-  c("C50", "Cubist", "earth", "flexsurv", "forecast", "glmnet",
-    "keras", "kernlab", "kknn", "klaR", "LiblineaR", "liquidSVM",
-    "magrittr", "MASS", "mda", "mixOmics", "naivebayes", "nnet",
-    "prophet", "pscl", "randomForest", "ranger", "rpart", "rstanarm",
-    "sparklyr", "stats", "survival", "xgboost", "xrf")
-
-search_for_engine_docs <- function(mod) {
-  all_deps <- get_from_env(paste0(mod, "_pkgs"))
-  all_deps <- unlist(all_deps$pkg)
-  all_deps <- unique(c("parsnip", all_deps))
-
-  all_deps <- all_deps[!(all_deps %in% excl_pkgs)]
-  res <- purrr::map(all_deps, find_details_topics, mod = mod)
-  res <- unique(unlist(res))
-  res
-}
-
-find_details_topics <- function(pkg, mod) {
-  meta_loc <- system.file("Meta/Rd.rds", package = pkg)
-  meta_loc <- meta_loc[meta_loc != ""]
-  if (length(meta_loc) > 0) {
-    topic_names <- readRDS(meta_loc)$Name
-    res <- grep(paste0("details_", mod), topic_names, value = TRUE)
-  } else {
-    res <- character(0)
   }
   res
 }

@@ -20,7 +20,7 @@ default: ‘optimal’)
 }
 }
 
-\subsection{Translation from parsnip to the original package (regression)}{\if{html}{\out{<div class="r">}}\preformatted{nearest_neighbor(
+\subsection{Translation from parsnip to the original package (regression)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{nearest_neighbor(
   neighbors = integer(1),
   weight_func = character(1),
   dist_power = double(1)
@@ -46,7 +46,7 @@ default: ‘optimal’)
 it is not consistent with the actual data dimensions.
 }
 
-\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="r">}}\preformatted{nearest_neighbor(
+\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{nearest_neighbor(
   neighbors = integer(1),
   weight_func = character(1),
   dist_power = double(1)
@@ -73,9 +73,8 @@ it is not consistent with the actual data dimensions.
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via
-\code{\link[=fit.model_spec]{fit.model_spec()}}, parsnip will
-convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
+will convert factor columns to indicators.
 
 Predictors should have the same scale. One way to achieve this is to
 center and scale each so that each predictor has mean zero and a
