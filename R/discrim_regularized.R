@@ -62,19 +62,6 @@ discrim_regularized <-
     )
   }
 
-#' @export
-print.discrim_regularized <- function(x, ...) {
-  cat("Regularized Discriminant Model Specification (", x$mode, ")\n\n", sep = "")
-  model_printer(x, ...)
-
-  if (!is.null(x$method$fit$args)) {
-    cat("Model fit template:\n")
-    print(show_call(x))
-  }
-
-  invisible(x)
-}
-
 # ------------------------------------------------------------------------------
 
 #' @method update discrim_regularized
@@ -86,29 +73,19 @@ update.discrim_regularized <-
            frac_common_cov = NULL,
            frac_identity = NULL,
            fresh = FALSE, ...) {
-    update_dot_check(...)
+
     args <- list(
       frac_common_cov = rlang::enquo(frac_common_cov),
       frac_identity = rlang::enquo(frac_identity)
     )
 
-    if (fresh) {
-      object$args <- args
-    } else {
-      null_args <- map_lgl(args, null_value)
-      if (any(null_args))
-        args <- args[!null_args]
-      if (length(args) > 0)
-        object$args[names(args)] <- args
-    }
-
-    new_model_spec(
-      "discrim_regularized",
-      args = object$args,
-      eng_args = object$eng_args,
-      mode = object$mode,
-      method = NULL,
-      engine = object$engine
+    update_spec(
+      object = object,
+      parameters = NULL,
+      args_enquo_list = args,
+      fresh = fresh,
+      cls = "discrim_regularized",
+      ...
     )
   }
 

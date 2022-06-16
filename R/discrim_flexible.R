@@ -45,19 +45,6 @@ discrim_flexible <-
     )
   }
 
-#' @export
-print.discrim_flexible <- function(x, ...) {
-  cat("Flexible Discriminant Model Specification (", x$mode, ")\n\n", sep = "")
-  model_printer(x, ...)
-
-  if (!is.null(x$method$fit$args)) {
-    cat("Model fit template:\n")
-    print(show_call(x))
-  }
-
-  invisible(x)
-}
-
 # ------------------------------------------------------------------------------
 
 #' Update a model specification
@@ -75,30 +62,20 @@ update.discrim_flexible <-
            prod_degree = NULL,
            prune_method = NULL,
            fresh = FALSE, ...) {
-    update_dot_check(...)
+
     args <- list(
       num_terms    = enquo(num_terms),
       prod_degree  = enquo(prod_degree),
       prune_method = enquo(prune_method)
     )
 
-    if (fresh) {
-      object$args <- args
-    } else {
-      null_args <- map_lgl(args, null_value)
-      if (any(null_args))
-        args <- args[!null_args]
-      if (length(args) > 0)
-        object$args[names(args)] <- args
-    }
-
-    new_model_spec(
-      "discrim_flexible",
-      args = object$args,
-      eng_args = object$eng_args,
-      mode = object$mode,
-      method = NULL,
-      engine = object$engine
+    update_spec(
+      object = object,
+      parameters = NULL,
+      args_enquo_list = args,
+      fresh = fresh,
+      cls = "discrim_flexible",
+      ...
     )
   }
 

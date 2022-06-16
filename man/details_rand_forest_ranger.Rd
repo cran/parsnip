@@ -27,7 +27,9 @@ below)
 default. For classification, a value of 10 is used.
 }
 
-\subsection{Translation from parsnip to the original package (regression)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{rand_forest(
+\subsection{Translation from parsnip to the original package (regression)}{
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{rand_forest(
   mtry = integer(1),
   trees = integer(1),
   min_n = integer(1)
@@ -35,7 +37,9 @@ default. For classification, a value of 10 is used.
   set_engine("ranger") \%>\% 
   set_mode("regression") \%>\% 
   translate()
-}\if{html}{\out{</div>}}\preformatted{## Random Forest Model Specification (regression)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## Random Forest Model Specification (regression)
 ## 
 ## Main Arguments:
 ##   mtry = integer(1)
@@ -45,17 +49,19 @@ default. For classification, a value of 10 is used.
 ## Computational engine: ranger 
 ## 
 ## Model fit template:
-## ranger::ranger(x = missing_arg(), y = missing_arg(), case.weights = missing_arg(), 
+## ranger::ranger(x = missing_arg(), y = missing_arg(), weights = missing_arg(), 
 ##     mtry = min_cols(~integer(1), x), num.trees = integer(1), 
 ##     min.node.size = min_rows(~integer(1), x), num.threads = 1, 
 ##     verbose = FALSE, seed = sample.int(10^5, 1))
-}
+}\if{html}{\out{</div>}}
 
 \code{min_rows()} and \code{min_cols()} will adjust the number of neighbors if the
 chosen value if it is not consistent with the actual data dimensions.
 }
 
-\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{rand_forest(
+\subsection{Translation from parsnip to the original package (classification)}{
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{rand_forest(
   mtry = integer(1),
   trees = integer(1),
   min_n = integer(1)
@@ -63,7 +69,9 @@ chosen value if it is not consistent with the actual data dimensions.
   set_engine("ranger") \%>\% 
   set_mode("classification") \%>\% 
   translate()
-}\if{html}{\out{</div>}}\preformatted{## Random Forest Model Specification (classification)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## Random Forest Model Specification (classification)
 ## 
 ## Main Arguments:
 ##   mtry = integer(1)
@@ -73,11 +81,11 @@ chosen value if it is not consistent with the actual data dimensions.
 ## Computational engine: ranger 
 ## 
 ## Model fit template:
-## ranger::ranger(x = missing_arg(), y = missing_arg(), case.weights = missing_arg(), 
+## ranger::ranger(x = missing_arg(), y = missing_arg(), weights = missing_arg(), 
 ##     mtry = min_cols(~integer(1), x), num.trees = integer(1), 
 ##     min.node.size = min_rows(~integer(1), x), num.threads = 1, 
 ##     verbose = FALSE, seed = sample.int(10^5, 1), probability = TRUE)
-}
+}\if{html}{\out{</div>}}
 
 Note that a \code{ranger} probability forest is always fit (unless the
 \code{probability} argument is changed by the user via
@@ -103,6 +111,16 @@ For \code{ranger} confidence intervals, the intervals are constructed using
 the form \verb{estimate +/- z * std_error}. For classification probabilities,
 these values can fall outside of \verb{[0, 1]} and will be coerced to be in
 this range.
+}
+
+\subsection{Case weights}{
+
+This model can utilize case weights during model fitting. To use them,
+see the documentation in \link{case_weights} and the examples
+on \code{tidymodels.org}.
+
+The \code{fit()} and \code{fit_xy()} arguments have arguments called
+\code{case_weights} that expect vectors of case weights.
 }
 
 \subsection{Examples}{

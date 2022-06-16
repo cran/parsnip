@@ -26,7 +26,9 @@ in \code{\link[sparklyr:ml_random_forest]{sparklyr::ml_random_forest()}} is
 regression.
 }
 
-\subsection{Translation from parsnip to the original package (regression)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{rand_forest(
+\subsection{Translation from parsnip to the original package (regression)}{
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{rand_forest(
   mtry = integer(1),
   trees = integer(1),
   min_n = integer(1)
@@ -34,7 +36,9 @@ regression.
   set_engine("spark") \%>\% 
   set_mode("regression") \%>\% 
   translate()
-}\if{html}{\out{</div>}}\preformatted{## Random Forest Model Specification (regression)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## Random Forest Model Specification (regression)
 ## 
 ## Main Arguments:
 ##   mtry = integer(1)
@@ -48,13 +52,15 @@ regression.
 ##     type = "regression", feature_subset_strategy = integer(1), 
 ##     num_trees = integer(1), min_instances_per_node = min_rows(~integer(1), 
 ##         x), seed = sample.int(10^5, 1))
-}
+}\if{html}{\out{</div>}}
 
 \code{min_rows()} and \code{min_cols()} will adjust the number of neighbors if the
 chosen value if it is not consistent with the actual data dimensions.
 }
 
-\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{rand_forest(
+\subsection{Translation from parsnip to the original package (classification)}{
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{rand_forest(
   mtry = integer(1),
   trees = integer(1),
   min_n = integer(1)
@@ -62,7 +68,9 @@ chosen value if it is not consistent with the actual data dimensions.
   set_engine("spark") \%>\% 
   set_mode("classification") \%>\% 
   translate()
-}\if{html}{\out{</div>}}\preformatted{## Random Forest Model Specification (classification)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## Random Forest Model Specification (classification)
 ## 
 ## Main Arguments:
 ##   mtry = integer(1)
@@ -76,7 +84,7 @@ chosen value if it is not consistent with the actual data dimensions.
 ##     type = "classification", feature_subset_strategy = integer(1), 
 ##     num_trees = integer(1), min_instances_per_node = min_rows(~integer(1), 
 ##         x), seed = sample.int(10^5, 1))
-}
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Preprocessing requirements}{
@@ -104,6 +112,19 @@ predictions are returned as character columns.
 session, the object can be reloaded and reattached to the parsnip
 object.
 }
+}
+
+\subsection{Case weights}{
+
+This model can utilize case weights during model fitting. To use them,
+see the documentation in \link{case_weights} and the examples
+on \code{tidymodels.org}.
+
+The \code{fit()} and \code{fit_xy()} arguments have arguments called
+\code{case_weights} that expect vectors of case weights.
+
+Note that, for spark engines, the \code{case_weight} argument value should be
+a character string to specify the column with the numeric case weights.
 }
 
 \subsection{References}{

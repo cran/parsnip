@@ -40,6 +40,7 @@ rule_fit <-
            tree_depth = NULL, learn_rate = NULL,
            loss_reduction = NULL,
            sample_size = NULL,
+           stop_iter = NULL,
            penalty = NULL,
            engine = "xrf") {
 
@@ -51,6 +52,7 @@ rule_fit <-
       learn_rate = enquo(learn_rate),
       loss_reduction = enquo(loss_reduction),
       sample_size = enquo(sample_size),
+      stop_iter = enquo(stop_iter),
       penalty = enquo(penalty)
     )
 
@@ -64,20 +66,6 @@ rule_fit <-
       engine = engine
     )
   }
-
-#' @export
-print.rule_fit <- function(x, ...) {
-  cat("RuleFit Model Specification (", x$mode, ")\n\n", sep = "")
-  model_printer(x, ...)
-
-  if (!is.null(x$method$fit$args)) {
-    cat("Model fit template:\n")
-    print(show_call(x))
-  }
-
-  invisible(x)
-}
-
 
 # ------------------------------------------------------------------------------
 
@@ -102,11 +90,6 @@ update.rule_fit <-
            loss_reduction = NULL, sample_size = NULL,
            penalty = NULL,
            fresh = FALSE, ...) {
-    update_dot_check(...)
-
-    if (!is.null(parameters)) {
-      parameters <- check_final_param(parameters)
-    }
 
     args <- list(
       mtry = enquo(mtry),
@@ -119,25 +102,13 @@ update.rule_fit <-
       penalty = enquo(penalty)
     )
 
-    args <- update_main_parameters(args, parameters)
-
-    if (fresh) {
-      object$args <- args
-    } else {
-      null_args <- map_lgl(args, null_value)
-      if (any(null_args))
-        args <- args[!null_args]
-      if (length(args) > 0)
-        object$args[names(args)] <- args
-    }
-
-    new_model_spec(
-      "rule_fit",
-      args = object$args,
-      eng_args = object$eng_args,
-      mode = object$mode,
-      method = NULL,
-      engine = object$engine
+    update_spec(
+      object = object,
+      parameters = parameters,
+      args_enquo_list = args,
+      fresh = fresh,
+      cls = "rule_fit",
+      ...
     )
   }
 

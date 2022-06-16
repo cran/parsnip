@@ -16,16 +16,23 @@ This model has 2 tuning parameter:
 \item \code{smoothness}: Kernel Smoothness (type: double, default: 1.0)
 \item \code{Laplace}: Laplace Correction (type: double, default: 0.0)
 }
+
+Note that the engine argument \code{usekernel} is set to \code{TRUE} by default
+when using the \code{naivebayes} engine.
 }
 
 \subsection{Translation from parsnip to the original package}{
 
-The \strong{discrim} extension package is required to fit this model.\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(discrim)
+The \strong{discrim} extension package is required to fit this model.
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(discrim)
 
 naive_Bayes(smoothness = numeric(0), Laplace = numeric(0)) \%>\% 
   set_engine("naivebayes") \%>\% 
   translate()
-}\if{html}{\out{</div>}}\preformatted{## Naive Bayes Model Specification (classification)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## Naive Bayes Model Specification (classification)
 ## 
 ## Main Arguments:
 ##   smoothness = numeric(0)
@@ -36,7 +43,7 @@ naive_Bayes(smoothness = numeric(0), Laplace = numeric(0)) \%>\%
 ## Model fit template:
 ## naivebayes::naive_bayes(x = missing_arg(), y = missing_arg(), 
 ##     adjust = numeric(0), laplace = numeric(0), usekernel = TRUE)
-}
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Preprocessing requirements}{
@@ -52,6 +59,11 @@ if the argument \code{usepoisson = TRUE} is passed as an engine argument.
 Variance calculations are used in these computations so \emph{zero-variance}
 predictors (i.e., with a single unique value) should be eliminated
 before fitting the model.
+}
+
+\subsection{Case weights}{
+
+The underlying model implementation does not allow for case weights.
 }
 
 \subsection{References}{

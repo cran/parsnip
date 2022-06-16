@@ -49,7 +49,7 @@ knit_engine_docs <- function(pattern = NULL) {
 
 extensions <- function() {
   c("baguette", "censored", "discrim", "multilevelmod", "plsmod",
-    "poissonreg", "rules")
+    "poissonreg", "rules", "bonsai", "agua")
 }
 
 # ------------------------------------------------------------------------------
@@ -243,7 +243,10 @@ make_engine_list <- function(mod) {
 
 get_default_engine <- function(mod, pkg = "parsnip") {
   cl <- rlang::call2(mod, .ns = pkg)
-  rlang::eval_tidy(cl)$engine
+  suppressMessages(
+    res <- rlang::eval_tidy(cl)$engine
+  )
+  res
 }
 
 #' @export
@@ -287,22 +290,6 @@ find_details_topics <- function(mod, pkg = "parsnip") {
 
 sort_c <- function(x) {
   withr::with_collate("C", sort(x))
-}
-
-get_sorted_unique_engines <- function(x) {
-  engines <- x$engine
-  engines <- unique(engines)
-  engines <- sort_c(engines)
-  engines
-}
-combine_prefix_with_engines <- function(prefix, engines) {
-  if (length(engines) == 0L) {
-    engines <- "No engines currently available"
-  } else {
-    engines <- glue::glue_collapse(engines, sep = ", ")
-  }
-
-  glue::glue("{prefix} {engines}")
 }
 
 # ------------------------------------------------------------------------------

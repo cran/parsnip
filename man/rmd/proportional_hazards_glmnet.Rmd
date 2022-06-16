@@ -22,9 +22,11 @@ This model has `r nrow(param)` tuning parameters:
 param$item
 ```
 
-A value of `mixture = 1` corresponds to a pure lasso model, while `mixture = 0` indicates ridge regression.
+The `penalty` parameter has no default and requires a single numeric value. For more details about this, and the `glmnet` model in general, see [parsnip::glmnet-details]. As for `mixture`:
 
-The `penalty` parameter has no default and requires a single numeric value. For more details about this, and the `glmnet` model in general, see [parsnip::glmnet-details].
+* `mixture = 1` specifies a pure lasso model,
+* `mixture = 0`  specifies a ridge regression model, and
+* `0 < mixture < 1` specifies an elastic net model, interpolating lasso and ridge.
 
 ## Translation from parsnip to the original package
 
@@ -84,8 +86,17 @@ predict(mod, pred_data, type = "survival", time = 500) %>%
 
 Note that columns used in the `strata()` function _will_ also be estimated in the regular portion of the model (i.e., within the linear predictor).
 
-# Linear predictor values
+```{r child = "template-survival-mean.Rmd"}
+```
+
+## Linear predictor values
+
 ```{r child = "template-censored-linear-predictor.Rmd"}
+```
+
+## Case weights
+
+```{r child = "template-uses-case-weights.Rmd"}
 ```
 
 # References

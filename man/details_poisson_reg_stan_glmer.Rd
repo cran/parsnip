@@ -36,19 +36,23 @@ See \code{?rstanarm::stan_glmer} and \code{?rstan::sampling} for more informatio
 
 \subsection{Translation from parsnip to the original package}{
 
-The \strong{multilevelmod} extension package is required to fit this model.\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(multilevelmod)
+The \strong{multilevelmod} extension package is required to fit this model.
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(multilevelmod)
 
 poisson_reg(engine = "stan_glmer") \%>\% 
   set_engine("stan_glmer") \%>\% 
   translate()
-}\if{html}{\out{</div>}}\preformatted{## Poisson Regression Model Specification (regression)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## Poisson Regression Model Specification (regression)
 ## 
 ## Computational engine: stan_glmer 
 ## 
 ## Model fit template:
 ## rstanarm::stan_glmer(formula = missing_arg(), data = missing_arg(), 
 ##     weights = missing_arg(), family = stats::poisson, refresh = 0)
-}
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Predicting new samples}{
@@ -92,7 +96,9 @@ next section.
 
 The model can accept case weights.
 
-With parsnip, we suggest using the formula method when fitting:\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(tidymodels)
+With parsnip, we suggest using the formula method when fitting:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(tidymodels)
 
 poisson_reg() \%>\% 
   set_engine("stan_glmer") \%>\% 
@@ -101,7 +107,9 @@ poisson_reg() \%>\%
 
 When using tidymodels infrastructure, it may be better to use a
 workflow. In this case, you can add the appropriate columns using
-\code{add_variables()} then supply the typical formula when adding the model:\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(tidymodels)
+\code{add_variables()} then supply the typical formula when adding the model:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(tidymodels)
 
 glmer_spec <- 
   poisson_reg() \%>\% 
@@ -121,6 +129,16 @@ intervals analogous to confidence and prediction intervals. In these
 instances, the units are the original outcome. When \code{std_error = TRUE},
 the standard deviation of the posterior distribution (or posterior
 predictive distribution as appropriate) is returned.
+}
+
+\subsection{Case weights}{
+
+This model can utilize case weights during model fitting. To use them,
+see the documentation in \link{case_weights} and the examples
+on \code{tidymodels.org}.
+
+The \code{fit()} and \code{fit_xy()} arguments have arguments called
+\code{case_weights} that expect vectors of case weights.
 }
 
 \subsection{References}{

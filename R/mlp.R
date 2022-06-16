@@ -59,18 +59,6 @@ mlp <-
     )
   }
 
-#' @export
-print.mlp <- function(x, ...) {
-  cat("Single Layer Neural Network Specification (", x$mode, ")\n\n", sep = "")
-  model_printer(x, ...)
-
-  if(!is.null(x$method$fit$args)) {
-    cat("Model fit template:\n")
-    print(show_call(x))
-  }
-  invisible(x)
-}
-
 # ------------------------------------------------------------------------------
 
 #' @method update mlp
@@ -83,12 +71,6 @@ update.mlp <-
            epochs = NULL, activation = NULL, learn_rate = NULL,
            fresh = FALSE, ...) {
 
-    eng_args <- update_engine_parameters(object$eng_args, ...)
-
-    if (!is.null(parameters)) {
-      parameters <- check_final_param(parameters)
-    }
-
     args <- list(
       hidden_units = enquo(hidden_units),
       penalty      = enquo(penalty),
@@ -98,29 +80,13 @@ update.mlp <-
       learn_rate   = enquo(learn_rate)
     )
 
-    args <- update_main_parameters(args, parameters)
-
-    # TODO make these blocks into a function and document well
-    if (fresh) {
-      object$args <- args
-      object$eng_args <- eng_args
-    } else {
-      null_args <- map_lgl(args, null_value)
-      if (any(null_args))
-        args <- args[!null_args]
-      if (length(args) > 0)
-        object$args[names(args)] <- args
-      if (length(eng_args) > 0)
-        object$eng_args[names(eng_args)] <- eng_args
-    }
-
-    new_model_spec(
-      "mlp",
-      args = object$args,
-      eng_args = object$eng_args,
-      mode = object$mode,
-      method = NULL,
-      engine = object$engine
+    update_spec(
+      object = object,
+      parameters = parameters,
+      args_enquo_list = args,
+      fresh = fresh,
+      cls = "mlp",
+      ...
     )
   }
 
@@ -176,6 +142,8 @@ check_args.mlp <- function(object) {
     act_funs <- c("linear", "relu", "elu", "tanh")
   } else if (object$engine == "keras") {
     act_funs <- c("linear", "softmax", "relu", "elu")
+  } else if (object$engine == "h2o") {
+    act_funs <- c("relu", "tanh")
   }
 
   if (is.character(args$activation)) {

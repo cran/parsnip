@@ -13,9 +13,11 @@ This model has 2 tuning parameters:
 
 - `mixture`: Proportion of Lasso Penalty (type: double, default: 1.0)
 
-A value of `mixture = 1` corresponds to a pure lasso model, while `mixture = 0` indicates ridge regression.
+The `penalty` parameter has no default and requires a single numeric value. For more details about this, and the `glmnet` model in general, see [glmnet-details]. As for `mixture`:
 
-The `penalty` parameter has no default and requires a single numeric value. For more details about this, and the `glmnet` model in general, see [glmnet-details].
+* `mixture = 1` specifies a pure lasso model,
+* `mixture = 0`  specifies a ridge regression model, and
+* `0 < mixture < 1` specifies an elastic net model, interpolating lasso and ridge.
 
 ## Translation from parsnip to the original package
 
@@ -53,6 +55,13 @@ By default, [glmnet::glmnet()] uses the argument `standardize = TRUE` to center 
 ## Examples 
 
 The "Fitting and Predicting with parsnip" article contains [examples](https://parsnip.tidymodels.org/articles/articles/Examples.html#multinom-reg-glmnet) for `multinom_reg()` with the `"glmnet"` engine.
+
+## Case weights
+
+
+This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
+
+The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
 
 ## References
 

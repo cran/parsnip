@@ -1,14 +1,7 @@
-library(testthat)
-library(parsnip)
-library(tibble)
-library(dplyr)
-
-source(test_path("helper-objects.R"))
 hpc <- hpc_data[1:150, c(2:5, 8)]
 
 # ------------------------------------------------------------------------------
 
-context("check predict output structures")
 
 lm_fit <-
   linear_reg(mode = "regression") %>%
@@ -63,6 +56,31 @@ test_that('non-standard levels', {
                c("2low", "high+values"))
 })
 
+test_that('predict(type = "prob") with level "class" (see #720)', {
+  x <- tibble::tibble(
+    boop = factor(sample(c("class", "class_1"), 100, replace = TRUE)),
+    bop = rnorm(100),
+    beep = rnorm(100)
+  )
+
+  expect_error(
+    regexp = NA,
+    mod <- logistic_reg() %>%
+      set_mode(mode = "classification") %>%
+      fit(boop ~ bop + beep, data = x)
+  )
+
+  expect_error(
+    regexp = NA,
+    predict(mod, type = "class", new_data = x)
+  )
+
+  expect_error(
+    regexp = "variable `boop` has a level called 'class'",
+    predict(mod, type = "prob", new_data = x)
+  )
+})
+
 
 test_that('non-factor classification', {
   skip_if(run_glmnet)
@@ -70,18 +88,21 @@ test_that('non-factor classification', {
   expect_error(
     logistic_reg() %>%
       set_engine("glm") %>%
-      fit(class ~ ., data = hpc %>% mutate(class = class == "VF"))
+      fit(class ~ .,
+          data = hpc %>% dplyr::mutate(class = class == "VF"))
   )
   expect_error(
     logistic_reg() %>%
       set_engine("glm") %>%
-      fit(class ~ ., data = hpc %>% mutate(class = ifelse(class == "VF", 1, 0)))
+      fit(class ~ .,
+          data = hpc %>% dplyr::mutate(class = ifelse(class == "VF", 1, 0)))
   )
 
   expect_error(
     multinom_reg() %>%
       set_engine("glmnet") %>%
-      fit(class ~ ., data = hpc %>% mutate(class = as.character(class)))
+      fit(class ~ .,
+          data = hpc %>% dplyr::mutate(class = as.character(class)))
   )
 })
 

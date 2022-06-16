@@ -51,18 +51,6 @@ rand_forest <-
     )
   }
 
-#' @export
-print.rand_forest <- function(x, ...) {
-  cat("Random Forest Model Specification (", x$mode, ")\n\n", sep = "")
-  model_printer(x, ...)
-
-  if(!is.null(x$method$fit$args)) {
-    cat("Model fit template:\n")
-    print(show_call(x))
-  }
-  invisible(x)
-}
-
 # ------------------------------------------------------------------------------
 
 #' @method update rand_forest
@@ -74,40 +62,19 @@ update.rand_forest <-
            mtry = NULL, trees = NULL, min_n = NULL,
            fresh = FALSE, ...) {
 
-    eng_args <- update_engine_parameters(object$eng_args, ...)
-
-    if (!is.null(parameters)) {
-      parameters <- check_final_param(parameters)
-    }
     args <- list(
       mtry   = enquo(mtry),
       trees  = enquo(trees),
       min_n  = enquo(min_n)
     )
 
-    args <- update_main_parameters(args, parameters)
-
-    # TODO make these blocks into a function and document well
-    if (fresh) {
-      object$args <- args
-      object$eng_args <- eng_args
-    } else {
-      null_args <- map_lgl(args, null_value)
-      if (any(null_args))
-        args <- args[!null_args]
-      if (length(args) > 0)
-        object$args[names(args)] <- args
-      if (length(eng_args) > 0)
-        object$eng_args[names(eng_args)] <- eng_args
-    }
-
-    new_model_spec(
-      "rand_forest",
-      args = object$args,
-      eng_args = object$eng_args,
-      mode = object$mode,
-      method = NULL,
-      engine = object$engine
+    update_spec(
+      object = object,
+      parameters = parameters,
+      args_enquo_list = args,
+      fresh = fresh,
+      cls = "rand_forest",
+      ...
     )
   }
 
@@ -163,21 +130,15 @@ translate.rand_forest <- function(x, engine = x$engine, ...) {
   ## -----------------------------------------------------------------------------
   # Protect some arguments based on data dimensions
 
-  if (any(names(arg_vals) == "mtry") & engine != "cforest") {
+  if (any(names(arg_vals) == "mtry") & engine != "partykit") {
     arg_vals$mtry <- rlang::call2("min_cols", arg_vals$mtry, expr(x))
-  }
-  if (any(names(arg_vals) == "mtry") & engine == "cforest") {
-    arg_vals$mtry <- rlang::call2("min_cols", arg_vals$mtry, expr(data))
   }
 
   if (any(names(arg_vals) == "min.node.size")) {
     arg_vals$min.node.size <-
       rlang::call2("min_rows", arg_vals$min.node.size, expr(x))
   }
-  if (any(names(arg_vals) == "minsplit" & engine == "cforest")) {
-    arg_vals$minsplit <-
-      rlang::call2("min_rows", arg_vals$minsplit, expr(data))
-  }
+
   if (any(names(arg_vals) == "nodesize")) {
     arg_vals$nodesize <-
       rlang::call2("min_rows", arg_vals$nodesize, expr(x))

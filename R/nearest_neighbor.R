@@ -55,18 +55,6 @@ nearest_neighbor <- function(mode = "unknown",
   )
 }
 
-#' @export
-print.nearest_neighbor <- function(x, ...) {
-  cat("K-Nearest Neighbor Model Specification (", x$mode, ")\n\n", sep = "")
-  model_printer(x, ...)
-
-  if(!is.null(x$method$fit$args)) {
-    cat("Model fit template:\n")
-    print(show_call(x))
-  }
-  invisible(x)
-}
-
 # ------------------------------------------------------------------------------
 
 #' @method update nearest_neighbor
@@ -79,40 +67,19 @@ update.nearest_neighbor <- function(object,
                                     dist_power = NULL,
                                     fresh = FALSE, ...) {
 
-  eng_args <- update_engine_parameters(object$eng_args, ...)
-
-  if (!is.null(parameters)) {
-    parameters <- check_final_param(parameters)
-  }
-
   args <- list(
     neighbors   = enquo(neighbors),
     weight_func = enquo(weight_func),
     dist_power  = enquo(dist_power)
   )
 
-  args <- update_main_parameters(args, parameters)
-
-  if (fresh) {
-    object$args <- args
-    object$eng_args <- eng_args
-  } else {
-    null_args <- map_lgl(args, null_value)
-    if (any(null_args))
-      args <- args[!null_args]
-    if (length(args) > 0)
-      object$args[names(args)] <- args
-    if (length(eng_args) > 0)
-      object$eng_args[names(eng_args)] <- eng_args
-  }
-
-  new_model_spec(
-    "nearest_neighbor",
-    args = object$args,
-    eng_args = object$eng_args,
-    mode = object$mode,
-    method = NULL,
-    engine = object$engine
+  update_spec(
+    object = object,
+    parameters = parameters,
+    args_enquo_list = args,
+    fresh = fresh,
+    cls = "nearest_neighbor",
+    ...
   )
 }
 

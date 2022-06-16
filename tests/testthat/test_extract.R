@@ -1,8 +1,3 @@
-
-context("model extraction")
-
-# ------------------------------------------------------------------------------
-
 test_that('extract', {
   skip_if(tune_check())
 
@@ -82,6 +77,20 @@ test_that('extract single parameter from model with main and engine parameters',
   )
   expect_equal(
     extract_parameter_dials(bst_model, parameter = "rules"),
+    NA
+  )
+})
+
+test_that("extract_parameter_dials doesn't error if namespaced args are used", {
+  skip_on_covr()
+  skip_if(tune_check())
+
+  bst_model <-
+    logistic_reg(mode = "classification", penalty = hardhat::tune()) %>%
+      set_engine("glmnet", family = stats::gaussian("log"))
+
+  expect_error(
+    extract_parameter_dials(bst_model, parameter = "penalty"),
     NA
   )
 })

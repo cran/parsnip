@@ -13,9 +13,11 @@ This model has 2 tuning parameters:
 
 - `mixture`: Proportion of Lasso Penalty (type: double, default: 0.0)
 
-For `penalty`, the amount of regularization includes both the L1 penalty (i.e., lasso) and the L2 penalty (i.e., ridge or weight decay). 
+For `penalty`, the amount of regularization includes both the L1 penalty (i.e., lasso) and the L2 penalty (i.e., ridge or weight decay). As for `mixture`:
 
-A value of `mixture = 1` corresponds to a pure lasso model, while `mixture = 0` indicates ridge regression.
+* `mixture = 1` specifies a pure lasso model,
+* `mixture = 0`  specifies a ridge regression model, and
+* `0 < mixture < 1` specifies an elastic net model, interpolating lasso and ridge.
 
 ## Translation from parsnip to the original package
 
@@ -37,7 +39,7 @@ logistic_reg(penalty = double(1), mixture = double(1)) %>%
 ## 
 ## Model fit template:
 ## sparklyr::ml_logistic_regression(x = missing_arg(), formula = missing_arg(), 
-##     weight_col = missing_arg(), reg_param = double(1), elastic_net_param = double(1), 
+##     weights = missing_arg(), reg_param = double(1), elastic_net_param = double(1), 
 ##     family = "binomial")
 ```
 
@@ -49,7 +51,17 @@ Factor/categorical predictors need to be converted to numeric values (e.g., dumm
 
 Predictors should have the same scale. One way to achieve this is to center and 
 scale each so that each predictor has mean zero and a variance of one.
+
 By default, `ml_logistic_regression()` uses the argument `standardization = TRUE` to center and scale the data. 
+
+## Case weights
+
+
+This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
+
+The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+
+Note that, for spark engines, the `case_weight` argument value should be a character string to specify the column with the numeric case weights. 
 
 ## Other details
 

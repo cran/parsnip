@@ -14,7 +14,7 @@ This model has 2 tuning parameter:
 
 - `Laplace`: Laplace Correction (type: double, default: 0.0)
 
-Note that `usekernel` is always set to `TRUE` for the `klaR` engine.
+Note that the engine argument `usekernel` is set to `TRUE` by default when using the `klaR` engine. 
 
 ## Translation from parsnip to the original package
 
@@ -51,6 +51,11 @@ The columns for qualitative predictors should always be represented as factors (
 Variance calculations are used in these computations so _zero-variance_ predictors (i.e., with a single unique value) should be eliminated before fitting the model. 
 
 
+
+## Case weights
+
+
+The underlying model implementation does not allow for case weights. 
 
 ## References
 

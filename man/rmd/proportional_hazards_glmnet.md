@@ -13,9 +13,11 @@ This model has 2 tuning parameters:
 
 - `mixture`: Proportion of Lasso Penalty (type: double, default: 1.0)
 
-A value of `mixture = 1` corresponds to a pure lasso model, while `mixture = 0` indicates ridge regression.
+The `penalty` parameter has no default and requires a single numeric value. For more details about this, and the `glmnet` model in general, see [parsnip::glmnet-details]. As for `mixture`:
 
-The `penalty` parameter has no default and requires a single numeric value. For more details about this, and the `glmnet` model in general, see [parsnip::glmnet-details].
+* `mixture = 1` specifies a pure lasso model,
+* `mixture = 0`  specifies a ridge regression model, and
+* `0 < mixture < 1` specifies an elastic net model, interpolating lasso and ridge.
 
 ## Translation from parsnip to the original package
 
@@ -41,7 +43,7 @@ proportional_hazards(penalty = double(1), mixture = double(1)) %>%
 ## 
 ## Model fit template:
 ## censored::glmnet_fit_wrapper(formula = missing_arg(), data = missing_arg(), 
-##     family = missing_arg(), alpha = double(1))
+##     weights = missing_arg(), alpha = double(1))
 ```
 
 ## Preprocessing requirements
@@ -95,7 +97,12 @@ predict(mod, pred_data, type = "survival", time = 500) %>%
 
 Note that columns used in the `strata()` function _will_ also be estimated in the regular portion of the model (i.e., within the linear predictor).
 
-# Linear predictor values
+
+
+Predictions of type `"time"` are predictions of the mean survival time.
+
+## Linear predictor values
+
 
 Since risk regression and parametric survival models are modeling different characteristics (e.g. relative hazard versus event time), their linear predictors will be going in opposite directions. 
 
@@ -104,6 +111,13 @@ For example, for parametric models, the linear predictor _increases with time_. 
 tidymodels does not treat different models differently when computing performance metrics.  To standardize across model types, the default for proportional hazards models is to have _increasing values with time_. As a result, the sign of the linear predictor will be the opposite of the value produced by the `predict()` method in the engine package. 
 
 This behavior can be changed by using the `increasing` argument when calling `predict()` on a \pkg{parsnip} model object. 
+
+## Case weights
+
+
+This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
+
+The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
 
 # References
 

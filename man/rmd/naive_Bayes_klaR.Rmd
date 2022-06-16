@@ -23,7 +23,7 @@ This model has `r nrow(param)` tuning parameter:
 param$item
 ```
 
-Note that `usekernel` is always set to `TRUE` for the `klaR` engine.
+Note that the engine argument `usekernel` is set to `TRUE` by default when using the `klaR` engine. 
 
 ## Translation from parsnip to the original package
 
@@ -42,6 +42,11 @@ naive_Bayes(smoothness = numeric(0), Laplace = numeric(0)) %>%
 The columns for qualitative predictors should always be represented as factors (as opposed to dummy/indicator variables). When the predictors are factors, the underlying code treats them as multinomial data and appropriately computes their conditional distributions. 
 
 ```{r child = "template-zv.Rmd"}
+```
+
+## Case weights
+
+```{r child = "template-no-case-weights.Rmd"}
 ```
 
 ## References

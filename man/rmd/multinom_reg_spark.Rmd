@@ -22,9 +22,11 @@ This model has `r nrow(param)` tuning parameters:
 param$item
 ```
 
-For `penalty`, the amount of regularization includes both the L1 penalty (i.e., lasso) and the L2 penalty (i.e., ridge or weight decay). 
+For `penalty`, the amount of regularization includes both the L1 penalty (i.e., lasso) and the L2 penalty (i.e., ridge or weight decay). As for `mixture`:
 
-A value of `mixture = 1` corresponds to a pure lasso model, while `mixture = 0` indicates ridge regression.
+* `mixture = 1` specifies a pure lasso model,
+* `mixture = 0`  specifies a ridge regression model, and
+* `0 < mixture < 1` specifies an elastic net model, interpolating lasso and ridge.
 
 ## Translation from parsnip to the original package
 
@@ -41,7 +43,16 @@ multinom_reg(penalty = double(1), mixture = double(1)) %>%
 
 ```{r child = "template-same-scale.Rmd"}
 ```
+
 By default, `ml_multinom_regression()` uses the argument `standardization = TRUE` to center and scale the data. 
+
+## Case weights
+
+```{r child = "template-uses-case-weights.Rmd"}
+```
+
+Note that, for spark engines, the `case_weight` argument value should be a character string to specify the column with the numeric case weights. 
+
 
 ## Other details
 

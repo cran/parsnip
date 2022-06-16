@@ -17,17 +17,22 @@ This model has 2 tuning parameter:
 \item \code{Laplace}: Laplace Correction (type: double, default: 0.0)
 }
 
-Note that \code{usekernel} is always set to \code{TRUE} for the \code{klaR} engine.
+Note that the engine argument \code{usekernel} is set to \code{TRUE} by default
+when using the \code{klaR} engine.
 }
 
 \subsection{Translation from parsnip to the original package}{
 
-The \strong{discrim} extension package is required to fit this model.\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(discrim)
+The \strong{discrim} extension package is required to fit this model.
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(discrim)
 
 naive_Bayes(smoothness = numeric(0), Laplace = numeric(0)) \%>\% 
   set_engine("klaR") \%>\% 
   translate()
-}\if{html}{\out{</div>}}\preformatted{## Naive Bayes Model Specification (classification)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## Naive Bayes Model Specification (classification)
 ## 
 ## Main Arguments:
 ##   smoothness = numeric(0)
@@ -38,7 +43,7 @@ naive_Bayes(smoothness = numeric(0), Laplace = numeric(0)) \%>\%
 ## Model fit template:
 ## discrim::klar_bayes_wrapper(x = missing_arg(), y = missing_arg(), 
 ##     adjust = numeric(0), fL = numeric(0), usekernel = TRUE)
-}
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Preprocessing requirements}{
@@ -51,6 +56,11 @@ appropriately computes their conditional distributions.
 Variance calculations are used in these computations so \emph{zero-variance}
 predictors (i.e., with a single unique value) should be eliminated
 before fitting the model.
+}
+
+\subsection{Case weights}{
+
+The underlying model implementation does not allow for case weights.
 }
 
 \subsection{References}{

@@ -47,7 +47,7 @@ set_fit(
   mode = "regression",
   value = list(
     interface = "formula",
-    protect = c("formula", "data"),
+    protect = c("formula", "data", "weights"),
     func = c(pkg = "mgcv", fun = "gam"),
     defaults = list()
   )
@@ -127,7 +127,7 @@ set_fit(
   mode = "classification",
   value = list(
     interface = "formula",
-    protect = c("formula", "data"),
+    protect = c("formula", "data", "weights"),
     func = c(pkg = "mgcv", fun = "gam"),
     defaults = list(
       family = quote(stats::binomial(link = "logit"))
@@ -166,6 +166,9 @@ set_pred(
   value  = list(
     pre = NULL,
     post = function(x, object) {
+      if (is.array(x)) {
+        x <- as.vector(x)
+      }
       x <- tibble(v1 = 1 - x, v2 = x)
       colnames(x) <- object$lvl
       x

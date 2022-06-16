@@ -22,62 +22,80 @@ check_empty_ellipse <- function (...)  {
   terms
 }
 
-deparserizer <- function(x, limit = options()$width - 10) {
-  x <- deparse(x, width.cutoff = limit)
-  x <- gsub("^    ", "", x)
-  x <- paste0(x, collapse = "")
-  if (nchar(x) > limit)
-    x <- paste0(substring(x, first = 1, last = limit - 7), "<snip>")
-  x
-}
-
-print_arg_list <- function(x, ...) {
-  atomic <- vapply(x, is.atomic, logical(1))
-  x2 <- x
-  x2[!atomic] <-  lapply(x2[!atomic], deparserizer, ...)
-  res <- paste0("  ", names(x2), " = ", x2, collaspe = "\n")
-  cat(res, sep = "")
-}
-
-#' Print helper for model objects
-#'
-#' A common format function that prints information about the model object (e.g.
-#' arguments, calls, packages, etc).
-#'
-#' @param x A model object.
-#' @param ... Not currently used.
-#' @keywords internal
-#' @export
-model_printer <- function(x, ...) {
-  non_null_args <- x$args[!vapply(x$args, null_value, lgl(1))]
-  if (length(non_null_args) > 0) {
-    cat("Main Arguments:\n")
-    non_null_args <- map(non_null_args, convert_arg)
-    cat(print_arg_list(non_null_args), "\n", sep = "")
-  }
-  if (length(x$eng_args) > 0) {
-    cat("Engine-Specific Arguments:\n")
-    x$eng_args <- map(x$eng_args, convert_arg)
-    cat(print_arg_list(x$eng_args), "\n", sep = "")
-  }
-  if (!is.null(x$engine)) {
-    cat("Computational engine:", x$engine, "\n\n")
-    if (!is.null(x$method$fit_call)) {
-      cat("Fit function:\n")
-      print(x$method$fit_call)
-      if (length(x$method$libs) > 0) {
-        if (length(x$method$libs) > 1)
-          cat("\nRequired packages:\n")
-        else
-          cat("\nRequired package: ")
-        cat(paste0(x$method$libs, collapse = ", "), "\n")
-      }
-    }
-  }
-}
-
 is_missing_arg <- function(x)
   identical(x, quote(missing_arg()))
+
+model_info_table <-
+  utils::read.delim(system.file("models.tsv", package = "parsnip"))
+
+# given a model object, return TRUE if:
+# * the model is supported without extensions
+# * the model needs an extension and it is loaded
+#
+# return FALSE if:
+# * the model needs an extension and it is _not_ loaded
+has_loaded_implementation <- function(spec_, engine_, mode_) {
+  if (isFALSE(mode_ %in% c("regression", "censored regression", "classification"))) {
+    mode_ <- c("regression", "censored regression", "classification")
+  }
+  eng_cond <- if (is.null(engine_)) {TRUE} else {quote(engine == engine_)}
+
+  avail <-
+    get_from_env(spec_) %>%
+    dplyr::filter(mode %in% mode_, !!eng_cond)
+  pars <-
+    model_info_table %>%
+    dplyr::filter(model == spec_, !!eng_cond, mode %in% mode_, is.na(pkg))
+
+  if (nrow(pars) > 0 || nrow(avail) > 0) {
+    return(TRUE)
+  }
+
+  FALSE
+}
+
+is_printable_spec <- function(x) {
+  !is.null(x$method$fit$args) &&
+  has_loaded_implementation(class(x)[1], x$engine, x$mode)
+}
+
+# construct a message informing the user that there are no
+# implementations for the current model spec / mode / engine.
+#
+# if there's a "pre-registered" extension supporting that setup,
+# nudge the user to install/load it.
+inform_missing_implementation <- function(spec_, engine_, mode_) {
+  avail <-
+    show_engines(spec_) %>%
+    dplyr::filter(mode == mode_, engine == engine_)
+  all <-
+    model_info_table %>%
+    dplyr::filter(model == spec_, mode == mode_, engine == engine_, !is.na(pkg)) %>%
+    dplyr::select(-model)
+
+  if (identical(mode_, "unknown")) {
+    mode_ <- ""
+  }
+
+  msg <-
+    glue::glue(
+      "parsnip could not locate an implementation for `{spec_}` {mode_} model \\
+       specifications using the `{engine_}` engine."
+    )
+
+  if (nrow(avail) == 0 && nrow(all) > 0) {
+    msg <-
+      c(
+        msg,
+        i = paste0("The parsnip extension package ", all$pkg[[1]],
+                   " implements support for this specification."),
+        i = "Please install (if needed) and load to continue.",
+        ""
+      )
+  }
+
+  msg
+}
 
 
 #' Print the model call
@@ -89,18 +107,10 @@ is_missing_arg <- function(x)
 show_call <- function(object) {
   object$method$fit$args <-
     map(object$method$fit$args, convert_arg)
-  if (
-    is.null(object$method$fit$func["pkg"]) ||
-    is.na(object$method$fit$func["pkg"])
-  ) {
-    res <- call2(object$method$fit$func["fun"], !!!object$method$fit$args)
-  } else {
-    res <-
-      call2(object$method$fit$func["fun"],
-            !!!object$method$fit$args,
-            .ns = object$method$fit$func["pkg"])
-  }
-  res
+
+  call2(object$method$fit$func["fun"],
+        !!!object$method$fit$args,
+        .ns = object$method$fit$func["pkg"])
 }
 
 convert_arg <- function(x) {
@@ -110,7 +120,6 @@ convert_arg <- function(x) {
     x
 }
 
-
 levels_from_formula <- function(f, dat) {
   if (inherits(dat, "tbl_spark"))
     res <- NULL
@@ -118,10 +127,6 @@ levels_from_formula <- function(f, dat) {
     res <- levels(eval_tidy(f[[2]], dat))
   res
 }
-
-is_spark <- function(x)
-  isTRUE(unname(x$method$fit$func["pkg"] == "sparklyr"))
-
 
 #' @export
 #' @keywords internal
@@ -185,9 +190,14 @@ update_dot_check <- function(...) {
 #' @export
 #' @keywords internal
 #' @rdname add_on_exports
-new_model_spec <- function(cls, args, eng_args, mode, method, engine) {
+new_model_spec <- function(cls, args, eng_args, mode, method, engine,
+                           check_missing_spec = TRUE) {
 
   check_spec_mode_engine_val(cls, engine, mode)
+
+  if ((!has_loaded_implementation(cls, engine, mode)) && check_missing_spec) {
+    rlang::inform(inform_missing_implementation(cls, engine, mode))
+  }
 
   out <- list(args = args, eng_args = eng_args,
               mode = mode, method = method, engine = engine)
@@ -210,17 +220,6 @@ check_outcome <- function(y, spec) {
   }
   invisible(NULL)
 }
-
-
-# Get's a character string of varible names used as the outcome
-# in a terms object
-terms_y <- function(x) {
-  att <- attributes(x)
-  resp_ind <- att$response
-  y_expr <- att$predvars[[resp_ind + 1]]
-  all.vars(y_expr)
-}
-
 
 # ------------------------------------------------------------------------------
 
@@ -276,12 +275,12 @@ update_main_parameters <- function(args, param) {
 #' @export
 #' @keywords internal
 #' @rdname add_on_exports
-update_engine_parameters <- function(eng_args, ...) {
+update_engine_parameters <- function(eng_args, fresh, ...) {
 
   dots <- enquos(...)
 
   ## only update from dots when there are eng args in original model spec
-  if (is_null(eng_args)) {
+  if (is_null(eng_args) || (fresh && length(dots) == 0)) {
     ret <- NULL
   } else {
     ret <- utils::modifyList(eng_args, dots)
@@ -384,4 +383,19 @@ stan_conf_int <- function(object, newdata) {
     )
 
   penalty
+}
+
+
+check_case_weights <- function(x, spec) {
+  if (is.null(x) | spec$engine == "spark") {
+    return(invisible(NULL))
+  }
+  if (!hardhat::is_case_weights(x)) {
+    rlang::abort("'case_weights' should be a single numeric vector of class 'hardhat_case_weights'.")
+  }
+  allowed <- case_weights_allowed(spec)
+  if (!allowed) {
+    rlang::abort("Case weights are not enabled by the underlying model implementation.")
+  }
+  invisible(NULL)
 }

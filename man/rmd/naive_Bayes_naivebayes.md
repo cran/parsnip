@@ -14,6 +14,8 @@ This model has 2 tuning parameter:
 
 - `Laplace`: Laplace Correction (type: double, default: 0.0)
 
+Note that the engine argument `usekernel` is set to `TRUE` by default when using the `naivebayes` engine. 
+
 ## Translation from parsnip to the original package
 
 The **discrim** extension package is required to fit this model.
@@ -51,6 +53,11 @@ For count data, integers can be estimated using a Poisson distribution if the ar
 Variance calculations are used in these computations so _zero-variance_ predictors (i.e., with a single unique value) should be eliminated before fitting the model. 
 
 
+
+## Case weights
+
+
+The underlying model implementation does not allow for case weights. 
 
 ## References
 

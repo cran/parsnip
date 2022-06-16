@@ -47,19 +47,6 @@ discrim_linear <-
     )
   }
 
-#' @export
-print.discrim_linear <- function(x, ...) {
-  cat("Linear Discriminant Model Specification (", x$mode, ")\n\n", sep = "")
-  model_printer(x, ...)
-
-  if (!is.null(x$method$fit$args)) {
-    cat("Model fit template:\n")
-    print(show_call(x))
-  }
-
-  invisible(x)
-}
-
 # ------------------------------------------------------------------------------
 
 #' @method update discrim_linear
@@ -71,29 +58,19 @@ update.discrim_linear <-
            penalty = NULL,
            regularization_method = NULL,
            fresh = FALSE, ...) {
-    update_dot_check(...)
+
     args <- list(
       penalty = rlang::enquo(penalty),
       regularization_method = rlang::enquo(regularization_method)
     )
 
-    if (fresh) {
-      object$args <- args
-    } else {
-      null_args <- map_lgl(args, null_value)
-      if (any(null_args))
-        args <- args[!null_args]
-      if (length(args) > 0)
-        object$args[names(args)] <- args
-    }
-
-    new_model_spec(
-      "discrim_linear",
-      args = object$args,
-      eng_args = object$eng_args,
-      mode = object$mode,
-      method = NULL,
-      engine = object$engine
+    update_spec(
+      object = object,
+      parameters = NULL,
+      args_enquo_list = args,
+      fresh = fresh,
+      cls = "discrim_linear",
+      ...
     )
   }
 

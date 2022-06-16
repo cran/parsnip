@@ -1,9 +1,4 @@
-
-# ------------------------------------------------------------------------------
-
-context("checking for multi_predict")
-
-source(test_path("helper-objects.R"))
+# checking for multi_predict
 hpc <- hpc_data[1:150, c(2:5, 8)]
 
 test_that('parsnip objects', {
@@ -13,7 +8,7 @@ test_that('parsnip objects', {
 
   lm_fit <- fit(lm_idea, mpg ~ ., data = mtcars)
   expect_false(has_multi_predict(lm_fit))
-  expect_false(has_multi_predict(lm_fit$fit))
+  expect_false(has_multi_predict(extract_fit_engine(lm_fit)))
   expect_error(
     multi_predict(lm_fit, mtcars),
     "No `multi_predict` method exists"
@@ -24,9 +19,9 @@ test_that('parsnip objects', {
     set_engine("earth") %>%
     fit(mpg ~ ., data = mtcars)
   expect_true(has_multi_predict(mars_fit))
-  expect_false(has_multi_predict(mars_fit$fit))
+  expect_false(has_multi_predict(extract_fit_engine(mars_fit)))
   expect_error(
-    multi_predict(mars_fit$fit, mtcars),
+    multi_predict(extract_fit_engine(mars_fit), mtcars),
     "No `multi_predict` method exists"
   )
 
@@ -36,35 +31,6 @@ test_that('other objects', {
 
   expect_false(has_multi_predict(NULL))
   expect_false(has_multi_predict(NA))
-
-})
-
-# ------------------------------------------------------------------------------
-
-context("getting y names from terms")
-
-test_that('getting y names from terms', {
-
-  expect_equal(
-    parsnip:::terms_y(lm(cbind(mpg, disp)  ~., data = mtcars)$terms),
-    c("mpg", "disp")
-  )
-
-  expect_equal(
-    parsnip:::terms_y(lm(mpg  ~., data = mtcars)$terms),
-    "mpg"
-  )
-
-  expect_equal(
-    parsnip:::terms_y(lm(log(mpg)  ~., data = mtcars)$terms),
-    "mpg"
-  )
-
-  expect_equal(
-    parsnip:::terms_y(terms(  ~., data = mtcars)),
-    character(0)
-  )
-
 
 })
 
@@ -112,4 +78,31 @@ test_that('control class', {
   )
 })
 
+# ------------------------------------------------------------------------------
 
+test_that('correct mtry', {
+  skip_if_not_installed("modeldata")
+  data(ames, package = "modeldata")
+  f_1 <- Sale_Price ~ Longitude + Latitude + Year_Built
+  f_2 <- Sale_Price ~ .
+  f_3 <- cbind(wt, mpg) ~ .
+
+  expect_equal(max_mtry_formula(2, f_1, ames), 2)
+  expect_equal(max_mtry_formula(5, f_1, ames), 3)
+  expect_equal(max_mtry_formula(0, f_1, ames), 1)
+
+  expect_equal(max_mtry_formula(2000, f_2, ames), ncol(ames) - 1)
+  expect_equal(max_mtry_formula(2, f_2, ames), 2)
+
+  expect_equal(max_mtry_formula(200, f_3, data = mtcars), ncol(mtcars) - 2)
+
+})
+
+# ----------------------------------------------------------------------------
+
+test_that('model type functions message informatively with unknown implementation', {
+  expect_snapshot(
+    bag_tree() %>%
+      set_engine("rpart")
+  )
+})

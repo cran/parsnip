@@ -13,8 +13,6 @@ This model has 7 tuning parameters:
 
 - `penalty`: Amount of Regularization (type: double, default: 0.0)
 
-- `mixture`: Proportion of Lasso Penalty (type: double, default: 0.0)
-
 - `epochs`: # Epochs (type: integer, default: 0.01)
 
 - `dropout`: Dropout Rate (type: double, default: 0.0)
@@ -22,6 +20,8 @@ This model has 7 tuning parameters:
 - `learn_rate`: Learning Rate (type: double, default: 100L)
 
 - `activation`: Activation Function (type: character, default: 'relu')
+
+- `mixture`: Proportion of Lasso Penalty (type: double, default: 0.0)
 
 The use of the L1 penalty (a.k.a. the lasso penalty) does _not_ force parameters to be strictly zero (as it does in packages such as glmnet). The zeroing out of parameters is a specific feature the optimization method used in those packages.
 
@@ -53,7 +53,7 @@ mlp(
 ```
 
 ```
-## Single Layer Neural Network Specification (regression)
+## Single Layer Neural Network Model Specification (regression)
 ## 
 ## Main Arguments:
 ##   hidden_units = integer(1)
@@ -91,7 +91,7 @@ mlp(
 ```
 
 ```
-## Single Layer Neural Network Specification (classification)
+## Single Layer Neural Network Model Specification (classification)
 ## 
 ## Main Arguments:
 ##   hidden_units = integer(1)
@@ -118,6 +118,11 @@ Factor/categorical predictors need to be converted to numeric values (e.g., dumm
 
 Predictors should have the same scale. One way to achieve this is to center and 
 scale each so that each predictor has mean zero and a variance of one.
+
+## Case weights
+
+
+The underlying model implementation does not allow for case weights. 
 
 ## References
 

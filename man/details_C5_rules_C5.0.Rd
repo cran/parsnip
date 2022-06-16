@@ -12,9 +12,10 @@ is a wrapper around this function.
 For this engine, there is a single mode: classification
 \subsection{Tuning Parameters}{
 
-This model has 1 tuning parameters:
+This model has 2 tuning parameters:
 \itemize{
 \item \code{trees}: # Trees (type: integer, default: 1L)
+\item \code{min_n}: Minimal Node Size (type: integer, default: 2L)
 }
 
 Note that C5.0 has a tool for \emph{early stopping} during boosting where
@@ -25,7 +26,9 @@ less iterations of boosting are performed than the number requested.
 
 \subsection{Translation from parsnip to the underlying model call (classification)}{
 
-The \strong{rules} extension package is required to fit this model.\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(rules)
+The \strong{rules} extension package is required to fit this model.
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(rules)
 
 C5_rules(
   trees = integer(1),
@@ -34,7 +37,9 @@ C5_rules(
   set_engine("C5.0") \%>\%
   set_mode("classification") \%>\%
   translate()
-}\if{html}{\out{</div>}}\preformatted{## C5.0 Model Specification (classification)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## C5.0 Model Specification (classification)
 ## 
 ## Main Arguments:
 ##   trees = integer(1)
@@ -45,7 +50,7 @@ C5_rules(
 ## Model fit template:
 ## rules::c5_fit(x = missing_arg(), y = missing_arg(), weights = missing_arg(), 
 ##     trials = integer(1), minCases = integer(1))
-}
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Preprocessing requirements}{
@@ -54,6 +59,16 @@ This engine does not require any special encoding of the predictors.
 Categorical predictors can be partitioned into groups of factor levels
 (e.g. \verb{\{a, c\}} vs \verb{\{b, d\}}) when splitting at a node. Dummy variables
 are not required for this model.
+}
+
+\subsection{Case weights}{
+
+This model can utilize case weights during model fitting. To use them,
+see the documentation in \link{case_weights} and the examples
+on \code{tidymodels.org}.
+
+The \code{fit()} and \code{fit_xy()} arguments have arguments called
+\code{case_weights} that expect vectors of case weights.
 }
 
 \subsection{References}{

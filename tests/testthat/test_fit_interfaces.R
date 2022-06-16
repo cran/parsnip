@@ -1,9 +1,3 @@
-library(testthat)
-context("fit interfaces")
-library(parsnip)
-library(rlang)
-
-source(test_path("helper-objects.R"))
 hpc <- hpc_data[1:150, c(2:5, 8)]
 
 f <- y ~ x
@@ -114,11 +108,15 @@ test_that('No loaded engines', {
     regexp = NA
   )
   expect_error(
-    cubist_rules() %>% fit(mpg ~., data = mtcars),
+    expect_message(
+      cubist_rules() %>% fit(mpg ~., data = mtcars)
+    ),
     regexp = "Please load a parsnip extension package that provides one"
   )
   expect_error(
-    poisson_reg() %>% fit(mpg ~., data = mtcars),
+    expect_message(
+      poisson_reg() %>% fit(mpg ~., data = mtcars)
+    ),
     regexp = "Please load a parsnip extension package that provides one"
   )
 })

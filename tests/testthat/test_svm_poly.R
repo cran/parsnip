@@ -1,107 +1,12 @@
-library(testthat)
-library(parsnip)
-library(rlang)
-library(tibble)
-
-# ------------------------------------------------------------------------------
-
-context("RBF SVM")
-source(test_path("helpers.R"))
-source(test_path("helper-objects.R"))
 hpc <- hpc_data[1:150, c(2:5, 8)]
 
 # ------------------------------------------------------------------------------
-
-test_that('primary arguments', {
-  basic <- svm_poly(mode = "regression")
-  basic_kernlab <- translate(basic %>% set_engine("kernlab"))
-
-  expect_equal(
-    object = basic_kernlab$method$fit$args,
-    expected = list(
-      x = expr(missing_arg()),
-      data = expr(missing_arg()),
-      kernel = "polydot"
-    )
-  )
-
-  degree <- svm_poly(mode = "regression", degree = 2)
-  degree_kernlab <- translate(degree %>% set_engine("kernlab"))
-  degree_obj <- expr(list())
-  degree_obj$degree <- new_empty_quosure(2)
-
-  expect_equal(
-    object = degree_kernlab$method$fit$args,
-    expected = list(
-      x = expr(missing_arg()),
-      data = expr(missing_arg()),
-      kernel = "polydot",
-      kpar = degree_obj
-    )
-  )
-
-  degree_scale <- svm_poly(mode = "regression", degree = 2, scale_factor = 1.2)
-  degree_scale_kernlab <- translate(degree_scale %>% set_engine("kernlab"))
-  degree_scale_obj <- expr(list())
-  degree_scale_obj$degree <- new_empty_quosure(2)
-  degree_scale_obj$scale <- new_empty_quosure(1.2)
-
-  expect_equal(
-    object = degree_scale_kernlab$method$fit$args,
-    expected = list(
-      x = expr(missing_arg()),
-      data = expr(missing_arg()),
-      kernel = "polydot",
-      kpar = degree_scale_obj
-    )
-  )
-
-})
-
-test_that('engine arguments', {
-
-  kernlab_cv <- svm_poly(mode = "regression") %>% set_engine("kernlab", cross = 10)
-
-  expect_equal(
-    object = translate(kernlab_cv, "kernlab")$method$fit$args,
-    expected = list(
-      x = expr(missing_arg()),
-      data = expr(missing_arg()),
-      cross = new_empty_quosure(10),
-      kernel = "polydot"
-    )
-  )
-
-})
-
-
 test_that('updating', {
-
-  expr1     <- svm_poly(mode = "regression")  %>% set_engine("kernlab", cross = 10)
-  expr1_exp <- svm_poly(mode = "regression", degree = 1) %>% set_engine("kernlab", cross = 10)
-
-  expr2     <- svm_poly(mode = "regression", degree = tune()) %>% set_engine("kernlab", cross = tune())
-  expr2_exp <- svm_poly(mode = "regression", degree = tune(), scale_factor = 1) %>% set_engine("kernlab", cross = 10)
-
-  expr3     <- svm_poly(mode = "regression", degree = 2, scale_factor = tune()) %>% set_engine("kernlab")
-  expr3_exp <- svm_poly(mode = "regression", degree = 3) %>% set_engine("kernlab")
-
-  expect_equal(update(expr1, degree = 1), expr1_exp)
-  expect_equal(update(expr2,  scale_factor = 1, cross = 10), expr2_exp)
-  expect_equal(update(expr3, degree = 3, fresh = TRUE), expr3_exp)
-
-  param_tibb <- tibble::tibble(degree = 3, cost = 10)
-  param_list <- as.list(param_tibb)
-
-  expr1_updated <- update(expr1, param_tibb)
-  expect_equal(expr1_updated$args$degree, 3)
-  expect_equal(expr1_updated$args$cost, 10)
-  expect_equal(expr1_updated$eng_args$cross, rlang::quo(10))
-
-  expr1_updated_lst <- update(expr1, param_list)
-  expect_equal(expr1_updated_lst$args$degree, 3)
-  expect_equal(expr1_updated_lst$args$cost, 10)
-  expect_equal(expr1_updated_lst$eng_args$cross, rlang::quo(10))
+  expect_snapshot(
+    svm_poly(mode = "regression", degree = 2) %>%
+      set_engine("kernlab", cross = 10) %>%
+      update(degree = tune(), cross = tune())
+  )
 })
 
 test_that('bad input', {
@@ -141,7 +46,6 @@ test_that('svm poly regression', {
 
   expect_false(has_multi_predict(res))
   expect_equal(multi_predict_args(res), NA_character_)
-  expect_output(print(res), "parsnip model object")
 
   expect_error(
     fit(
@@ -193,7 +97,7 @@ test_that('svm poly regression prediction', {
       y = hpc$compounds,
       control = ctrl
     )
-  expect_equal(reg_form$fit@alphaindex, reg_xy_form$fit@alphaindex)
+  expect_equal(extract_fit_engine(reg_form)@alphaindex, extract_fit_engine(reg_xy_form)@alphaindex)
 
   parsnip_xy_pred <- predict(reg_xy_form, hpc[1:3, -c(1, 5)])
   expect_equal(as.data.frame(kern_pred),
@@ -267,11 +171,11 @@ test_that('svm poly classification probabilities', {
       y = hpc_no_m$class,
       control = ctrl
     )
-  expect_equal(cls_form$fit@alphaindex, cls_xy_form$fit@alphaindex)
+  expect_equal(extract_fit_engine(cls_form)@alphaindex, extract_fit_engine(cls_xy_form)@alphaindex)
 
   library(kernlab)
   kern_probs <-
-    kernlab::predict(cls_form$fit, hpc_no_m[ind, -5], type = "probabilities") %>%
+    kernlab::predict(extract_fit_engine(cls_form), hpc_no_m[ind, -5], type = "probabilities") %>%
     as_tibble() %>%
     setNames(c('.pred_VF', '.pred_F', '.pred_L'))
 

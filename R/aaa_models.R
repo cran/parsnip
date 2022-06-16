@@ -260,12 +260,6 @@ check_mode_with_no_engine <- function(cls, mode) {
   }
 }
 
-check_engine_val <- function(eng) {
-  if (rlang::is_missing(eng) || length(eng) != 1 || !is.character(eng))
-    rlang::abort("Please supply a character string for an engine (e.g. `'lm'`).")
-  invisible(NULL)
-}
-
 check_arg_val <- function(arg) {
   if (rlang::is_missing(arg) || length(arg) != 1 || !is.character(arg))
     rlang::abort("Please supply a character string for the argument.")
@@ -612,8 +606,6 @@ set_model_engine <- function(model, mode, eng) {
   check_mode_val(eng)
   check_mode_for_new_engine(model, eng, mode)
 
-  current <- get_model_env()
-
   new_eng <- dplyr::tibble(engine = eng, mode = mode)
   old_eng <- get_from_env(model)
 
@@ -640,7 +632,6 @@ set_model_arg <- function(model, eng, parsnip, original, func, has_submodel) {
   check_func_val(func)
   check_submodels_val(has_submodel)
 
-  current <- get_model_env()
   old_args <- get_from_env(paste0(model, "_args"))
 
   new_arg <-
@@ -920,7 +911,6 @@ get_pred_type <- function(model, type) {
 #' @export
 show_model_info <- function(model) {
   check_model_exists(model)
-  current <- get_model_env()
 
   cat("Information for `", model, "`\n", sep = "")
 
@@ -933,8 +923,24 @@ show_model_info <- function(model) {
   engines <- get_from_env(model)
   if (nrow(engines) > 0) {
     cat(" engines: \n")
-    engines %>%
+
+    weight_info <-
+      purrr::map_df(
+        model,
+        ~ get_from_env(paste0(.x, "_fit")) %>% mutate(model = .x)
+      ) %>%
+      dplyr::mutate(protect = map(value, ~ .x$protect)) %>%
+      dplyr::select(-value) %>%
       dplyr::mutate(
+        has_wts = purrr::map_lgl(protect, ~ any(grepl("^weight", .x))),
+        has_wts = ifelse(has_wts, cli::symbol$sup_1, "")
+      ) %>%
+      dplyr::select(engine, mode, has_wts)
+
+      engines %>%
+        dplyr::left_join(weight_info, by = c("engine", "mode")) %>%
+      dplyr::mutate(
+        engine = paste0(engine, has_wts),
         mode = format(paste0(mode, ": "))
       ) %>%
       dplyr::group_by(mode) %>%
@@ -947,7 +953,7 @@ show_model_info <- function(model) {
       dplyr::ungroup() %>%
       dplyr::pull(lab) %>%
       cat(sep = "")
-    cat("\n")
+    cat("\n", cli::symbol$sup_1, "The model can use case weights.\n\n", sep = "")
   } else {
     cat(" no registered engines.\n\n")
   }

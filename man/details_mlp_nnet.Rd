@@ -23,7 +23,9 @@ some models, you may need to pass this value in via
 \code{\link[=set_engine]{set_engine()}} so that the model does not fail.
 }
 
-\subsection{Translation from parsnip to the original package (regression)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{mlp(
+\subsection{Translation from parsnip to the original package (regression)}{
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{mlp(
   hidden_units = integer(1),
   penalty = double(1),
   epochs = integer(1)
@@ -31,7 +33,9 @@ some models, you may need to pass this value in via
   set_engine("nnet") \%>\% 
   set_mode("regression") \%>\% 
   translate()
-}\if{html}{\out{</div>}}\preformatted{## Single Layer Neural Network Specification (regression)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## Single Layer Neural Network Model Specification (regression)
 ## 
 ## Main Arguments:
 ##   hidden_units = integer(1)
@@ -41,16 +45,17 @@ some models, you may need to pass this value in via
 ## Computational engine: nnet 
 ## 
 ## Model fit template:
-## nnet::nnet(formula = missing_arg(), data = missing_arg(), weights = missing_arg(), 
-##     size = integer(1), decay = double(1), maxit = integer(1), 
-##     trace = FALSE, linout = TRUE)
-}
+## nnet::nnet(formula = missing_arg(), data = missing_arg(), size = integer(1), 
+##     decay = double(1), maxit = integer(1), trace = FALSE, linout = TRUE)
+}\if{html}{\out{</div>}}
 
 Note that parsnip automatically sets linear activation in the last
 layer.
 }
 
-\subsection{Translation from parsnip to the original package (classification)}{\if{html}{\out{<div class="sourceCode r">}}\preformatted{mlp(
+\subsection{Translation from parsnip to the original package (classification)}{
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{mlp(
   hidden_units = integer(1),
   penalty = double(1),
   epochs = integer(1)
@@ -58,7 +63,9 @@ layer.
   set_engine("nnet") \%>\% 
   set_mode("classification") \%>\% 
   translate()
-}\if{html}{\out{</div>}}\preformatted{## Single Layer Neural Network Specification (classification)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## Single Layer Neural Network Model Specification (classification)
 ## 
 ## Main Arguments:
 ##   hidden_units = integer(1)
@@ -68,22 +75,26 @@ layer.
 ## Computational engine: nnet 
 ## 
 ## Model fit template:
-## nnet::nnet(formula = missing_arg(), data = missing_arg(), weights = missing_arg(), 
-##     size = integer(1), decay = double(1), maxit = integer(1), 
-##     trace = FALSE, linout = FALSE)
-}
+## nnet::nnet(formula = missing_arg(), data = missing_arg(), size = integer(1), 
+##     decay = double(1), maxit = integer(1), trace = FALSE, linout = FALSE)
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Preprocessing requirements}{
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
-will convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip will
+convert factor columns to indicators.
 
 Predictors should have the same scale. One way to achieve this is to
 center and scale each so that each predictor has mean zero and a
 variance of one.
+}
+
+\subsection{Case weights}{
+
+The underlying model implementation does not allow for case weights.
 }
 
 \subsection{Examples}{

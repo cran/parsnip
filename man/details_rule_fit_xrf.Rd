@@ -15,7 +15,7 @@ For this engine, there are multiple modes: classification and regression
 This model has 8 tuning parameters:
 \itemize{
 \item \code{mtry}: Proportion Randomly Selected Predictors (type: double,
-default: 1.0)
+default: see below)
 \item \code{trees}: # Trees (type: integer, default: 15L)
 \item \code{min_n}: Minimal Node Size (type: integer, default: 1L)
 \item \code{tree_depth}: Tree Depth (type: integer, default: 6L)
@@ -30,7 +30,9 @@ default: 1.0)
 
 \subsection{Translation from parsnip to the underlying model call (regression)}{
 
-The \strong{rules} extension package is required to fit this model.\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(rules)
+The \strong{rules} extension package is required to fit this model.
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(rules)
 
 rule_fit(
   mtry = numeric(1),
@@ -45,7 +47,9 @@ rule_fit(
   set_engine("xrf") \%>\%
   set_mode("regression") \%>\%
   translate()
-}\if{html}{\out{</div>}}\preformatted{## RuleFit Model Specification (regression)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## RuleFit Model Specification (regression)
 ## 
 ## Main Arguments:
 ##   mtry = numeric(1)
@@ -60,16 +64,19 @@ rule_fit(
 ## Computational engine: xrf 
 ## 
 ## Model fit template:
-## rules::xrf_fit(object = missing_arg(), data = missing_arg(), 
-##     colsample_bytree = numeric(1), nrounds = integer(1), min_child_weight = integer(1), 
-##     max_depth = integer(1), eta = numeric(1), gamma = numeric(1), 
-##     subsample = numeric(1), lambda = numeric(1))
-}
+## rules::xrf_fit(formula = missing_arg(), data = missing_arg(), 
+##     xgb_control = missing_arg(), colsample_bynode = numeric(1), 
+##     nrounds = integer(1), min_child_weight = integer(1), max_depth = integer(1), 
+##     eta = numeric(1), gamma = numeric(1), subsample = numeric(1), 
+##     lambda = numeric(1))
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Translation from parsnip to the underlying model call (classification)}{
 
-The \strong{rules} extension package is required to fit this model.\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(rules)
+The \strong{rules} extension package is required to fit this model.
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(rules)
 
 rule_fit(
   mtry = numeric(1),
@@ -84,7 +91,9 @@ rule_fit(
   set_engine("xrf") \%>\%
   set_mode("classification") \%>\%
   translate()
-}\if{html}{\out{</div>}}\preformatted{## RuleFit Model Specification (classification)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## RuleFit Model Specification (classification)
 ## 
 ## Main Arguments:
 ##   mtry = numeric(1)
@@ -99,11 +108,12 @@ rule_fit(
 ## Computational engine: xrf 
 ## 
 ## Model fit template:
-## rules::xrf_fit(object = missing_arg(), data = missing_arg(), 
-##     colsample_bytree = numeric(1), nrounds = integer(1), min_child_weight = integer(1), 
-##     max_depth = integer(1), eta = numeric(1), gamma = numeric(1), 
-##     subsample = numeric(1), lambda = numeric(1))
-}
+## rules::xrf_fit(formula = missing_arg(), data = missing_arg(), 
+##     xgb_control = missing_arg(), colsample_bynode = numeric(1), 
+##     nrounds = integer(1), min_child_weight = integer(1), max_depth = integer(1), 
+##     eta = numeric(1), gamma = numeric(1), subsample = numeric(1), 
+##     lambda = numeric(1))
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Differences from the xrf package}{
@@ -131,8 +141,64 @@ whereas \strong{xrf} uses an internal 5-fold cross-validation to determine it
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
-will convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip will
+convert factor columns to indicators.
+}
+
+\subsection{Other details}{
+\subsection{Interpreting \code{mtry}}{
+
+The \code{mtry} argument denotes the number of predictors that will be
+randomly sampled at each split when creating tree models.
+
+Some engines, such as \code{"xgboost"}, \code{"xrf"}, and \code{"lightgbm"}, interpret
+their analogue to the \code{mtry} argument as the \emph{proportion} of predictors
+that will be randomly sampled at each split rather than the \emph{count}. In
+some settings, such as when tuning over preprocessors that influence the
+number of predictors, this parameterization is quite
+helpful—interpreting \code{mtry} as a proportion means that [0,1] is always
+a valid range for that parameter, regardless of input data.
+
+parsnip and its extensions accommodate this parameterization using the
+\code{counts} argument: a logical indicating whether \code{mtry} should be
+interpreted as the number of predictors that will be randomly sampled at
+each split. \code{TRUE} indicates that \code{mtry} will be interpreted in its
+sense as a count, \code{FALSE} indicates that the argument will be
+interpreted in its sense as a proportion.
+
+\code{mtry} is a main model argument for
+\code{\link[=boost_tree]{boost_tree()}} and
+\code{\link[=rand_forest]{rand_forest()}}, and thus should not have an
+engine-specific interface. So, regardless of engine, \code{counts} defaults
+to \code{TRUE}. For engines that support the proportion
+interpretation—currently \code{"xgboost"}, \code{"xrf"} (via the rules package),
+and \code{"lightgbm"} (via the bonsai package)—the user can pass the
+\code{counts = FALSE} argument to \code{set_engine()} to supply \code{mtry} values
+within [0,1].
+}
+
+\subsection{Early stopping}{
+
+The \code{stop_iter()} argument allows the model to prematurely stop training
+if the objective function does not improve within \code{early_stop}
+iterations.
+
+The best way to use this feature is in conjunction with an \emph{internal
+validation set}. To do this, pass the \code{validation} parameter of
+\code{\link[=xgb_train]{xgb_train()}} via the parsnip
+\code{\link[=set_engine]{set_engine()}} function. This is the
+proportion of the training set that should be reserved for measuring
+performance (and stopping early).
+
+If the model specification has \code{early_stop >= trees}, \code{early_stop} is
+converted to \code{trees - 1} and a warning is issued.
+}
+
+}
+
+\subsection{Case weights}{
+
+The underlying model implementation does not allow for case weights.
 }
 
 \subsection{References}{
