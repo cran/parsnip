@@ -84,8 +84,8 @@ in \code{\link[=discrim_flexible]{discrim_flexible()}}.
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
-will convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip will
+convert factor columns to indicators.
 }
 
 \subsection{Case weights}{
@@ -96,6 +96,14 @@ on \code{tidymodels.org}.
 
 The \code{fit()} and \code{fit_xy()} arguments have arguments called
 \code{case_weights} that expect vectors of case weights.
+}
+
+\subsection{Saving fitted model objects}{
+
+This model object contains data that are not required to make
+predictions. When saving the model for the purpose of prediction, the
+size of the saved object might be substantially reduced by using
+functions from the \href{https://butcher.tidymodels.org}{butcher} package.
 }
 
 \subsection{Examples}{

@@ -63,18 +63,28 @@ test_that('S3 method dispatch/registration', {
 })
 
 # ------------------------------------------------------------------------------
+test_that("combine_words helper works", {
+  expect_snapshot(combine_words(1))
+  expect_snapshot(combine_words(1:2))
+  expect_snapshot(combine_words(1:3))
+  expect_snapshot(combine_words(1:4))
+})
+
+# ------------------------------------------------------------------------------
 
 test_that('control class', {
   x <- linear_reg() %>% set_engine("lm")
   ctrl <- control_parsnip()
   class(ctrl) <- c("potato", "chair")
+  # This doesn't error anymore because `condense_control()` doesn't care about
+  # classes, it cares about elements
   expect_error(
     fit(x, mpg ~ ., data = mtcars, control = ctrl),
-    "The 'control' argument should have class 'control_parsnip'"
+    NA
   )
   expect_error(
     fit_xy(x, x = mtcars[, -1], y = mtcars$mpg, control = ctrl),
-    "The 'control' argument should have class 'control_parsnip'"
+    NA
   )
 })
 
@@ -101,14 +111,73 @@ test_that('correct mtry', {
 # ----------------------------------------------------------------------------
 
 test_that('model type functions message informatively with unknown implementation', {
+  # one possible extension --------------------------------------------------
+  # known engine, mode
+  expect_snapshot(
+    bag_tree() %>%
+      set_engine("rpart") %>%
+      set_mode("regression")
+  )
+
+  # known, uniquely identifying mode
+  expect_snapshot(
+    bag_tree() %>%
+      set_mode("censored regression")
+  )
+
+  # two possible extensions -------------------------------------------------
+  # all default / unknown
+  expect_snapshot(
+    bag_tree()
+  )
+
+  # extension-ambiguous engine
   expect_snapshot(
     bag_tree() %>%
       set_engine("rpart")
   )
 })
 
+test_that('missing implementation checks prompt conservatively with old objects', {
+  # #793 introduced the `user_specified_engine` and `user_specified_mode`
+  # slots to parsnip model spec objects. model types defined in external
+  # extension packages, as well as model specs generated before parsnip 1.0.2,
+  # will not have this slot. ensure that these messages/errors aren't
+  # erroneously introduced when that's the case
+  #
+  # further tests in tidymodels/extratests@53
+  bt <-
+    bag_tree() %>%
+    set_engine("rpart") %>%
+    set_mode("regression")
+
+  bt$user_specified_mode <- NULL
+  bt$user_specified_engine <- NULL
+
+  expect_snapshot(bt)
+})
+
+test_that('arguments can be passed to model spec inside function', {
+  f <- function(k = 5) {
+    nearest_neighbor(mode = "regression", neighbors = k) %>%
+      fit(mpg ~ ., data = mtcars)
+  }
+
+  exp_res <- nearest_neighbor(mode = "regression", neighbors = 5) %>%
+    fit(mpg ~ ., data = mtcars)
+
+  expect_error(
+    fun_res <- f(),
+    NA
+  )
+
+  expect_equal(exp_res$fit[-c(8, 9)], fun_res$fit[-c(8, 9)])
+})
+
+
 test_that('set_engine works as a generic', {
   expect_snapshot(error = TRUE,
-    set_engine(mtcars, "rpart")
+                  set_engine(mtcars, "rpart")
   )
+
 })

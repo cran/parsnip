@@ -48,8 +48,8 @@ single hidden unit.
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
-will convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip will
+convert factor columns to indicators.
 
 Predictors should have the same scale. One way to achieve this is to
 center and scale each so that each predictor has mean zero and a
@@ -59,6 +59,13 @@ variance of one.
 \subsection{Case weights}{
 
 The underlying model implementation does not allow for case weights.
+}
+
+\subsection{Saving fitted model objects}{
+
+Models fitted with this engine may require native serialization methods
+to be properly saved and/or passed between R sessions. To learn more
+about preparing fitted models for serialization, see the bundle package.
 }
 
 \subsection{Examples}{

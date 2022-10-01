@@ -71,10 +71,18 @@ set_args.model_spec <- function(object, ...) {
     args = object$args,
     eng_args = object$eng_args,
     mode = object$mode,
+    user_specified_mode = object$user_specified_mode,
     method = NULL,
     engine = object$engine,
-    check_missing_spec = FALSE
+    user_specified_engine = object$user_specified_engine
   )
+}
+
+#' @export
+set_args.default <- function(object,...) {
+  error_set_object(object, func = "set_args")
+
+  invisible(FALSE)
 }
 
 #' @rdname set_args
@@ -88,11 +96,27 @@ set_mode.model_spec <- function(object, mode) {
   cls <- class(object)[1]
   if (rlang::is_missing(mode)) {
     spec_modes <- rlang::env_get(get_model_env(), paste0(cls, "_modes"))
-    stop_incompatible_mode(spec_modes, cls = cls)
+    stop_incompatible_mode(spec_modes, cls = cls, call = caller_env(0))
   }
-  check_spec_mode_engine_val(cls, object$engine, mode)
+
+  # determine if the model specification could feasibly match any entry
+  # in the union of the parsnip model environment and model_info_table.
+  # if not, trigger an error based on the (possibly inferred) model spec slots.
+  if (!spec_is_possible(spec = object,
+                        mode = mode, user_specified_mode = TRUE)) {
+    check_spec_mode_engine_val(cls, object$engine, mode)
+  }
+
   object$mode <- mode
+  object$user_specified_mode <- TRUE
   object
+}
+
+#' @export
+set_mode.default <- function(object, mode) {
+  error_set_object(object, func = "set_mode")
+
+  invisible(FALSE)
 }
 
 # ------------------------------------------------------------------------------

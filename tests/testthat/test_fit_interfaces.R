@@ -66,11 +66,11 @@ test_that('unknown modes', {
   )
   expect_error(
     fit_xy(mars_spec, x = mtcars[, -1], y = mtcars[,1]),
-    regexp = NA
+    regexp = "Please set the mode in the model specification."
   )
   expect_error(
     fit_xy(mars_spec, x = lending_club[,1:2], y = lending_club$Class),
-    regexp = NA
+    regexp = "Please set the mode in the model specification."
   )
 })
 
@@ -107,16 +107,7 @@ test_that('No loaded engines', {
     linear_reg() %>% fit(mpg ~., data = mtcars),
     regexp = NA
   )
-  expect_error(
-    expect_message(
-      cubist_rules() %>% fit(mpg ~., data = mtcars)
-    ),
-    regexp = "Please load a parsnip extension package that provides one"
-  )
-  expect_error(
-    expect_message(
-      poisson_reg() %>% fit(mpg ~., data = mtcars)
-    ),
-    regexp = "Please load a parsnip extension package that provides one"
-  )
+  expect_snapshot_error({cubist_rules() %>% fit(mpg ~., data = mtcars)})
+  expect_snapshot_error({poisson_reg() %>% fit(mpg ~., data = mtcars)})
+  expect_snapshot_error({cubist_rules(engine = "Cubist") %>% fit(mpg ~., data = mtcars)})
 })

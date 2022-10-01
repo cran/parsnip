@@ -203,11 +203,11 @@ interpreted in its sense as a proportion.
 
 \code{mtry} is a main model argument for
 \code{\link[=boost_tree]{boost_tree()}} and
-\code{\link[=rand_forest]{rand_forest()}}, and thus should not have
-an engine-specific interface. So, regardless of engine, \code{counts}
-defaults to \code{TRUE}. For engines that support the proportion
-interpretation (currently \code{"xgboost"} and \code{"xrf"}, via the rules
-package, and \code{"lightgbm"} via the bonsai package) the user can pass the
+\code{\link[=rand_forest]{rand_forest()}}, and thus should not have an
+engine-specific interface. So, regardless of engine, \code{counts} defaults
+to \code{TRUE}. For engines that support the proportion interpretation
+(currently \code{"xgboost"} and \code{"xrf"}, via the rules package, and
+\code{"lightgbm"} via the bonsai package) the user can pass the
 \code{counts = FALSE} argument to \code{set_engine()} to supply \code{mtry} values
 within [0,1].
 }
@@ -240,6 +240,18 @@ the outcome. To use a different loss, pass the \code{objective} argument to
 \code{\link[=set_engine]{set_engine()}} directly.
 }
 
+}
+
+\subsection{Saving fitted model objects}{
+
+This model object contains data that are not required to make
+predictions. When saving the model for the purpose of prediction, the
+size of the saved object might be substantially reduced by using
+functions from the \href{https://butcher.tidymodels.org}{butcher} package.
+
+Models fitted with this engine may require native serialization methods
+to be properly saved and/or passed between R sessions. To learn more
+about preparing fitted models for serialization, see the bundle package.
 }
 
 \subsection{Examples}{

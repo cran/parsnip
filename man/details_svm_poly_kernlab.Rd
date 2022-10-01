@@ -93,8 +93,8 @@ by R’s random number stream.
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
-will convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip will
+convert factor columns to indicators.
 
 Predictors should have the same scale. One way to achieve this is to
 center and scale each so that each predictor has mean zero and a
@@ -111,6 +111,14 @@ The underlying model implementation does not allow for case weights.
 The “Fitting and Predicting with parsnip” article contains
 \href{https://parsnip.tidymodels.org/articles/articles/Examples.html#svm-poly-kernlab}{examples}
 for \code{svm_poly()} with the \code{"kernlab"} engine.
+}
+
+\subsection{Saving fitted model objects}{
+
+This model object contains data that are not required to make
+predictions. When saving the model for the purpose of prediction, the
+size of the saved object might be substantially reduced by using
+functions from the \href{https://butcher.tidymodels.org}{butcher} package.
 }
 
 \subsection{References}{

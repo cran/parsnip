@@ -40,64 +40,71 @@ test_that('pipe engine', {
 })
 
 test_that("can't set a mode that isn't allowed by the model spec", {
-  expect_error(
+  expect_snapshot(
     set_mode(linear_reg(), "classification"),
-    "'classification' is not a known mode"
+    error = TRUE
   )
 })
 
 
 
 test_that("unavailable modes for an engine and vice-versa", {
-  expect_error(
+  expect_snapshot(
     decision_tree() %>%
       set_mode("regression") %>%
       set_engine("C5.0"),
-    "Available modes for engine C5"
+    error = TRUE
   )
-  expect_error(
+
+  expect_snapshot(
+    decision_tree(mode = "regression", engine = "C5.0"),
+    error = TRUE
+  )
+
+  expect_snapshot(
     decision_tree() %>%
       set_engine("C5.0") %>%
       set_mode("regression"),
-    "Available modes for engine C5"
+    error = TRUE
   )
 
-  expect_error(
+  expect_snapshot(
     decision_tree(engine = NULL) %>%
       set_engine("C5.0") %>%
       set_mode("regression"),
-    "Available modes for engine C5"
+    error = TRUE
   )
 
-  expect_error(
+  expect_snapshot(
     decision_tree(engine = NULL)%>%
       set_mode("regression") %>%
       set_engine("C5.0"),
-    "Available modes for engine C5"
+    error = TRUE
   )
 
-  expect_error(
-    expect_message(
-      proportional_hazards() %>% set_mode("regression")
-    ),
-    "'regression' is not a known mode"
+  expect_snapshot(
+    proportional_hazards() %>% set_mode("regression"),
+    error = TRUE
   )
 
-  expect_error(
+  expect_snapshot(
     linear_reg() %>% set_mode(),
-    "Available modes for model type linear_reg"
+    error = TRUE
   )
 
-  expect_error(
+  expect_snapshot(
+    linear_reg(engine = "boop"),
+    error = TRUE
+  )
+
+  expect_snapshot(
     linear_reg() %>% set_engine(),
-    "Missing engine"
+    error = TRUE
   )
 
-  expect_error(
-    expect_message(
-      proportional_hazards() %>% set_engine()
-    ),
-    "No known engines for"
+  expect_snapshot(
+    proportional_hazards() %>% set_engine(),
+    error = TRUE
   )
 })
 
@@ -108,6 +115,29 @@ test_that("set_* functions error when input isn't model_spec", {
 
   expect_snapshot(error = TRUE,
                   set_args(mtcars, blah = "blah")
+  )
+
+  expect_snapshot(error = TRUE,
+                  bag_tree %>% set_mode("classification")
+  )
+
+  expect_snapshot(error = TRUE,
+                  bag_tree %>% set_engine("rpart")
+  )
+
+  expect_snapshot(error = TRUE,
+                  bag_tree %>% set_args(boop = "bop")
+  )
+
+  # won't raise "info" part of error if not a parsnip-namespaced function
+  # not a function
+  expect_snapshot(error = TRUE,
+                  1L %>% set_args(mode = "classification")
+  )
+
+  # not from parsnip
+  expect_snapshot(error = TRUE,
+                  bag_tree %>% set_mode("classification")
   )
 })
 

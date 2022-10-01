@@ -66,8 +66,8 @@ poisson_reg(penalty = double(1), mixture = double(1)) \%>\%
 
 Factor/categorical predictors need to be converted to numeric values
 (e.g., dummy or indicator variables) for this engine. When using the
-formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip
-will convert factor columns to indicators.
+formula method via \code{\link[=fit.model_spec]{fit()}}, parsnip will
+convert factor columns to indicators.
 
 Predictors should have the same scale. One way to achieve this is to
 center and scale each so that each predictor has mean zero and a
@@ -94,6 +94,13 @@ parallelizes over hyperparameter combinations for a given resample.
 h2o will automatically shut down the local h2o instance started by R
 when R is terminated. To manually stop the h2o server, run
 \code{h2o::h2o.shutdown()}.
+}
+
+\subsection{Saving fitted model objects}{
+
+Models fitted with this engine may require native serialization methods
+to be properly saved and/or passed between R sessions. To learn more
+about preparing fitted models for serialization, see the bundle package.
 }
 }
 \keyword{internal}

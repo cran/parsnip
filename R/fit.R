@@ -112,20 +112,16 @@ fit.model_spec <-
     if (object$mode == "unknown") {
       rlang::abort("Please set the mode in the model specification.")
     }
-    if (!identical(class(control), class(control_parsnip()))) {
-      rlang::abort("The 'control' argument should have class 'control_parsnip'.")
-    }
+    control <- condense_control(control, control_parsnip())
     check_case_weights(case_weights, object)
 
     dots <- quos(...)
 
     if (length(possible_engines(object)) == 0) {
-      rlang::abort(
-        glue::glue(
-          "No engines were loaded for `{class(object)[1]}`.",
-          " Please load a parsnip extension package that provides one.",
-          " See https://www.tidymodels.org/find/parsnip/ "
-        )
+      prompt_missing_implementation(
+        spec = object,
+        prompt = cli::cli_abort,
+        call = call2("fit")
       )
     }
     if (is.null(object$engine)) {
@@ -228,6 +224,10 @@ fit_xy.model_spec <-
            control = control_parsnip(),
            ...
   ) {
+    if (object$mode == "unknown") {
+      rlang::abort("Please set the mode in the model specification.")
+    }
+
     if (object$mode == "censored regression") {
       rlang::abort("Models for censored regression must use the formula interface.")
     }
@@ -236,15 +236,13 @@ fit_xy.model_spec <-
       rlang::abort("Survival models must use the formula interface.")
     }
 
-    if (!identical(class(control), class(control_parsnip()))) {
-      rlang::abort("The 'control' argument should have class 'control_parsnip'.")
-    }
+    control <- condense_control(control, control_parsnip())
+
     if (is.null(colnames(x))) {
       rlang::abort("'x' should have column names.")
     }
     check_case_weights(case_weights, object)
 
-    object <- check_mode(object, levels(y))
     dots <- quos(...)
     if (is.null(object$engine)) {
       eng_vals <- possible_engines(object)

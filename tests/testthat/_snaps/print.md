@@ -3,7 +3,7 @@
     Code
       svm_poly()
     Output
-      Polynomial Support Vector Machine Model Specification (unknown)
+      Polynomial Support Vector Machine Model Specification (unknown mode)
       
       Computational engine: kernlab 
       
@@ -13,7 +13,7 @@
     Code
       boost_tree(mtry = 5)
     Output
-      Boosted Tree Model Specification (unknown)
+      Boosted Tree Model Specification (unknown mode)
       
       Main Arguments:
         mtry = 5
@@ -74,6 +74,8 @@
 
     Code
       print_model_spec(lr)
+    Message
+      ! parsnip could not locate an implementation for `beep` model specifications.
     Output
       beep Model Specification (regression)
       
@@ -84,6 +86,8 @@
 
     Code
       print_model_spec(lr, cls = "boop")
+    Message
+      ! parsnip could not locate an implementation for `boop` model specifications.
     Output
       boop Model Specification (regression)
       
@@ -94,6 +98,8 @@
 
     Code
       print_model_spec(lr, cls = "boop", desc = "Boop")
+    Message
+      ! parsnip could not locate an implementation for `boop` model specifications.
     Output
       Boop Model Specification (regression)
       

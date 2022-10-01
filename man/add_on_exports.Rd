@@ -25,9 +25,10 @@ new_model_spec(
   args,
   eng_args,
   mode,
+  user_specified_mode = TRUE,
   method,
   engine,
-  check_missing_spec = TRUE
+  user_specified_engine = TRUE
 )
 
 check_final_param(x)
