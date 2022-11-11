@@ -94,6 +94,19 @@ xgboost_engine_args <-
     component_id = "engine"
   )
 
+lightgbm_engine_args <-
+  tibble::tibble(
+    name = c(
+      "num_leaves"
+    ),
+    call_info = list(
+      list(pkg = "dials", fun = "num_leaves")
+    ),
+    source = "model_spec",
+    component = "boost_tree",
+    component_id = "engine"
+  )
+
 ranger_engine_args <-
   tibble::tibble(
     name = c(
@@ -146,6 +159,18 @@ partykit_engine_args <-
     component_id = "engine"
   )
 
+aorsf_engine_args <-
+  tibble::tibble(
+    name = c(
+      "split_min_stat"
+    ),
+    call_info = list(
+      list(pkg = "dials", fun = "conditional_min_criterion")
+    ),
+    source = "model_spec",
+    component = "rand_forest",
+    component_id = "engine"
+  )
 
 earth_engine_args <-
   tibble::tibble(
@@ -189,6 +214,17 @@ brulee_logistc_engine_args <-
 brulee_multinomial_engine_args <-
   brulee_mlp_engine_args %>%
   dplyr::filter(name %in% c("momentum", "batch_size", "stop_iter", "class_weights"))
+
+flexsurvspline_engine_args <-
+  tibble::tibble(
+    name = c("k"),
+    call_info = list(
+      list(pkg = "dials", fun = "num_knots")
+    ),
+    source = "model_spec",
+    component = "survival_reg",
+    component_id = "engine"
+  )
 
 # ------------------------------------------------------------------------------
 
@@ -244,6 +280,7 @@ tunable_boost_tree <- function(x, ...) {
     res$call_info[res$name == "sample_size"] <-
       list(list(pkg = "dials", fun = "sample_prop"))
   } else if (x$engine == "lightgbm") {
+    res <- add_engine_parameters(res, lightgbm_engine_args)
     res$call_info[res$name == "sample_size"] <-
       list(list(pkg = "dials", fun = "sample_prop"))
   }
@@ -259,6 +296,8 @@ tunable_rand_forest <- function(x, ...) {
     res <- add_engine_parameters(res, randomForest_engine_args)
   } else if (x$engine == "partykit") {
     res <- add_engine_parameters(res, partykit_engine_args)
+  } else if (x$engine == "aorsf") {
+    res <- add_engine_parameters(res, aorsf_engine_args)
   }
   res
 }
@@ -306,6 +345,15 @@ tunable_mlp <- function(x, ...) {
       list(list(pkg = "dials", fun = "learn_rate", range = c(-3, -1/2)))
     res$call_info[res$name == "epochs"] <-
       list(list(pkg = "dials", fun = "epochs", range = c(5L, 500L)))
+  }
+  res
+}
+
+#' @export
+tunable.survival_reg <- function(x, ...) {
+  res <- NextMethod()
+  if (x$engine == "flexsurvspline") {
+    res <- add_engine_parameters(res, flexsurvspline_engine_args)
   }
   res
 }

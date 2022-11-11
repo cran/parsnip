@@ -1,3 +1,13 @@
+# parsnip 1.0.3
+
+* Adds documentation and tuning infrastructure for the new `flexsurvspline` engine for the `survival_reg()` model specification from the `censored` package (@mattwarkentin, #831).
+
+* The matrix interface for fitting `fit_xy()` now works for the `"censored regression"` mode (#829).
+
+* The `num_leaves` argument of `boost_tree()`s `lightgbm` engine (via the bonsai package) is now tunable.
+
+* A change in our data checking code resulted in about a 3-fold speed-up in parsnip (#835)
+
 # parsnip 1.0.2
 
 * A bagged neural network model was added (`bag_mlp()`). Engine implementations will live in the baguette package. 

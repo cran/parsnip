@@ -163,3 +163,4 @@ check_args.rand_forest <- function(object) {
   # move translate checks here?
   invisible(object)
 }
+

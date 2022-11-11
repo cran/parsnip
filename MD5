@@ -1,7 +1,7 @@
-c06a4ab83e24833bf7b218b260e0a066 *DESCRIPTION
+cc6c7bb72837a77a51a35f978b53e3ca *DESCRIPTION
 503138227cc929126db341e231fd1938 *LICENSE
-5f1ccc9db956d81f98226509cb8aaeb0 *NAMESPACE
-79e4147da8f5a9e37f165e1688a3d0f1 *NEWS.md
+24cd8ec5d4408a1083122548d8ef0ea2 *NAMESPACE
+212d47f9d805bfb18f890e1f2a0683f9 *NEWS.md
 ae26c79cbe7ccdca75faf5984aaab976 *R/C5_rules_C5.0.R
 2e8291f7e6cfed6df82d9cc55b3142d7 *R/aaa.R
 5e214f84c17af762e230aa3a8275d5d4 *R/aaa_models.R
@@ -41,7 +41,7 @@ b4dc3647bcaceb7797a2bc13f91ee010 *R/contr_one_hot.R
 e6d7428fd31bb779b6aba939f9ab7721 *R/cubist_rules.R
 eaa47069b519202f8f116d35ff544987 *R/cubist_rules_Cubist.R
 2f12682e1eb4067a62057cb0b7233df4 *R/data.R
-fad55925605a52ef031a64a68345fff4 *R/decision_tree.R
+26eda69f658e30be9d246ea74e79a1e0 *R/decision_tree.R
 f00573f749e87f07c10c9a212479f63d *R/decision_tree_C5.0.R
 6735891bf64415d91ba521d32b926b6f *R/decision_tree_data.R
 9b79105637ef9ad70bca45c161fbfece *R/decision_tree_partykit.R
@@ -63,7 +63,7 @@ ee4fe95adbde3890e61aea1c6dbbcd7f *R/discrim_regularized.R
 52d20aa33f711aa6983e3dff6c42be1c *R/engine_docs.R
 4d9e94569661959813caf9811b8c0815 *R/engines.R
 d5f5ee5afb485a74a4cb98a252e2cf10 *R/extract.R
-6bf7e4885caaf7f362e9fff8fad568ab *R/fit.R
+2948a47120b52435790ffe24e9aa4bbe *R/fit.R
 d293a6e13cae4a48de1a36fde0376b4c *R/fit_control.R
 0eb501143aee98c6f2b2bc6c4033cf58 *R/fit_helpers.R
 a83771912493ffd7194c993be038d632 *R/gen_additive_mod.R
@@ -104,7 +104,7 @@ f5d39ae0767c80f1470465654d221c77 *R/logistic_reg_spark.R
 d0f3e690c3c9350bb93e87720d71e45b *R/mars.R
 f2cd6b8eb855a360defb675cc015e80c *R/mars_data.R
 195872b360a9b60fb18772ea8d0eaebb *R/mars_earth.R
-9f413c40af6061e7ee3283d20881cb3d *R/misc.R
+d6b0685114a39e968c4aae36e3353df4 *R/misc.R
 eda142936272f041c0e10ae627b40f6b *R/mlp.R
 f0193970488e8ee3a1e63faacd6a33de *R/mlp_brulee.R
 890219464dcfbc0a103e4e5441b7cd17 *R/mlp_data.R
@@ -129,7 +129,7 @@ dae67f2b20a649d2d9d432d9a95b61fe *R/naive_Bayes_h2o.R
 af537404b7301d590594a09fe6971e66 *R/nearest_neighbor_kknn.R
 e309eb04134704d58ac292b7078f9493 *R/nullmodel.R
 3e061cc14cf2e2726c35bdc9674b69b4 *R/nullmodel_data.R
-d39803138209385329e5b4ef8b4d83e2 *R/parsnip-package.R
+7cb76aa8456adaea85b0bf1977e0a77d *R/parsnip-package.R
 6470e1c431869455ca8a4ba6ddeb51aa *R/partykit.R
 25f73c72f087e09f91dd30f56f8b2624 *R/pls.R
 acf31d73e80bc346d28dfe051fa67a46 *R/pls_mixOmics.R
@@ -159,7 +159,8 @@ de87ed5d9b3c0409730f78e8a211f294 *R/predict_time.R
 ee51d51dc43c33a6f8e14e82903b126a *R/proportional_hazards_data.R
 7bb8908a13d8efeeed2716c669e1693c *R/proportional_hazards_glmnet.R
 425fd429a4b46c7c3914007c35504b75 *R/proportional_hazards_survival.R
-326f5dee4f327f87f9236b9d9edf80fd *R/rand_forest.R
+ade1e9331486741ed0585b09cbb88969 *R/rand_forest.R
+e4a9e4ab172a8c061a18167c0e0e0f7d *R/rand_forest_aorsf.R
 a5cbd50d6e3f596a9439ede83694172f *R/rand_forest_data.R
 5e4c664b73c74e28947c7edb77f664ee *R/rand_forest_h2o.R
 6dcddf0e5244a8f3dc294d81c1f139c9 *R/rand_forest_partykit.R
@@ -180,6 +181,7 @@ bf222aefdbc97293ac83fc8af22dd7ed *R/surv_reg_survival.R
 8a715861ac1398f0872232b2b8d78d5e *R/survival_reg.R
 3b292d51043101d82ebcf4e389297015 *R/survival_reg_data.R
 2c78cc37ee7f3687eef6e8b946ac2b78 *R/survival_reg_flexsurv.R
+3c964e93a9a6f491e4519abd70406914 *R/survival_reg_flexsurvspline.R
 39bb33b68b75ea0a055a7c971864d4a5 *R/survival_reg_survival.R
 09fc5f75f03d2307e51d92778baddbd8 *R/svm_linear.R
 de9e447af5ef59342a3d97bb8960d5ff *R/svm_linear_LiblineaR.R
@@ -195,13 +197,14 @@ bbc5b7128a6cc916c71d41889d0f2ea5 *R/svm_rbf_kernlab.R
 80cded497467b4031393f948858414bd *R/tidy_glmnet.R
 e50c369e12a76fa503b24feeeac660d7 *R/tidy_liblinear.R
 196e8c855357afc1ea40c2147578a511 *R/translate.R
-679b2a65a0db82552d8b009e4c8a9bbe *R/tunable.R
+5b875453cc1cab5a2919aa460e76d0ea *R/tunable.R
 be63a7fbfefff284158066b8bdf5ef89 *R/tune_args.R
 66967271e6c504547c8bb86654977b8d *R/type_sum.R
 9fb2682846508259f71b67ad32aedd32 *R/update.R
 c61c3ea62ce732c3b8598a49f625b38e *R/varying.R
 d1b0da509b11da36e7b432e962c9e806 *R/zzz.R
-f05b7b2700159b9bcc2fe74d20066525 *build/parsnip.pdf
+b39acbbba6189ee6fc7a185aea09eae7 *README.md
+cf211d7d09d5dae1612b9e02f5ce39c0 *build/parsnip.pdf
 e2fdc64cf996319e91cf70f41d9ae514 *build/vignette.rds
 da3a5c035c7f206202dfae84a2345db9 *data/model_db.rda
 d8bca895774c76c50d24bf275da1246f *inst/README-DOCS.md
@@ -210,7 +213,7 @@ fea633eb868f24282221aa438e22754a *inst/add-in/parsnip_model_db.R
 65a3f85b6c57cd8120c1fac62f22948d *inst/doc/parsnip.R
 366bbe8884a386c843d9338eae351962 *inst/doc/parsnip.Rmd
 b85ca230758f2f3b1cc88c5492683559 *inst/doc/parsnip.html
-22e13a7a5476e93262938cacc13a9fd3 *inst/models.tsv
+16176f0a73565e4f8e03a266d824eabd *inst/models.tsv
 03e6d9f8cd20a79580574d41214a5688 *inst/rstudio/addins.dcf
 000f597a49eaedd5221a9dc09c66f23f *man/C5.0_train.Rd
 94ce4660dcdf4d5017da8cbc21bd06af *man/C5_rules.Rd
@@ -237,7 +240,7 @@ ac18a8adc130cbe58a03a556ec0fe51f *man/condense_control.Rd
 6fc488f22a266c78a67c991315abde77 *man/decision_tree.Rd
 c62678213fdab302e80cfae46d177449 *man/descriptors.Rd
 f40d3b01108a322f58f8840477180966 *man/details_C5_rules_C5.0.Rd
-63bc94cf9d21dcbe7425fae376c44d2c *man/details_auto_ml_h2o.Rd
+18bee349867cc856b9af07d7685904f0 *man/details_auto_ml_h2o.Rd
 bf225a9ba5ddd3d2f39221fff7ca15e3 *man/details_bag_mars_earth.Rd
 f5e3549f81fe807c183b194865d0e337 *man/details_bag_mlp_nnet.Rd
 be9573cdc423935703fb3f2a2c162a0f *man/details_bag_tree_C5.0.Rd
@@ -315,6 +318,7 @@ a6e565279356f7184bd774692f85afea *man/details_poisson_reg_glmnet.Rd
 5b925e5dd633ffbf6ee424b733356bce *man/details_poisson_reg_zeroinfl.Rd
 0ac6f42d4e330b7e31aca981ed37fc57 *man/details_proportional_hazards_glmnet.Rd
 0f76494c89be1baf48e8b7676a3bf878 *man/details_proportional_hazards_survival.Rd
+c4a409186b08d54de62e6423484c36fa *man/details_rand_forest_aorsf.Rd
 a7e705731b73c221d16e8dfb23a705a2 *man/details_rand_forest_h2o.Rd
 539a4d97f22b12383d00123fd9535e7e *man/details_rand_forest_partykit.Rd
 873c2656ed7f8c2c055de19cf43051e0 *man/details_rand_forest_randomForest.Rd
@@ -324,7 +328,8 @@ fe7611c61023b4c6490938789074c2a8 *man/details_rule_fit_h2o.Rd
 0e90a0d938fa327e53d55ed717785810 *man/details_rule_fit_xrf.Rd
 071892beb087e78aaa4698bd8dadda43 *man/details_surv_reg_flexsurv.Rd
 54a85710065a314845e3637f41f54ca1 *man/details_surv_reg_survival.Rd
-ff589991aa11a0c0d4c61a998be314eb *man/details_survival_reg_flexsurv.Rd
+41f748f347f871fa6ae0dcb647e9bdc1 *man/details_survival_reg_flexsurv.Rd
+751ea5d43519506132bcb206e77557e1 *man/details_survival_reg_flexsurvspline.Rd
 a1303a640bdaf28a3d527c164ecbf285 *man/details_survival_reg_survival.Rd
 8597787daea31f697b20a50912bd3cae *man/details_svm_linear_LiblineaR.Rd
 0ddb8c1023922b93e7572d07ffd5576c *man/details_svm_linear_kernlab.Rd
@@ -337,6 +342,7 @@ cea37579601c6e1f95bf571bdc2a851f *man/discrim_regularized.Rd
 dbeaa765e1c4fc1ef8d7688305f78938 *man/doc-tools.Rd
 44e4290e3fb755f5eba39912b6dccf1a *man/dot-model_param_name_key.Rd
 839eac665b2ab942813b03dea0ba1f52 *man/eval_args.Rd
+b35a0b1ddf4d1f25ff3395b636f74384 *man/extension-check-helpers.Rd
 8ab0390bdcd5a4fffc5ff5daa036b755 *man/extract-parsnip.Rd
 54cc11f975e404b503b734195a28d8bd *man/figures/adjust.png
 9655355d14eb83d93b29c875274cb667 *man/figures/comittees.png
@@ -404,8 +410,8 @@ a4da4b6213459f4a351c3dd7476736a5 *man/req_pkgs.Rd
 138cb9f06528dff2a2b11c739de83cb6 *man/rmd/C5_rules_C5.0.Rmd
 bbcbc0654eba51065e0b7987ac7f1360 *man/rmd/C5_rules_C5.0.md
 09cefd2b4eec164335da8ccedf6196e6 *man/rmd/aaa.Rmd
-cdcd1363451326c93340fd8e396a90d9 *man/rmd/auto_ml_h2o.Rmd
-9a147f9af10387efef8d66337584b18f *man/rmd/auto_ml_h2o.md
+7011a922b267acf22c47d11239863ccc *man/rmd/auto_ml_h2o.Rmd
+42a3f5f20c5bf0fd3bef06ae01a607f4 *man/rmd/auto_ml_h2o.md
 dbcf0cb11996f2e8276da47cedef75e1 *man/rmd/bag_mars_earth.Rmd
 23ea76ef0bf9e4cd0ef1ae0231d9da4b *man/rmd/bag_mars_earth.md
 3ba4ea8df1f9fa19872259aafd2a8e87 *man/rmd/bag_mlp_nnet.Rmd
@@ -568,6 +574,8 @@ b1e4318cd5cc6f39b8f51ca0acc6940a *man/rmd/proportional_hazards_glmnet.Rmd
 28e65ac67df3752e9eef20853b33fbc8 *man/rmd/proportional_hazards_glmnet.md
 f939b6ecd4ecd2b41ba4b1d0b56d6e70 *man/rmd/proportional_hazards_survival.Rmd
 fd34bfb9841af32e64be56bf6f1f791e *man/rmd/proportional_hazards_survival.md
+8f5f3a99e1aa7eeb4d908b914e3303ab *man/rmd/rand_forest_aorsf.Rmd
+527e2561ef8190fd8797515c924220df *man/rmd/rand_forest_aorsf.md
 e0710800561336736e4532cc1f56acb2 *man/rmd/rand_forest_h2o.Rmd
 b1dc8426f8e3e0329ecd8219129bf57b *man/rmd/rand_forest_h2o.md
 3c511a7dac191bca7fc10b8958b9d744 *man/rmd/rand_forest_partykit.Rmd
@@ -586,8 +594,10 @@ df7febb77eacff6dc92d91e958780076 *man/rmd/rule_fit_h2o.md
 72e245344922361f3a037752013b5da7 *man/rmd/surv_reg_flexsurv.md
 96c54b4ea88fd6edeffb111c44533c0f *man/rmd/surv_reg_survival.Rmd
 ca55951d31247ab9238103f496914a76 *man/rmd/surv_reg_survival.md
-2183095661fc8f33e7668463f25c0e30 *man/rmd/survival_reg_flexsurv.Rmd
-18713ab348ffe51c8823e21d47e96748 *man/rmd/survival_reg_flexsurv.md
+b9499299ece709a6bafeade79029d8cb *man/rmd/survival_reg_flexsurv.Rmd
+56fc61e3072c376540907697746ab129 *man/rmd/survival_reg_flexsurv.md
+a6bfe417a756e2828a14fde7011ffaa1 *man/rmd/survival_reg_flexsurvspline.Rmd
+5d0c8e4e17a4d068f28000c0456817bc *man/rmd/survival_reg_flexsurvspline.md
 abd84a152ba011c0803057dee24dc350 *man/rmd/survival_reg_survival.Rmd
 3d9ed04ebe37745b44fafcb19a9c6deb *man/rmd/survival_reg_survival.md
 a398f6f8fa772b90c86c455f8d45e380 *man/rmd/svm_linear_LiblineaR.Rmd
@@ -713,7 +723,7 @@ fcafdd40c3c1fd88ebbae1922d24325e *tests/testthat/test_nearest_neighbor.R
 cedb78a13867d30a47781ca842721a33 *tests/testthat/test_partykit.R
 bb7a2fe171ad52ab299636905299d27e *tests/testthat/test_predict_formats.R
 1093d91e5faa163b1effbec0c2074e24 *tests/testthat/test_print.R
-d4b121f5641c089eef56e0d4fbbdb308 *tests/testthat/test_proportional_hazards.R
+e0b7e91f92459d45dcbb7e94c01d2d8d *tests/testthat/test_proportional_hazards.R
 5a8cbbc36c140c8142966a7139eba449 *tests/testthat/test_rand_forest.R
 734ad4de3eff575f6d1d84a67d3dd030 *tests/testthat/test_rand_forest_ranger.R
 b76e5a65af17eb765afc81850ab38a66 *tests/testthat/test_re_registration.R
@@ -721,7 +731,7 @@ c8b41a50f8e037a9cdef2edaadb5d505 *tests/testthat/test_registration.R
 2cbe2d122bd6fbcfa368d0d22e3c3545 *tests/testthat/test_surv_reg.R
 2dbc71780186a486ea4efa66f2dceeba *tests/testthat/test_surv_reg_flexsurv.R
 cb147bc6a955913103d18c2ca8f9faf8 *tests/testthat/test_surv_reg_survreg.R
-39624ceaf02a4c637a94db74098c423d *tests/testthat/test_survival_reg.R
+1abf92474fdfb52aff8de46b1d911e10 *tests/testthat/test_survival_reg.R
 80701cb556c9a3187e8123399be90b27 *tests/testthat/test_svm_linear.R
 d240734cde0b4b338dfaa408eba83b6d *tests/testthat/test_svm_poly.R
 664ed08d0e943b81cfcd7337f7363b27 *tests/testthat/test_svm_rbf.R

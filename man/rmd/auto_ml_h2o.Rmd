@@ -17,7 +17,7 @@ Engine arguments of interest
 
 ## Translation from parsnip to the original package (regression)
 
-`agua::h2o_train_auto()` is a wrapper around [h2o::h2o.automl()]. 
+[agua::h2o_train_auto()] is a wrapper around [h2o::h2o.automl()]. 
 
 ```{r h2o-reg}
 auto_ml() %>%  

@@ -105,6 +105,7 @@
 "poisson_reg"	"regression"	"zeroinfl"	"poissonreg"
 "proportional_hazards"	"censored regression"	"glmnet"	"censored"
 "proportional_hazards"	"censored regression"	"survival"	"censored"
+"rand_forest"	"censored regression"	"aorsf"	"censored"
 "rand_forest"	"censored regression"	"partykit"	"censored"
 "rand_forest"	"classification"	"h2o"	"agua"
 "rand_forest"	"classification"	"partykit"	"bonsai"
@@ -123,6 +124,7 @@
 "surv_reg"	"regression"	"flexsurv"	NA
 "surv_reg"	"regression"	"survival"	NA
 "survival_reg"	"censored regression"	"flexsurv"	"censored"
+"survival_reg"	"censored regression"	"flexsurvspline"	"censored"
 "survival_reg"	"censored regression"	"survival"	"censored"
 "svm_linear"	"classification"	"kernlab"	NA
 "svm_linear"	"classification"	"LiblineaR"	NA
