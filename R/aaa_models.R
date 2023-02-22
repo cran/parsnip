@@ -123,8 +123,6 @@ check_eng_val <- function(eng) {
   invisible(NULL)
 }
 
-#' @rdname set_new_model
-#' @export
 check_model_exists <- function(model) {
   if (rlang::is_missing(model) || length(model) != 1 || !is.character(model)) {
     rlang::abort("Please supply a character string for a model name (e.g. `'linear_reg'`)")
@@ -139,8 +137,6 @@ check_model_exists <- function(model) {
   invisible(NULL)
 }
 
-#' @rdname set_new_model
-#' @export
 check_model_doesnt_exist <- function(model) {
   if (rlang::is_missing(model) || length(model) != 1 || !is.character(model)) {
     rlang::abort("Please supply a character string for a model name (e.g. `'linear_reg'`)")
@@ -637,7 +633,6 @@ set_model_engine <- function(model, mode, eng) {
   check_model_exists(model)
   check_mode_val(mode)
   check_eng_val(eng)
-  check_mode_val(eng)
   check_mode_for_new_engine(model, eng, mode)
 
   new_eng <- dplyr::tibble(engine = eng, mode = mode)
