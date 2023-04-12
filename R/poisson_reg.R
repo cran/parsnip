@@ -24,6 +24,7 @@
 #'
 #'  Available for `glmnet` and `spark` only.
 #'
+#' @templateVar modeltype poisson_reg
 #' @template spec-details
 #'
 #' @template spec-references
@@ -86,9 +87,9 @@ translate.poisson_reg <- function(x, engine = x$engine, ...) {
   x <- translate.default(x, engine, ...)
 
   if (engine == "glmnet") {
+    # See https://parsnip.tidymodels.org/reference/glmnet-details.html
     .check_glmnet_penalty_fit(x)
-    # See discussion in https://github.com/tidymodels/parsnip/issues/195
-    x$method$fit$args$lambda <- NULL
+    x <- set_glmnet_penalty_path(x)
     # Since the `fit` information is gone for the penalty, we need to have an
     # evaluated value for the parameter.
     x$args$penalty <- rlang::eval_tidy(x$args$penalty)

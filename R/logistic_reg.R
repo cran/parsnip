@@ -30,6 +30,7 @@
 #'  Available for specific engines only. For `LiblineaR` models, `mixture` must
 #'  be exactly 1 or 0 only.
 #'
+#' @templateVar modeltype logistic_reg
 #' @template spec-details
 #'
 #' @details This model fits a classification model for binary outcomes; for
@@ -76,19 +77,9 @@ translate.logistic_reg <- function(x, engine = x$engine, ...) {
   arg_names <- names(arg_vals)
 
   if (engine == "glmnet") {
+    # See https://parsnip.tidymodels.org/reference/glmnet-details.html
     .check_glmnet_penalty_fit(x)
-    if (any(names(x$eng_args) == "path_values")) {
-      # Since we decouple the parsnip `penalty` argument from being the same
-      # as the glmnet `lambda` value, `path_values` allows users to set the
-      # path differently from the default that glmnet uses. See
-      # https://github.com/tidymodels/parsnip/issues/431
-      x$method$fit$args$lambda <- x$eng_args$path_values
-      x$eng_args$path_values <- NULL
-      x$method$fit$args$path_values <- NULL
-    } else {
-      # See discussion in https://github.com/tidymodels/parsnip/issues/195
-      x$method$fit$args$lambda <- NULL
-    }
+    x <- set_glmnet_penalty_path(x)
     # Since the `fit` information is gone for the penalty, we need to have an
     # evaluated value for the parameter.
     x$args$penalty <- rlang::eval_tidy(x$args$penalty)
@@ -173,86 +164,6 @@ prob_to_class_2 <- function(x, object) {
   x <- ifelse(x >= 0.5, object$lvl[2], object$lvl[1])
   unname(x)
 }
-
-
-organize_glmnet_class <- function(x, object) {
-  if (ncol(x) == 1) {
-    res <- prob_to_class_2(x[, 1], object)
-  } else {
-    n <- nrow(x)
-    res <- utils::stack(as.data.frame(x))
-    res$values <- prob_to_class_2(res$values, object)
-    if (!is.null(object$spec$args$penalty))
-      res$lambda <- rep(object$spec$args$penalty, each = n) else
-        res$lambda <- rep(object$fit$lambda, each = n)
-    res <- res[, colnames(res) %in% c("values", "lambda")]
-  }
-  res
-}
-
-organize_glmnet_prob <- function(x, object) {
-  if (ncol(x) == 1) {
-    res <- tibble(v1 = 1 - x[, 1], v2 = x[, 1])
-    colnames(res) <- object$lvl
-  } else {
-    n <- nrow(x)
-    res <- utils::stack(as.data.frame(x))
-    res <- tibble(v1 = 1 - res$values, v2 = res$values)
-    colnames(res) <- object$lvl
-    if (!is.null(object$spec$args$penalty))
-      res$lambda <- rep(object$spec$args$penalty, each = n) else
-        res$lambda <- rep(object$fit$lambda, each = n)
-  }
-  res
-}
-
-# ------------------------------------------------------------------------------
-
-#' @export
-predict._lognet <- predict_glmnet
-
-#' @export
-#' @rdname multi_predict
-multi_predict._lognet <- multi_predict_glmnet
-
-format_glmnet_multi_logistic_reg <- function(pred, penalty, type, lvl) {
-  param_key <- tibble(group = colnames(pred), penalty = penalty)
-  pred <- as_tibble(pred)
-  pred$.row <- 1:nrow(pred)
-  pred <- gather(pred, group, .pred_class, -.row)
-  if (type == "class") {
-    pred[[".pred_class"]] <- factor(pred[[".pred_class"]], levels = lvl)
-  } else {
-    if (type == "response") {
-      pred[[".pred2"]] <- 1 - pred[[".pred_class"]]
-      names(pred) <- c(".row", "group", paste0(".pred_", rev(lvl)))
-      pred <- pred[, c(".row", "group", paste0(".pred_", lvl))]
-    }
-  }
-  if (utils::packageVersion("dplyr") >= "1.0.99.9000") {
-    pred <- full_join(param_key, pred, by = "group", multiple = "all")
-  } else {
-    pred <- full_join(param_key, pred, by = "group")
-  }
-  pred$group <- NULL
-  pred <- arrange(pred, .row, penalty)
-  .row <- pred$.row
-  pred$.row <- NULL
-  pred <- split(pred, .row)
-  names(pred) <- NULL
-  tibble(.pred = pred)
-}
-
-
-
-#' @export
-predict_class._lognet <- predict_class_glmnet
-
-#' @export
-predict_classprob._lognet <- predict_classprob_glmnet
-
-#' @export
-predict_raw._lognet <- predict_raw_glmnet
 
 # ------------------------------------------------------------------------------
 

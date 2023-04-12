@@ -31,7 +31,7 @@
 #'            linear predictors). Default value is `FALSE`.
 #'     \item `quantile`: for `type` equal to `quantile`, the quantiles of the
 #'            distribution. Default is `(1:9)/10`.
-#'     \item `time`: for `type` equal to `"survival"` or `"hazard"`, the
+#'     \item `eval_time`: for `type` equal to `"survival"` or `"hazard"`, the
 #'            time points at which the survival probability or hazard is estimated.
 #'  }
 #' @details For `type = NULL`, `predict()` uses
@@ -48,10 +48,14 @@
 #'
 #'  ## Censored regression predictions
 #'
-#' For censored regression, a numeric vector for `time` is required when
-#' survival or hazard probabilities are requested. Also, when
-#' `type = "linear_pred"`, censored regression models will by default be
-#' formatted such that the linear predictor _increases_ with time. This may
+#' For censored regression, a numeric vector for `eval_time` is required when
+#' survival or hazard probabilities are requested. The time values are required
+#' to be unique, finite, non-missing, and non-negative. The `predict()`
+#' functions will adjust the values to fit this specification by removing
+#' offending points (with a warning).
+#'
+#' Also, when `type = "linear_pred"`, censored regression models will by default
+#' be formatted such that the linear predictor _increases_ with time. This may
 #' have the opposite sign as what the underlying model's `predict()` method
 #' produces. Set `increasing = FALSE` to suppress this behavior.
 #'
@@ -83,11 +87,11 @@
 #'
 #' For `type = "survival"`, the tibble has a `.pred` column, which is
 #'  a list-column. Each list element contains a tibble with columns
-#'  `.time` and `.pred_survival` (and perhaps other columns).
+#'  `.eval_time` and `.pred_survival` (and perhaps other columns).
 #'
 #' For `type = "hazard"`, the tibble has a `.pred` column, which is
 #'  a list-column. Each list element contains a tibble with columns
-#'  `.time` and `.pred_hazard` (and perhaps other columns).
+#'  `.eval_time` and `.pred_hazard` (and perhaps other columns).
 #'
 #' Using `type = "raw"` with `predict.model_fit()` will return
 #'  the unadulterated results of the prediction function.
@@ -179,8 +183,6 @@ predict.model_fit <- function(object, new_data, type = NULL, opts = list(), ...)
   res
 }
 
-surv_types <- c("time", "survival", "hazard")
-
 check_pred_type <- function(object, type, ...) {
   if (is.null(type)) {
     type <-
@@ -197,14 +199,31 @@ check_pred_type <- function(object, type, ...) {
         glue_collapse(pred_types, sep = ", ", last = " and ")
       )
     )
-  if (type == "numeric" & object$spec$mode != "regression")
-    rlang::abort("For numeric predictions, the object should be a regression model.")
-  if (type == "class" & object$spec$mode != "classification")
-    rlang::abort("For class predictions, the object should be a classification model.")
-  if (type == "prob" & object$spec$mode != "classification")
-    rlang::abort("For probability predictions, the object should be a classification model.")
-  if (type %in% surv_types & object$spec$mode != "censored regression")
-    rlang::abort("For event time predictions, the object should be a censored regression.")
+
+  switch(
+    type,
+    "numeric" = if (object$spec$mode != "regression") {
+      rlang::abort("For numeric predictions, the object should be a regression model.")
+    },
+    "class" = if (object$spec$mode != "classification") {
+      rlang::abort("For class predictions, the object should be a classification model.")
+    },
+    "prob" = if (object$spec$mode != "classification") {
+      rlang::abort("For probability predictions, the object should be a classification model.")
+    },
+    "time" = if (object$spec$mode != "censored regression") {
+      rlang::abort("For event time predictions, the object should be a censored regression.")
+    },
+    "survival" = if (object$spec$mode != "censored regression") {
+      rlang::abort("For survival probability predictions, the object should be a censored regression.")
+    },
+    "hazard" = if (object$spec$mode != "censored regression") {
+      rlang::abort("For hazard predictions, the object should be a censored regression.")
+    },
+    "linear_pred" = if (object$spec$mode != "censored regression") {
+      rlang::abort("For the linear predictor, the object should be a censored regression.")
+    }
+  )
 
   # TODO check for ... options when not the correct type
   type
@@ -222,28 +241,19 @@ check_pred_type <- function(object, type, ...) {
 #' @export
 
 format_num <- function(x) {
-  if (inherits(x, "tbl_spark"))
+  if (inherits(x, "tbl_spark")) {
     return(x)
-
-  if (isTRUE(ncol(x) > 1) | is.data.frame(x)) {
-    x <- as_tibble(x, .name_repair = "minimal")
-    if (!any(grepl("^\\.pred", names(x)))) {
-      names(x) <- paste0(".pred_", names(x))
-    }
-  } else {
-    x <- tibble(.pred = unname(x))
   }
-
-  x
+  ensure_parsnip_format(x, ".pred", overwrite = FALSE)
 }
 
 #' @rdname format-internals
 #' @export
 format_class <- function(x) {
-  if (inherits(x, "tbl_spark"))
+  if (inherits(x, "tbl_spark")) {
     return(x)
-
-  tibble(.pred_class = unname(x))
+  }
+  ensure_parsnip_format(x, ".pred_class")
 }
 
 #' @rdname format-internals
@@ -252,65 +262,60 @@ format_classprobs <- function(x) {
   if (!any(grepl("^\\.pred_", names(x)))) {
     names(x) <- paste0(".pred_", names(x))
   }
-  x <- as_tibble(x)
-  x <- purrr::map_dfr(x, rlang::set_names, NULL)
+  if (!tibble::is_tibble(x)) {
+    x <- as_tibble(x)
+  }
+
+  for (i in seq_along(x)) {
+    names(x[[i]]) <- NULL
+  }
+
   x
 }
 
 #' @rdname format-internals
 #' @export
 format_time <- function(x) {
-  if (isTRUE(ncol(x) > 1) | is.data.frame(x)) {
-    x <- as_tibble(x, .name_repair = "minimal")
-    if (!any(grepl("^\\.pred_time", names(x)))) {
-      names(x) <- paste0(".pred_time_", names(x))
-    }
-  } else {
-    x <- tibble(.pred_time = unname(x))
-  }
-
-  x
+  ensure_parsnip_format(x, ".pred_time", overwrite = FALSE)
 }
 
 #' @rdname format-internals
 #' @export
 format_survival <- function(x) {
-  if (isTRUE(ncol(x) > 1) | is.data.frame(x)) {
-    x <- as_tibble(x, .name_repair = "minimal")
-    names(x) <- ".pred"
-  } else {
-    x <- tibble(.pred = unname(x))
-  }
-
-  x
+  ensure_parsnip_format(x, ".pred")
 }
 
 #' @rdname format-internals
 #' @export
 format_linear_pred <- function(x) {
-  if (inherits(x, "tbl_spark"))
+  if (inherits(x, "tbl_spark")){
     return(x)
-
-  if (isTRUE(ncol(x) > 1) | is.data.frame(x)) {
-    x <- as_tibble(x, .name_repair = "minimal")
-    names(x) <- ".pred_linear_pred"
-  } else {
-    x <- tibble(.pred_linear_pred = unname(x))
   }
-
-  x
+  ensure_parsnip_format(x, ".pred_linear_pred")
 }
 
 #' @rdname format-internals
 #' @export
 format_hazard <- function(x) {
-  if (isTRUE(ncol(x) > 1) | is.data.frame(x)) {
-    x <- as_tibble(x, .name_repair = "minimal")
-    names(x) <- ".pred"
-  } else {
-    x <- tibble(.pred_hazard = unname(x))
-  }
+  ensure_parsnip_format(x, ".pred")
+}
 
+ensure_parsnip_format <- function(x, col_name, overwrite = TRUE) {
+  if (isTRUE(ncol(x) > 1) | is.data.frame(x)) {
+    x <- tibble::new_tibble(x)
+    if (!any(grepl(paste0("^\\", col_name), names(x)))) {
+      if (overwrite) {
+        names(x) <- col_name
+      } else {
+        names(x) <- paste(col_name, names(x), sep = "_")
+      }
+    }
+  } else {
+    x <- tibble::new_tibble(vctrs::df_list(unname(x), .name_repair = "minimal"),
+                            nrow = length(x))
+    names(x) <- col_name
+    x
+  }
   x
 }
 
@@ -324,19 +329,18 @@ make_pred_call <- function(x) {
   cl
 }
 
-check_pred_type_dots <- function(object, type, ...) {
+check_pred_type_dots <- function(object, type, ..., call = rlang::caller_env()) {
   the_dots <- list(...)
   nms <- names(the_dots)
 
   # ----------------------------------------------------------------------------
 
-  if (any(names(the_dots) == "newdata")) {
-    rlang::abort("Did you mean to use `new_data` instead of `newdata`?")
-  }
+  check_for_newdata(..., call = call)
 
   # ----------------------------------------------------------------------------
 
-  other_args <- c("interval", "level", "std_error", "quantile", "time", "increasing")
+  other_args <- c("interval", "level", "std_error", "quantile",
+                  "time", "eval_time", "increasing")
   is_pred_arg <- names(the_dots) %in% other_args
   if (any(!is_pred_arg)) {
     bad_args <- names(the_dots)[!is_pred_arg]
@@ -350,7 +354,15 @@ check_pred_type_dots <- function(object, type, ...) {
   }
 
   # ----------------------------------------------------------------------------
-  # places where time should not be given
+  # places where eval_time should not be given
+  if (any(nms == "eval_time") & !type %in% c("survival", "hazard")) {
+    rlang::abort(
+      paste(
+        "`eval_time` should only be passed to `predict()` when `type` is one of:",
+        paste0("'", c("survival", "hazard"), "'", collapse = ", ")
+      )
+    )
+  }
   if (any(nms == "time") & !type %in% c("survival", "hazard")) {
     rlang::abort(
       paste(
@@ -359,12 +371,12 @@ check_pred_type_dots <- function(object, type, ...) {
       )
     )
   }
-  # when time should be passed
-  if (!any(nms == "time") & type %in% c("survival", "hazard")) {
+  # when eval_time should be passed
+  if (!any(nms %in% c("eval_time", "time")) & type %in% c("survival", "hazard")) {
     rlang::abort(
       paste(
-        "When using 'type' values of 'survival' or 'hazard' are given,",
-        "a numeric vector 'time' should also be given."
+        "When using `type` values of 'survival' or 'hazard',",
+        "a numeric vector `eval_time` should also be given."
       )
     )
   }
@@ -402,12 +414,16 @@ prepare_data <- function(object, new_data) {
     new_data <- .convert_xy_to_form_new(object$preproc, new_data)
   }
 
+  encodings <- get_encoding(class(object$spec)[1])
   remove_intercept <-
-    get_encoding(class(object$spec)[1]) %>%
-    dplyr::filter(mode == object$spec$mode, engine == object$spec$engine) %>%
-    dplyr::pull(remove_intercept)
+    vctrs::vec_slice(
+      encodings$remove_intercept,
+      encodings$mode == object$spec$mode &
+        encodings$engine == object$spec$engine
+    )
+
   if (remove_intercept & any(grepl("Intercept", names(new_data)))) {
-    new_data <- new_data %>% dplyr::select(-dplyr::one_of("(Intercept)"))
+    new_data <- new_data[, colnames(new_data) != "(Intercept)", drop = FALSE]
   }
 
   fit_interface <- object$spec$method$fit$interface
