@@ -43,6 +43,9 @@ trunc_probs <- function(probs, trunc = 0.01) {
   eval_time
 }
 
+# nocov start
+# these are tested in extratests
+
 .check_pred_col <- function(x, call = rlang::env_parent()) {
   if (!any(names(x) == ".pred")) {
     rlang::abort("The input should have a list column called `.pred`.", call = call)
@@ -60,6 +63,11 @@ trunc_probs <- function(probs, trunc = 0.01) {
 }
 
 .check_censor_model <- function(x) {
+  if (x$spec$mode != "censored regression") {
+    cli::cli_abort(
+      "The model needs to be for mode 'censored regression', not for mode '{x$spec$mode}'."
+    )
+  }
   nms <- names(x)
   if (!any(nms == "censor_probs")) {
     rlang::abort("Please refit the model with parsnip version 1.0.4 or greater.")
@@ -67,8 +75,6 @@ trunc_probs <- function(probs, trunc = 0.01) {
   invisible(NULL)
 }
 
-# nocov start
-# these are tested in extratests
 # ------------------------------------------------------------------------------
 # Brier score helpers. Most of this is based off of Graf, E., Schmoor, C.,
 # Sauerbrei, W. and Schumacher, M. (1999), Assessment and comparison of
@@ -244,7 +250,9 @@ add_graf_weights_vec <- function(object, .pred, surv_obj, trunc = 0.05, eps = 10
   num_times <- vctrs::list_sizes(.pred)
   y <- vctrs::list_unchop(.pred)
   y$surv_obj <- vctrs::vec_rep_each(surv_obj, times = num_times)
+
   names(y)[names(y) == ".time"] <- ".eval_time"   # Temporary
+
   # Compute the actual time of evaluation
   y$.weight_time <- graf_weight_time_vec(y$surv_obj, y$.eval_time, eps = eps)
   # Compute the corresponding probability of being censored
@@ -252,16 +260,17 @@ add_graf_weights_vec <- function(object, .pred, surv_obj, trunc = 0.05, eps = 10
   y$.pred_censored <- trunc_probs(y$.pred_censored, trunc = trunc)
   # Invert the probabilities to create weights
   y$.weight_censored = 1 / y$.pred_censored
+
   # Convert back the list column format
   y$surv_obj <- NULL
   vctrs::vec_chop(y, sizes = num_times)
 }
 
-.find_surv_col <- function(x, call = rlang::env_parent()) {
+.find_surv_col <- function(x, call = rlang::env_parent(), fail = TRUE) {
   is_lst_col <- purrr::map_lgl(x, purrr::is_list)
   is_surv <- purrr::map_lgl(x[!is_lst_col], .is_surv, fail = FALSE)
   num_surv <- sum(is_surv)
-  if (num_surv != 1) {
+  if (fail && num_surv != 1) {
     rlang::abort("There should be a single column of class `Surv`", call = call)
   }
   names(is_surv)[is_surv]

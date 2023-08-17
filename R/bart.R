@@ -42,7 +42,7 @@
 #'
 #' @seealso \Sexpr[stage=render,results=rd]{parsnip:::make_seealso_list("bart")}
 #'
-#' @examples
+#' @examplesIf !parsnip:::is_cran_check()
 #' show_engines("bart")
 #'
 #' bart(mode = "regression", trees = 5)
@@ -231,6 +231,9 @@ dbart_predict_calc <- function(obj, new_data, type, level = 0.95, std_err = FALS
             paste0(".pred_upper_", obj$lvl)
           )
         )
+    }
+    if (std_err) {
+      res$.std_error <- apply(post_dist, 2, stats::sd, na.rm = TRUE)
     }
   }
   res

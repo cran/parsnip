@@ -5,7 +5,7 @@
 #' @param ... Not used.
 #' @return A character vector
 #' @name required_pkgs.model_spec
-#' @examples
+#' @examplesIf !parsnip:::is_cran_check()
 #' should_fail <- try(required_pkgs(linear_reg(engine = NULL)), silent = TRUE)
 #' should_fail
 #'
@@ -37,9 +37,9 @@ required_pkgs.model_fit <- function(x, infra = TRUE, ...) {
 
 get_pkgs <- function(x, infra) {
   cls <- class(x)[1]
-  pkgs <-
-    get_from_env(paste0(cls, "_pkgs")) %>%
-    dplyr::filter(engine == x$engine)
+  pkgs <- get_from_env(paste0(cls, "_pkgs"))
+  pkgs <- vctrs::vec_slice(pkgs, pkgs$engine == x$engine)
+
   if (length(pkgs$pkg) == 0) {
     res <- character(0)
   } else {

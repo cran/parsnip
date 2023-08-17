@@ -55,7 +55,7 @@
 #' a "reverse Kaplan-Meier" curve that models the probability of censoring. This
 #' may be used later to compute inverse probability censoring weights for
 #' performance measures.
-#' @examples
+#' @examplesIf !parsnip:::is_cran_check()
 #' # Although `glm()` only has a formula interface, different
 #' # methods for specifying the model can be used
 #'
@@ -115,6 +115,22 @@ fit.model_spec <-
     }
     control <- condense_control(control, control_parsnip())
     check_case_weights(case_weights, object)
+
+    if (!inherits(formula, "formula")) {
+      msg <- "The {.arg formula} argument must be a formula, but it is a \\
+              {.cls {class(formula)[1]}}."
+
+      if (inherits(formula, "recipe")) {
+        msg <-
+          c(
+            msg,
+            "i" = "To fit a model with a recipe preprocessor, please use a \\
+                 {.help [workflow](workflows::workflow)}."
+          )
+      }
+
+      cli::cli_abort(msg)
+    }
 
     dots <- quos(...)
 
@@ -249,6 +265,7 @@ fit_xy.model_spec <-
         rlang::warn(glue::glue("Engine set to `{object$engine}`."))
       }
     }
+    y_var <- colnames(y)
 
     if (object$engine != "spark" & NCOL(y) == 1 & !(is.vector(y) | is.factor(y))) {
       if (is.matrix(y)) {
@@ -262,6 +279,7 @@ fit_xy.model_spec <-
     eval_env <- rlang::env()
     eval_env$x <- x
     eval_env$y <- y
+    eval_env$y_var <- y_var
     eval_env$weights <- weights_to_numeric(case_weights, object)
 
     # TODO case weights: pass in eval_env not individual elements
