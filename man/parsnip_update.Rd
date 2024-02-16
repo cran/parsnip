@@ -370,7 +370,7 @@ on the logit scale). The default value is 2.}
 
 \item{mtry}{A number for the number (or proportion) of predictors that will
 be randomly sampled at each split when creating the tree models
-(specific engines only)}
+(specific engines only).}
 
 \item{learn_rate}{A number for the rate at which the boosting algorithm adapts
 from iteration-to-iteration (specific engines only). This is sometimes referred to
@@ -423,8 +423,8 @@ of model parameters randomly set to zero during model training.}
 \item{activation}{A single character string denoting the type of relationship
 between the original predictors and the hidden unit layer. The activation
 function between the hidden and output layers is automatically set to either
-"linear" or "softmax" depending on the type of outcome. Possible values are:
-"linear", "softmax", "relu", and "elu"}
+"linear" or "softmax" depending on the type of outcome. Possible values
+depend on the engine being used.}
 
 \item{smoothness}{An non-negative number representing the the relative
 smoothness of the class boundary. Smaller examples result in model flexible

@@ -12,7 +12,7 @@
 #' More information on how \pkg{parsnip} is used for modeling is at
 #' \url{https://www.tidymodels.org/}.
 #'
-#' @inheritParams boost_tree
+#' @inheritParams nearest_neighbor
 #' @param num_terms The number of features that will be retained in the
 #'    final model, including the intercept.
 #' @param prod_degree The highest possible interaction degree.
@@ -104,6 +104,7 @@ translate.mars <- function(x, engine = x$engine, ...) {
 
 # ------------------------------------------------------------------------------
 
+#' @export
 check_args.mars <- function(object) {
 
   args <- lapply(object$args, rlang::eval_tidy)

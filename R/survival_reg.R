@@ -9,7 +9,7 @@
 #' More information on how \pkg{parsnip} is used for modeling is at
 #' \url{https://www.tidymodels.org/}.
 #'
-#' @inheritParams boost_tree
+#' @inheritParams nearest_neighbor
 #' @param mode A single character string for the prediction outcome mode.
 #'  The only possible value for this model is "censored regression".
 #' @param dist A character string for the probability distribution of the
@@ -81,7 +81,7 @@ translate.survival_reg <- function(x, engine = x$engine, ...) {
   x
 }
 
-
+#' @export
 check_args.survival_reg <- function(object) {
 
   if (object$engine == "flexsurv") {

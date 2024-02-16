@@ -15,13 +15,13 @@
 #' \url{https://www.tidymodels.org/}.
 #'
 #' @param mode A single character string for the prediction outcome mode.
-#'  Possible values for this model are "unknown", "regression", or
-#'  "classification".
+#'  Possible values for this model are "unknown", "regression",
+#'  "classification", or "censored regression".
 #' @param engine A single character string specifying what computational engine
 #'  to use for fitting.
 #' @param mtry A number for the number (or proportion) of predictors that will
 #'  be randomly sampled at each split when creating the tree models
-#' (specific engines only)
+#' (specific engines only).
 #' @param trees An integer for the number of trees contained in
 #'  the ensemble.
 #' @param min_n An integer for the minimum number of data points
@@ -163,6 +163,7 @@ translate.boost_tree <- function(x, engine = x$engine, ...) {
 
 # ------------------------------------------------------------------------------
 
+#' @export
 check_args.boost_tree <- function(object) {
 
   args <- lapply(object$args, rlang::eval_tidy)

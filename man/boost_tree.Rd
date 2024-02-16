@@ -19,15 +19,15 @@ boost_tree(
 }
 \arguments{
 \item{mode}{A single character string for the prediction outcome mode.
-Possible values for this model are "unknown", "regression", or
-"classification".}
+Possible values for this model are "unknown", "regression",
+"classification", or "censored regression".}
 
 \item{engine}{A single character string specifying what computational engine
 to use for fitting.}
 
 \item{mtry}{A number for the number (or proportion) of predictors that will
 be randomly sampled at each split when creating the tree models
-(specific engines only)}
+(specific engines only).}
 
 \item{trees}{An integer for the number of trees contained in
 the ensemble.}

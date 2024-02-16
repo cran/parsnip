@@ -260,7 +260,7 @@ levels_from_formula <- function(f, dat) {
   if (inherits(dat, "tbl_spark")) {
     res <- NULL
   } else {
-    res <- levels(eval_tidy(f[[2]], dat))
+    res <- levels(eval_tidy(rlang::f_lhs(f), dat))
   }
   res
 }
@@ -282,10 +282,14 @@ show_fit <- function(model, eng) {
 
 # Check non-translated core arguments
 # Each model has its own definition of this
+#' @export
+#' @keywords internal
+#' @rdname add_on_exports
 check_args <- function(object) {
   UseMethod("check_args")
 }
 
+#' @export
 check_args.default <- function(object) {
   invisible(object)
 }
@@ -352,6 +356,16 @@ new_model_spec <- function(cls, args, eng_args, mode, user_specified_mode = TRUE
 check_outcome <- function(y, spec) {
   if (spec$mode == "unknown") {
     return(invisible(NULL))
+  }
+
+  has_no_outcome <- if (is.atomic(y)) {is.null(y)} else {length(y) == 0}
+  if (isTRUE(has_no_outcome)) {
+    cli::cli_abort(
+      c("!" = "{.fun {class(spec)[1]}} was unable to find an outcome.",
+        "i" = "Ensure that you have specified an outcome column and that it \\
+               hasn't been removed in pre-processing."),
+      call = NULL
+    )
   }
 
   if (spec$mode == "regression") {

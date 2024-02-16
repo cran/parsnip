@@ -1,6 +1,6 @@
 Package: parsnip
 Title: A Common API to Modeling and Analysis Functions
-Version: 1.1.1
+Version: 1.2.0
 Authors@R: c(
     person("Max", "Kuhn", , "max@posit.co", role = c("aut", "cre")),
     person("Davis", "Vaughan", , "davis@posit.co", role = "aut"),
@@ -16,7 +16,7 @@ License: MIT + file LICENSE
 URL: https://github.com/tidymodels/parsnip,
         https://parsnip.tidymodels.org/
 BugReports: https://github.com/tidymodels/parsnip/issues
-Depends: R (>= 3.5)
+Depends: R (>= 3.6)
 Imports: cli, dplyr (>= 1.1.0), generics (>= 0.1.2), ggplot2, globals,
         glue, hardhat (>= 1.1.0), lifecycle, magrittr, pillar,
         prettyunits, purrr (>= 1.0.0), rlang (>= 0.3.1), stats, tibble
@@ -36,12 +36,12 @@ Config/rcmdcheck/ignore-inconsequential-notes: true
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3.9000
+RoxygenNote: 7.3.1
 NeedsCompilation: no
-Packaged: 2023-08-17 21:03:11 UTC; max
+Packaged: 2024-02-16 14:09:10 UTC; max
 Author: Max Kuhn [aut, cre],
   Davis Vaughan [aut],
   Emil Hvitfeldt [ctb],
   Posit Software, PBC [cph, fnd]
 Repository: CRAN
-Date/Publication: 2023-08-17 21:50:02 UTC
+Date/Publication: 2024-02-16 17:50:10 UTC
