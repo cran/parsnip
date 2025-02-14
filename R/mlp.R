@@ -126,30 +126,30 @@ translate.mlp <- function(x, engine = x$engine, ...) {
 # ------------------------------------------------------------------------------
 
 #' @export
-check_args.mlp <- function(object) {
+check_args.mlp <- function(object, call = rlang::caller_env()) {
 
   args <- lapply(object$args, rlang::eval_tidy)
 
-  if (is.numeric(args$penalty))
-    if (args$penalty < 0)
-      rlang::abort("The amount of weight decay must be >= 0.")
+  check_number_decimal(args$penalty, min = 0, allow_null = TRUE, call = call, arg = "penalty")
+  check_number_decimal(args$dropout, min = 0, max = 1, allow_null = TRUE, call = call, arg = "dropout")
 
-  if (is.numeric(args$dropout))
-    if (args$dropout < 0 | args$dropout >= 1)
-      rlang::abort("The dropout proportion must be on [0, 1).")
-
-  if (is.numeric(args$penalty) & is.numeric(args$dropout))
-    if (args$dropout > 0 & args$penalty > 0)
-      rlang::abort("Both weight decay and dropout should not be specified.")
+  if (is.numeric(args$penalty) && is.numeric(args$dropout) &&
+      args$dropout > 0 && args$penalty > 0) {
+    cli::cli_abort(
+      "Both weight decay and dropout should not be specified.",
+      call = call
+    )
+  }
 
   invisible(object)
 }
 
 # keras wrapper for feed-forward nnet
 
-class2ind <- function (x, drop2nd = FALSE) {
-  if (!is.factor(x))
-    rlang::abort("`x` should be a factor")
+class2ind <- function (x, drop2nd = FALSE, call = rlang::caller_env()) {
+  if (!is.factor(x)) {
+    cli::cli_abort(c("x" = "{.arg x} should be a {cls factor} not {.obj_type_friendly {x}."))
+  }
   y <- model.matrix( ~ x - 1)
   colnames(y) <- gsub("^x", "", colnames(y))
   attributes(y)$assign <- NULL
@@ -192,11 +192,18 @@ keras_mlp <-
            seeds = sample.int(10^5, size = 3),
            ...) {
 
-    act_funs <- c("linear", "softmax", "relu", "elu")
-    rlang::arg_match(activation, act_funs,)
+    allowed_keras_activation <- keras_activations()
+    good_activation <- activation %in% allowed_keras_activation
+    if (!all(good_activation)) {
+      cli::cli_abort(
+        "{.arg activation} should be one of: {allowed_keras_activation}, not 
+        {.val {activation}}."
+      )
+    }
+    activation <- get_activation_fn(activation)
 
     if (penalty > 0 & dropout > 0) {
-      rlang::abort("Please use either dropoput or weight decay.", call. = FALSE)
+      cli::cli_abort("Please use either dropout or weight decay.", call = NULL)
     }
     if (!is.matrix(x)) {
       x <- as.matrix(x)
@@ -342,6 +349,26 @@ parse_keras_args <- function(...) {
 
 mlp_num_weights <- function(p, hidden_units, classes) {
   ((p + 1) * hidden_units) + ((hidden_units+1) * classes)
+}
+
+allowed_keras_activation <-
+ c("elu", "exponential", "gelu", "hardsigmoid", "linear", "relu", "selu", 
+   "sigmoid", "softmax", "softplus", "softsign", "swish", "tanh")
+
+#' Activation functions for neural networks in keras
+#'
+#' @keywords internal
+#' @return A character vector of values.
+#' @export
+keras_activations <- function() {
+  allowed_keras_activation
+}
+
+get_activation_fn <- function(arg, ...) {
+  if (arg == "hardsigmoid") {
+    arg <- "hard_sigmoid"
+  }
+  arg
 }
 
 ## -----------------------------------------------------------------------------

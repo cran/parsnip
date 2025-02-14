@@ -52,6 +52,7 @@ A \code{model_fit} object that contains several elements:
 \itemize{
 \item \code{lvl}: If the outcome is a factor, this contains
 the factor levels at the time of model fitting.
+\item \code{ordered}: If the outcome is a factor, was it an ordered factor?
 \item \code{spec}: The model specification object
 (\code{object} in the call to \code{fit})
 \item \code{fit}: when the model is executed without error,
@@ -103,6 +104,10 @@ executed and saved in the parsnip object. The \code{censor_probs} element contai
 a "reverse Kaplan-Meier" curve that models the probability of censoring. This
 may be used later to compute inverse probability censoring weights for
 performance measures.
+
+Sparse data is supported, with the use of the \code{x} argument in \code{fit_xy()}. See
+\code{allow_sparse_x} column of \code{\link[=get_encoding]{get_encoding()}} for sparse input
+compatibility.
 }
 \examples{
 \dontshow{if (!parsnip:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}

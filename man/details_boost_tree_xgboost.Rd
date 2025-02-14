@@ -121,6 +121,24 @@ when a watchlist is used to monitor performance from with the xgboost
 training process.
 }
 
+\subsection{Case weights}{
+
+This model can utilize case weights during model fitting. To use them,
+see the documentation in \link{case_weights} and the examples
+on \code{tidymodels.org}.
+
+The \code{fit()} and \code{fit_xy()} arguments have arguments called
+\code{case_weights} that expect vectors of case weights.
+}
+
+\subsection{Sparse Data}{
+
+This model can utilize sparse data during model fitting and prediction.
+Both sparse matrices such as dgCMatrix from the \code{Matrix} package and
+sparse tibbles from the \code{sparsevctrs} package are supported. See
+\link{sparse_data} for more information.
+}
+
 \subsection{Other details}{
 \subsection{Interfacing with the \code{params} argument}{
 

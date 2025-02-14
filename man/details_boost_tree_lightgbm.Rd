@@ -69,10 +69,11 @@ The \strong{bonsai} extension package is required to fit this model.
 ## 
 ## Model fit template:
 ## bonsai::train_lightgbm(x = missing_arg(), y = missing_arg(), 
-##     feature_fraction_bynode = integer(), num_iterations = integer(), 
-##     min_data_in_leaf = integer(), max_depth = integer(), learning_rate = numeric(), 
-##     min_gain_to_split = numeric(), verbose = -1, num_threads = 0, 
-##     seed = sample.int(10^5, 1), deterministic = TRUE)
+##     weights = missing_arg(), feature_fraction_bynode = integer(), 
+##     num_iterations = integer(), min_data_in_leaf = integer(), 
+##     max_depth = integer(), learning_rate = numeric(), min_gain_to_split = numeric(), 
+##     verbose = -1, num_threads = 0, seed = sample.int(10^5, 1), 
+##     deterministic = TRUE)
 }\if{html}{\out{</div>}}
 }
 
@@ -103,10 +104,11 @@ The \strong{bonsai} extension package is required to fit this model.
 ## 
 ## Model fit template:
 ## bonsai::train_lightgbm(x = missing_arg(), y = missing_arg(), 
-##     feature_fraction_bynode = integer(), num_iterations = integer(), 
-##     min_data_in_leaf = integer(), max_depth = integer(), learning_rate = numeric(), 
-##     min_gain_to_split = numeric(), verbose = -1, num_threads = 0, 
-##     seed = sample.int(10^5, 1), deterministic = TRUE)
+##     weights = missing_arg(), feature_fraction_bynode = integer(), 
+##     num_iterations = integer(), min_data_in_leaf = integer(), 
+##     max_depth = integer(), learning_rate = numeric(), min_gain_to_split = numeric(), 
+##     verbose = -1, num_threads = 0, seed = sample.int(10^5, 1), 
+##     deterministic = TRUE)
 }\if{html}{\out{</div>}}
 
 \code{\link[bonsai:train_lightgbm]{bonsai::train_lightgbm()}} is a wrapper
@@ -158,13 +160,6 @@ to \code{TRUE}. For engines that support the proportion interpretation
 within \verb{[0, 1]}.
 }
 
-\subsection{Saving fitted model objects}{
-
-Models fitted with this engine may require native serialization methods
-to be properly saved and/or passed between R sessions. To learn more
-about preparing fitted models for serialization, see the bundle package.
-}
-
 \subsection{Bagging}{
 
 The \code{sample_size} argument is translated to the \code{bagging_fraction}
@@ -195,6 +190,14 @@ default settings, logged warnings and errors will still be passed on to
 the user. To print out all logs during training, set \code{quiet = TRUE}.
 }
 
+}
+
+\subsection{Sparse Data}{
+
+This model can utilize sparse data during model fitting and prediction.
+Both sparse matrices such as dgCMatrix from the \code{Matrix} package and
+sparse tibbles from the \code{sparsevctrs} package are supported. See
+\link{sparse_data} for more information.
 }
 
 \subsection{Examples}{

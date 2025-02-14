@@ -24,7 +24,7 @@ An engine-specific parameter for this model is:
 The **bonsai** extension package is required to fit this model.
 
 
-```r
+``` r
 library(bonsai)
 
 decision_tree(tree_depth = integer(1), min_n = integer(1)) %>% 
@@ -53,7 +53,7 @@ decision_tree(tree_depth = integer(1), min_n = integer(1)) %>%
 The **bonsai** extension package is required to fit this model.
 
 
-```r
+``` r
 library(bonsai)
 
 decision_tree(tree_depth = integer(1), min_n = integer(1)) %>% 
@@ -84,7 +84,7 @@ decision_tree(tree_depth = integer(1), min_n = integer(1)) %>%
 The **censored** extension package is required to fit this model.
 
 
-```r
+``` r
 library(censored)
 
 decision_tree(tree_depth = integer(1), min_n = integer(1)) %>% 

@@ -20,7 +20,7 @@ This model has 3 tuning parameters:
 The **bonsai** extension package is required to fit this model.
 
 
-```r
+``` r
 library(bonsai)
 
 rand_forest() %>% 
@@ -44,7 +44,7 @@ rand_forest() %>%
 The **bonsai** extension package is required to fit this model.
 
 
-```r
+``` r
 library(bonsai)
 
 rand_forest() %>% 
@@ -70,7 +70,7 @@ rand_forest() %>%
 The **censored** extension package is required to fit this model.
 
 
-```r
+``` r
 library(censored)
 
 rand_forest() %>% 

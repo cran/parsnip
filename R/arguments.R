@@ -21,9 +21,13 @@ check_eng_args <- function(args, obj, core_args) {
   common_args <- intersect(protected_args, names(args))
   if (length(common_args) > 0) {
     args <- args[!(names(args) %in% common_args)]
-    common_args <- paste0(common_args, collapse = ", ")
-    rlang::warn(glue::glue("The following arguments cannot be manually modified ",
-                           "and were removed: {common_args}."))
+    cli::cli_warn(
+      c(
+        "The argument{?s} {.arg {common_args}} cannot be manually modified
+         and {?was/were} removed."
+      ),
+      class = "parsnip_protected_arg_warning"
+    )
   }
   args
 }
@@ -33,7 +37,7 @@ check_eng_args <- function(args, obj, core_args) {
 #' `set_args()` can be used to modify the arguments of a model specification while
 #'  `set_mode()` is used to change the model's mode.
 #'
-#' @param object A model specification.
+#' @param object A [model specification][model_spec].
 #' @param ... One or more named model arguments.
 #' @param mode A character string for the model type (e.g. "classification" or
 #'  "regression")
@@ -47,6 +51,8 @@ check_eng_args <- function(args, obj, core_args) {
 #'   set_args(mtry = 3, importance = TRUE) %>%
 #'   set_mode("regression")
 #'
+#' linear_reg() %>%
+#'   set_mode("quantile regression", quantile_levels = c(0.2, 0.5, 0.8))
 #' @export
 set_args <- function(object, ...) {
   UseMethod("set_args")
@@ -56,7 +62,7 @@ set_args <- function(object, ...) {
 set_args.model_spec <- function(object, ...) {
   the_dots <- enquos(...)
   if (length(the_dots) == 0)
-    rlang::abort("Please pass at least one named argument.")
+    cli::cli_abort("Please pass at least one named argument.")
   main_args <- names(object$args)
   new_args <- names(the_dots)
   for (i in new_args) {
@@ -87,12 +93,18 @@ set_args.default <- function(object,...) {
 
 #' @rdname set_args
 #' @export
-set_mode <- function(object, mode) {
+set_mode <- function(object, mode, ...) {
   UseMethod("set_mode")
 }
 
+#' @rdname set_args
+#' @param quantile_levels A vector of values between zero and one (only for the
+#' `"quantile regression"` mode); otherwise, it is `NULL`. The model uses these
+#' values to appropriately train quantile regression models to make predictions
+#' for these values (e.g., `quantile_levels = 0.5` is the median).
 #' @export
-set_mode.model_spec <- function(object, mode) {
+set_mode.model_spec <- function(object, mode, quantile_levels = NULL, ...) {
+  check_dots_empty()
   cls <- class(object)[1]
   if (rlang::is_missing(mode)) {
     spec_modes <- rlang::env_get(get_model_env(), paste0(cls, "_modes"))
@@ -109,11 +121,21 @@ set_mode.model_spec <- function(object, mode) {
 
   object$mode <- mode
   object$user_specified_mode <- TRUE
+  if (mode == "quantile regression") {
+      hardhat::check_quantile_levels(quantile_levels)
+  } else {
+    if (!is.null(quantile_levels)) {
+      cli::cli_warn("{.arg quantile_levels} is only used when the mode is
+                     {.val quantile regression}.")
+    }
+  }
+
+  object$quantile_levels <- quantile_levels
   object
 }
 
 #' @export
-set_mode.default <- function(object, mode) {
+set_mode.default <- function(object, mode, ...) {
   error_set_object(object, func = "set_mode")
 
   invisible(FALSE)
@@ -132,7 +154,7 @@ maybe_eval <- function(x) {
 #' Evaluate parsnip model arguments
 #' @export
 #' @keywords internal
-#' @param spec A model specification
+#' @param spec A [model specification][model_spec].
 #' @param ... Not used.
 eval_args <- function(spec, ...) {
   spec$args   <- purrr::map(spec$args,   maybe_eval)
@@ -238,7 +260,7 @@ make_form_call <- function(object, env = NULL) {
 }
 
 # TODO we need something to indicate that case weights are being used.
-make_xy_call <- function(object, target, env) {
+make_xy_call <- function(object, target, env, call = rlang::caller_env()) {
   fit_args <- object$method$fit$args
   uses_weights <- has_weights(env)
 
@@ -262,7 +284,8 @@ make_xy_call <- function(object, target, env) {
       none = rlang::expr(x),
       data.frame = rlang::expr(maybe_data_frame(x)),
       matrix = rlang::expr(maybe_matrix(x)),
-      rlang::abort(glue::glue("Invalid data type target: {target}."))
+      dgCMatrix = rlang::expr(maybe_sparse_matrix(x)),
+      cli::cli_abort("Invalid data type target: {target}.", call = call)
     )
   if (uses_weights) {
     object$method$fit$args[[ unname(data_args["weights"]) ]] <- rlang::expr(weights)
@@ -316,9 +339,13 @@ min_cols <- function(num_cols, source) {
     p <- ncol(source)
   }
   if (num_cols > p) {
-    msg <- paste0(num_cols, " columns were requested but there were ", p,
-                 " predictors in the data. ", p, " will be used.")
-    rlang::warn(msg)
+    cli::cli_warn(
+      c(
+        "!" = "{num_cols} column{?s} {?was/were} requested but there {cli::qty(p)} {?was/were}
+               {p} predictor{?s} in the data.",
+        "i" = "{p} predictor{?s} will be used."
+      )
+    )
     num_cols <- p
   }
 
@@ -335,9 +362,14 @@ min_rows <- function(num_rows, source, offset = 0) {
   }
 
   if (num_rows > n - offset) {
-    msg <- paste0(num_rows, " samples were requested but there were ", n,
-                  " rows in the data. ", n - offset, " will be used.")
-    rlang::warn(msg)
+    cli::cli_warn(
+      c(
+        "!" = "{num_rows} sample{?s} {?was/were} requested but there were
+               {n} rows in the data.",
+        "i" = "{n - offset} sample{?s} will be used."
+      )
+    )
+
     num_rows <- n - offset
   }
 

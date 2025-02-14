@@ -19,7 +19,7 @@ null_value(x)
 
 show_fit(model, eng)
 
-check_args(object)
+check_args(object, call = rlang::caller_env())
 
 update_dot_check(...)
 
@@ -34,15 +34,23 @@ new_model_spec(
   user_specified_engine = TRUE
 )
 
-check_final_param(x)
+check_final_param(x, call = rlang::caller_env())
 
-update_main_parameters(args, param)
+update_main_parameters(args, param, call = rlang::caller_env())
 
 update_engine_parameters(eng_args, fresh, ...)
 
 print_model_spec(x, cls = class(x)[1], desc = get_model_desc(cls), ...)
 
-update_spec(object, parameters, args_enquo_list, fresh, cls, ...)
+update_spec(
+  object,
+  parameters,
+  args_enquo_list,
+  fresh,
+  cls,
+  ...,
+  call = caller_env()
+)
 
 is_varying(x)
 }

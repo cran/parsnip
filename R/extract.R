@@ -4,7 +4,7 @@
 #' These functions extract various elements from a parsnip object. If they do
 #' not exist yet, an error is thrown.
 #'
-#' - `extract_spec_parsnip()` returns the parsnip model specification.
+#' - `extract_spec_parsnip()` returns the parsnip [model specification][model_spec].
 #'
 #' - `extract_fit_engine()` returns the engine specific fit embedded within
 #'   a parsnip model fit. For example, when using [parsnip::linear_reg()]
@@ -14,8 +14,15 @@
 #'
 #' - `extract_parameter_set_dials()` returns a set of dials parameter objects.
 #'
+#' - `extract_fit_time()` returns a tibble with fit times. The fit times
+#'   correspond to the time for the parsnip engine to fit and do not include
+#'   other portions of the elapsed time in [parsnip::fit.model_spec()].
+#'
 #' @param x A parsnip `model_fit` object or a parsnip `model_spec` object.
 #' @param parameter A single string for the parameter ID.
+#' @param summarize A logical for whether the elapsed fit time should be
+#'   returned as a single row or multiple rows. Doesn't support `FALSE` for
+#'   parsnip models.
 #' @param ... Not currently used.
 #' @details
 #' Extracting the underlying engine fit can be helpful for describing the
@@ -23,7 +30,7 @@
 #'  importance/explainers.
 #'
 #' However, users should not invoke the `predict()` method on an extracted
-#'  model. There may be preprocessing operations that `parsnip` has executed on
+#'  model. There may be preprocessing operations that parsnip has executed on
 #'  the data prior to giving it to the model. Bypassing these can lead to errors
 #'  or silently generating incorrect predictions.
 #'
@@ -58,7 +65,7 @@ extract_spec_parsnip.model_fit <- function(x, ...) {
   if (any(names(x) == "spec")) {
     return(x$spec)
   }
-  rlang::abort("Internal error: The model fit does not have a model spec.")
+  cli::cli_abort("The model fit does not have a model spec.", .internal = TRUE)
 }
 
 
@@ -68,7 +75,7 @@ extract_fit_engine.model_fit <- function(x, ...) {
   if (any(names(x) == "fit")) {
     return(x$fit)
   }
-  rlang::abort("Internal error: The model fit does not have an engine fit.")
+  cli::cli_abort("The model fit does not have  an engine fit.", .internal = TRUE)
 }
 
 #' @export
@@ -126,4 +133,21 @@ eval_call_info <-  function(x) {
 #' @rdname extract-parsnip
 extract_parameter_dials.model_spec <- function(x, parameter, ...) {
   extract_parameter_dials(extract_parameter_set_dials(x), parameter)
+}
+
+#' @export
+#' @rdname extract-parsnip
+extract_fit_time.model_fit <- function(x, summarize = TRUE, ...) {
+  elapsed <- x[["elapsed"]][["elapsed"]][["elapsed"]]
+
+  if (is.na(elapsed) || is.null(elapsed)) {
+    cli::cli_abort(
+      "This model was fit before {.fun extract_fit_time} was added."
+    )
+  }
+
+  dplyr::tibble(
+    stage_id = class(x$spec)[1],
+    elapsed = elapsed
+  )
 }

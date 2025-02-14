@@ -1,6 +1,6 @@
 # Initialize model environments
 
-all_modes <- c("classification", "regression", "censored regression")
+all_modes <- c("classification", "regression", "censored regression", "quantile regression")
 
 # ------------------------------------------------------------------------------
 
@@ -70,6 +70,7 @@ get_model_env <- function() {
 #' @keywords internal
 #' @export
 get_from_env <- function(items) {
+  check_character(items)
   mod_env <- get_model_env()
   rlang::env_get(mod_env, items, default = NULL)
 }
@@ -86,9 +87,7 @@ set_in_env <- function(...) {
 #' @keywords internal
 #' @export
 set_env_val <- function(name, value) {
-  if (length(name) != 1 || !is.character(name)) {
-    rlang::abort("`name` should be a single character value.")
-  }
+  check_string(name, allow_empty = FALSE)
   mod_env <- get_model_env()
   x <- list(value)
   names(x) <- name
@@ -113,75 +112,69 @@ error_set_object <- function(object, func) {
   cli::cli_abort(msg, call = call2(func))
 }
 
-check_eng_val <- function(eng) {
-  if (rlang::is_missing(eng) || length(eng) != 1 || !is.character(eng))
-    rlang::abort("Please supply a character string for an engine name (e.g. `'lm'`)")
+check_eng_val <- function(eng, call = caller_env()) {
+  check_string(eng, allow_empty = FALSE, call = call)
   invisible(NULL)
 }
 
-check_model_exists <- function(model) {
-  if (rlang::is_missing(model) || length(model) != 1 || !is.character(model)) {
-    rlang::abort("Please supply a character string for a model name (e.g. `'linear_reg'`)")
-  }
+check_model_exists <- function(model, call = caller_env()) {
+  check_string(model, allow_empty = FALSE, call = call)
 
   current <- get_model_env()
 
   if (!any(current$models == model)) {
-    rlang::abort(glue::glue("Model `{model}` has not been registered."))
+    cli::cli_abort(
+      "Model {.val {model}} has not been registered.",
+      call = call
+    )
   }
 
   invisible(NULL)
 }
 
-check_model_doesnt_exist <- function(model) {
-  if (rlang::is_missing(model) || length(model) != 1 || !is.character(model)) {
-    rlang::abort("Please supply a character string for a model name (e.g. `'linear_reg'`)")
-  }
+check_model_doesnt_exist <- function(model, call = caller_env()) {
+  check_string(model, allow_empty = FALSE, call = call)
 
   current <- get_model_env()
 
   if (any(current$models == model)) {
-    rlang::abort(glue::glue("Model `{model}` already exists"))
+    cli::cli_abort(
+      "Model {.val {model}} already exists.",
+      call = call
+    )
   }
 
   invisible(NULL)
 }
 
-check_mode_val <- function(mode) {
-  if (rlang::is_missing(mode) || length(mode) != 1 || !is.character(mode)) {
-    rlang::abort("Please supply a character string for a mode (e.g. `'regression'`).")
-  }
+check_mode_val <- function(mode, call = caller_env()) {
+  check_string(mode, allow_empty = FALSE, call = call)
   invisible(NULL)
 }
 
 
 stop_incompatible_mode <- function(spec_modes, eng = NULL, cls = NULL, call) {
   if (is.null(eng) & is.null(cls)) {
-    msg <- "Available modes are: "
+    msg <- "Available modes are:"
   }
   if (!is.null(eng) & is.null(cls)) {
-    msg <- glue::glue("Available modes for engine {eng} are: ")
+    msg <- "Available modes for engine {eng} are:"
   }
   if (is.null(eng) & !is.null(cls)) {
-    msg <- glue::glue("Available modes for model type {cls} are: ")
+    msg <- "Available modes for model type {cls} are:"
   }
   if (!is.null(eng) & !is.null(cls)) {
-    msg <- glue::glue("Available modes for model type {cls} with engine {eng} are: ")
+    msg <- "Available modes for model type {cls} with engine {eng} are:"
   }
 
-  msg <- glue::glue(
-    msg,
-    glue::glue_collapse(glue::glue("'{spec_modes}'"), sep = ", ")
-  )
-  rlang::abort(msg, call = call)
+  cli::cli_abort(paste(msg, "{.val {spec_modes}}."), call = call)
 }
 
 stop_incompatible_engine <- function(spec_engs, mode, call) {
-  msg <- glue::glue(
-    "Available engines for mode {mode} are: ",
-    glue::glue_collapse(glue::glue("'{spec_engs}'"), sep = ", ")
+  cli::cli_abort(
+    "Available engines for mode {.val {mode}} are: {.val {spec_engs}}.",
+    call = call
   )
-  rlang::abort(msg, call = call)
 }
 
 stop_missing_engine <- function(cls, call) {
@@ -193,17 +186,21 @@ stop_missing_engine <- function(cls, call) {
                                   "}"),
                      .groups = "drop")
   if (nrow(info) == 0) {
-    rlang::abort(paste0("No known engines for `", cls, "()`."), call = call)
+    cli::cli_abort("No known engines for {.fn {cls}}.", call = call)
   }
-  msg <- paste0(info$msg, collapse = ", ")
-  msg <- paste("Missing engine. Possible mode/engine combinations are:", msg)
-  rlang::abort(msg, call = call)
+  cli::cli_abort(
+    "Missing engine. Possible mode/engine combinations are: {info$msg}.",
+    call = call
+  )
 }
 
-check_mode_for_new_engine <- function(cls, eng, mode) {
-  all_modes <- get_from_env(paste0(cls, "_modes"))
-  if (!(mode %in% all_modes)) {
-    rlang::abort(paste0("'", mode, "' is not a known mode for model `", cls, "()`."))
+check_mode_for_new_engine <- function(cls, eng, mode, call = caller_env()) {
+  model_modes <- get_from_env(paste0(cls, "_modes"))
+  if (!(mode %in% model_modes)) {
+    cli::cli_abort(
+      "{.val {mode}} is not a known mode for model {.fn {cls}}.",
+      call = call
+    )
   }
   invisible(NULL)
 }
@@ -214,8 +211,10 @@ check_spec_mode_engine_val <- function(cls, eng, mode, call = caller_env()) {
 
   all_modes <- get_from_env(paste0(cls, "_modes"))
   if (!(mode %in% all_modes)) {
-    rlang::abort(paste0("'", mode, "' is not a known mode for model `", cls, "()`."),
-                 call = call)
+    cli::cli_abort(
+      "{.val {mode}} is not a known mode for model {.fn {cls}}.",
+      call = call
+    )
   }
 
   model_info <- rlang::env_get(get_model_env(), cls)
@@ -250,10 +249,10 @@ check_spec_mode_engine_val <- function(cls, eng, mode, call = caller_env()) {
   spec_engs <- model_info$engine
   # engine is allowed to be NULL
   if (!is.null(eng) && !(eng %in% spec_engs)) {
-    rlang::abort(
-      paste0(
-        "Engine '", eng, "' is not supported for `", cls, "()`. See ",
-        "`show_engines('", cls, "')`."
+    cli::cli_abort(
+      c(
+        x = "Engine {.val {eng}} is not supported for {.fn {cls}}",
+        i = "See {.code show_engines({.val {cls}})}."
       ),
       call = call
     )
@@ -296,39 +295,25 @@ check_mode_with_no_engine <- function(cls, mode, call) {
   }
 }
 
-check_arg_val <- function(arg) {
-  if (rlang::is_missing(arg) || length(arg) != 1 || !is.character(arg))
-    rlang::abort("Please supply a character string for the argument.")
-  invisible(NULL)
-}
+check_func_val <- function(func, call = caller_env()) {
+  msg <- "{.arg func} should be a named vector with element {.field fun} and \\
+          the optional elements {.field pkg}, {.field range}, {.field trans}, \\
+          and {.field values}. {.field func} and {.field pkg} should both be \\
+          single character strings."
 
-check_submodels_val <- function(has_submodel) {
-  if (!is.logical(has_submodel) || length(has_submodel) != 1) {
-    rlang::abort("The `submodels` argument should be a single logical.")
+  if (rlang::is_missing(func) || !is.vector(func)) {
+    cli::cli_abort(msg, call = call)
   }
-  invisible(NULL)
-}
-
-check_func_val <- function(func) {
-  msg <-
-    paste(
-      "`func` should be a named vector with element 'fun' and the optional ",
-      "elements 'pkg', 'range', 'trans', and 'values'.",
-      "`func` and 'pkg' should both be single character strings."
-    )
-
-  if (rlang::is_missing(func) || !is.vector(func))
-    rlang::abort(msg)
 
   nms <- sort(names(func))
 
   if (all(is.null(nms)))  {
-    rlang::abort(msg)
+    cli::cli_abort(msg, call = call)
   }
 
   if (length(func) == 1) {
     if (isTRUE(any(nms != "fun"))) {
-      rlang::abort(msg)
+      cli::cli_abort(msg, call = call)
     }
   } else {
     # check for extra names:
@@ -336,23 +321,31 @@ check_func_val <- function(func) {
     nm_check <- nms %in% c("fun", "pkg", "range", "trans", "values")
     not_allowed <- nms[!(nms %in% allow_nms)]
     if (length(not_allowed) > 0) {
-      rlang::abort(msg)
+      cli::cli_abort(msg, call = call)
     }
   }
 
-  if (!is.character(func[["fun"]])) {
-    rlang::abort(msg)
-  }
-  if (any(nms == "pkg") && !is.character(func[["pkg"]])) {
-    rlang::abort(msg)
+  check_string(
+    func[["fun"]],
+    allow_empty = FALSE,
+    arg = I("The `fun` element of `func`"),
+    call = call
+  )
+  if (any(nms == "pkg")) {
+    check_string(
+      func[["pkg"]],
+      allow_null = TRUE,
+      arg = I("The `pkg` element of `func`"),
+      call = call
+    )
   }
 
   invisible(NULL)
 }
 
-check_fit_info <- function(fit_obj) {
+check_fit_info <- function(fit_obj, call = caller_env()) {
   if (is.null(fit_obj)) {
-    rlang::abort("The `fit` module cannot be NULL.")
+    cli::cli_abort("The {.arg fit_obj} argument cannot be NULL.", call = call)
   }
 
   # check required data elements
@@ -360,10 +353,10 @@ check_fit_info <- function(fit_obj) {
   has_req_nms <- exp_nms %in% names(fit_obj)
 
   if (!all(has_req_nms)) {
-    rlang::abort(
-      glue::glue("The `fit` module should have elements: ",
-      glue::glue_collapse(glue::glue("`{exp_nms}`"), sep = ", "))
-      )
+    cli::cli_abort(
+      "The {.arg value} argument should have elements: {.field {exp_nms}}.",
+      call = call
+    )
   }
 
   # check optional data elements
@@ -371,15 +364,19 @@ check_fit_info <- function(fit_obj) {
   other_nms <- setdiff(exp_nms, names(fit_obj))
   has_opt_nms <- other_nms %in% opt_nms
   if (any(!has_opt_nms)) {
-    msg <- glue::glue("The `fit` module can only have optional elements: ",
-                      glue::glue_collapse(glue::glue("`{exp_nms}`"), sep = ", "))
-
-    rlang::abort(msg)
+    cli::cli_abort(
+      "The {.arg value} argument can only have optional elements: \\
+      {.field {exp_nms}}.",
+      call = call
+    )
   }
   if (any(other_nms == "data")) {
     data_nms <- names(fit_obj$data)
     if (length(data_nms == 0) || any(data_nms == "")) {
-      rlang::abort("All elements of the `data` argument vector must be named.")
+      cli::cli_abort(
+        "All elements of the {.field data} argument vector must be named.",
+        call = call
+      )
     }
   }
 
@@ -387,39 +384,49 @@ check_fit_info <- function(fit_obj) {
   check_func_val(fit_obj$func)
 
   if (!is.list(fit_obj$defaults)) {
-    rlang::abort("The `defaults` element should be a list: ")
+    cli::cli_abort("The {.field defaults} element should be a list.", call = call)
   }
 
   invisible(NULL)
 }
 
-check_pred_info <- function(pred_obj, type) {
+check_pred_info <- function(pred_obj, type, call = caller_env()) {
   if (all(type != pred_types)) {
-    rlang::abort(
-      glue::glue("The prediction type should be one of: ",
-      glue::glue_collapse(glue::glue("'{pred_types}'"), sep = ", "))
-      )
+    cli::cli_abort(
+      "The prediction type should be one of: {.val {pred_types}}.",
+      call = call
+    )
   }
 
   exp_nms <- c("args", "func", "post", "pre")
   if (!isTRUE(all.equal(sort(names(pred_obj)), exp_nms))) {
-    rlang::abort(
-      glue::glue("The `predict` module should have elements: ",
-      glue::glue_collapse(glue::glue("`{exp_nms}`"), sep = ", "))
-      )
+    cli::cli_abort(
+      "The {.field predict} module should have elements: {.val {exp_nms}}.",
+      call = call
+    )
   }
 
-  if (!is.null(pred_obj$pre) & !is.function(pred_obj$pre)) {
-    rlang::abort("The `pre` module should be null or a function: ")
-  }
-  if (!is.null(pred_obj$post) & !is.function(pred_obj$post)) {
-    rlang::abort("The `post` module should be null or a function: ")
-  }
+  check_function(
+    pred_obj$pre,
+    allow_null = TRUE,
+    arg = I("The `pre` element of `pred_obj`"),
+    call = call
+  )
+
+  check_function(
+    pred_obj$post,
+    allow_null = TRUE,
+    arg = I("The `post` element of `pred_obj`"),
+    call = call
+  )
 
   check_func_val(pred_obj$func)
 
   if (!is.list(pred_obj$args)) {
-    rlang::abort("The `args` element should be a list. ")
+    cli::cli_abort(
+      "The {.field args} element should be a list.",
+      call = call
+    )
   }
 
   invisible(NULL)
@@ -430,31 +437,24 @@ spec_has_pred_type <- function(object, type) {
   any(possible_preds == type)
 }
 
-check_spec_pred_type <- function(object, type) {
+check_spec_pred_type <- function(object, type, call = caller_env()) {
   if (!spec_has_pred_type(object, type)) {
     possible_preds <- names(object$spec$method$pred)
-    rlang::abort(c(
-      glue::glue("No {type} prediction method available for this model."),
-      glue::glue("Value for `type` should be one of: ",
-                 glue::glue_collapse(glue::glue("'{possible_preds}'"), sep = ", "))
-    ))
+    cli::cli_abort(
+      "No {.val {type}} prediction method available for this model. \\
+      {.arg type} should be one of: {.val {possible_preds}}.",
+      call = call
+    )
   }
   invisible(NULL)
 }
 
-check_pkg_val <- function(pkg) {
-  if (rlang::is_missing(pkg) || length(pkg) != 1 || !is.character(pkg)) {
-    rlang::abort("Please supply a single character value for the package name.")
-  }
-  invisible(NULL)
-}
-
-check_interface_val <- function(x) {
+check_interface_val <- function(x, call = call) {
   exp_interf <- c("data.frame", "formula", "matrix")
   if (length(x) != 1 || !(x %in% exp_interf)) {
-    rlang::abort(
-      glue::glue("The `interface` element should have a single value of: ",
-                 glue::glue_collapse(glue::glue("`{exp_interf}`"), sep = ", "))
+    cli::cli_abort(
+      "The {.field interface} element should have a single of: {exp_interf}.",
+      call = call
     )
   }
   invisible(NULL)
@@ -487,7 +487,7 @@ check_interface_val <- function(x) {
 #'   and `raw`.
 #' @param pkg An options character string for a package name.
 #' @param parsnip A single character string for the "harmonized" argument name
-#'  that `parsnip` exposes.
+#'  that parsnip exposes.
 #' @param original A single character string for the argument name that
 #'  underlying model function uses.
 #' @param value A list that conforms to the `fit_obj` or `pred_obj` description
@@ -501,7 +501,7 @@ check_interface_val <- function(x) {
 #' @keywords internal
 #' @details These functions are available for users to add their
 #'  own models or engines (in a package or otherwise) so that they can
-#'  be accessed using `parsnip`. This is more thoroughly documented
+#'  be accessed using parsnip. This is more thoroughly documented
 #'  on the package web site (see references below).
 #'
 #' In short, `parsnip` stores an environment object that contains
@@ -656,10 +656,10 @@ set_model_engine <- function(model, mode, eng) {
 set_model_arg <- function(model, eng, parsnip, original, func, has_submodel) {
   check_model_exists(model)
   check_eng_val(eng)
-  check_arg_val(parsnip)
-  check_arg_val(original)
+  check_string(parsnip, allow_empty = FALSE)
+  check_string(original, allow_empty = FALSE)
   check_func_val(func)
-  check_submodels_val(has_submodel)
+  check_bool(has_submodel)
 
   old_args <- get_from_env(paste0(model, "_args"))
 
@@ -674,7 +674,10 @@ set_model_arg <- function(model, eng, parsnip, original, func, has_submodel) {
 
   updated <- try(dplyr::bind_rows(old_args, new_arg), silent = TRUE)
   if (inherits(updated, "try-error")) {
-    rlang::abort("An error occured when adding the new argument.")
+    cli::cli_abort(
+      "An error occurred when adding the new argument.",
+      parent = updated
+    )
   }
 
   updated <- vctrs::vec_unique(updated)
@@ -692,7 +695,7 @@ set_model_arg <- function(model, eng, parsnip, original, func, has_submodel) {
 set_dependency <- function(model, eng, pkg = "parsnip", mode = NULL) {
   check_model_exists(model)
   check_eng_val(eng)
-  check_pkg_val(pkg)
+  check_string(pkg, allow_empty = FALSE)
 
   model_info <- get_from_env(model)
   pkg_info <- get_from_env(paste0(model, "_pkgs"))
@@ -706,8 +709,9 @@ set_dependency <- function(model, eng, pkg = "parsnip", mode = NULL) {
     dplyr::filter(engine == eng) %>%
     nrow()
   if (has_engine != 1) {
-    rlang::abort(
-      glue::glue("The engine '{eng}' has not been registered for model '{model}'.")
+    cli::cli_abort(
+      "The engine {.val {eng}} has not been registered for model \\
+      {.val {model}}."
     )
   }
 
@@ -719,10 +723,12 @@ set_dependency <- function(model, eng, pkg = "parsnip", mode = NULL) {
     mode <- all_modes
   } else {
     if (length(mode) > 1) {
-      rlang::abort("'mode' should be a single character value or NULL.")
+      cli::cli_abort("{.arg mode} should be a single character value or NULL.")
     }
     if (!any(mode == all_modes)) {
-      rlang::abort(glue::glue("mode '{mode}' is not a valid mode for '{model}'"))
+      cli::cli_abort(
+        "mode {.val {mode}} is not a valid mode for {.val {model}}."
+      )
     }
   }
 
@@ -762,7 +768,7 @@ get_dependency <- function(model) {
   check_model_exists(model)
   pkg_name <- paste0(model, "_pkgs")
   if (!any(pkg_name != rlang::env_names(get_model_env()))) {
-    rlang::abort(glue::glue("`{model}` does not have a dependency list in parsnip."))
+    cli::cli_abort("{.val {model}} does not have a dependency list in parsnip.")
   }
   rlang::env_get(get_model_env(), pkg_name)
 }
@@ -774,7 +780,8 @@ get_dependency <- function(model) {
 # same model/mode/engine (and prediction type). If it already exists and the
 # new information is different, fail with a message. See issue #653
 is_discordant_info <- function(model, mode, eng, candidate,
-                            pred_type = NULL, component = "fit") {
+                            pred_type = NULL, component = "fit",
+                            call = caller_env()) {
   current <- get_from_env(paste0(model, "_", component))
 
   # For older versions of parsnip before set_encoding()
@@ -789,7 +796,7 @@ is_discordant_info <- function(model, mode, eng, candidate,
   if (component == "predict" & !is.null(pred_type)) {
 
     current <- dplyr::filter(current, type == pred_type)
-    p_type <- paste0("and prediction type '", pred_type, "'")
+    p_type <- "and prediction type {.val {pred_type}} "
   } else {
     p_type <- ""
   }
@@ -801,12 +808,14 @@ is_discordant_info <- function(model, mode, eng, candidate,
   same_info <- isTRUE(all.equal(current, candidate, check.environment = FALSE))
 
   if (!same_info) {
-    rlang::abort(
-      glue::glue(
-        "The combination of engine '{eng}' and mode '{mode}' {p_type} already has ",
-        "{component} data for model '{model}' and the new information being ",
-        "registered is different."
-      )
+    cli::cli_abort(
+      paste0(
+        "The combination of engine {.var {eng}} and mode {.var {mode}} ",
+        p_type,
+        "already has {component} data for model {.var {model}}
+         and the new information being registered is different."
+      ),
+      call = call
     )
   }
 
@@ -815,16 +824,17 @@ is_discordant_info <- function(model, mode, eng, candidate,
 
 # Also check for general registration
 
-check_unregistered <- function(model, mode, eng) {
+check_unregistered <- function(model, mode, eng, call = caller_env()) {
   model_info <- get_from_env(model)
   has_engine <-
     model_info %>%
     dplyr::filter(engine == eng & mode == !!mode) %>%
     nrow()
   if (has_engine != 1) {
-    rlang::abort(
-      glue::glue("The combination of engine '{eng}' and mode '{mode}' has not ",
-                 "been registered for model '{model}'.")
+    cli::cli_abort(
+      "The combination of engine {.var {eng}} and mode {.var {mode}} has not \\
+      been registered for model {.var {model}}.",
+      call = call
     )
   }
   invisible(NULL)
@@ -856,7 +866,10 @@ set_fit <- function(model, mode, eng, value) {
   old_fits <- get_from_env(paste0(model, "_fit"))
   updated <- try(dplyr::bind_rows(old_fits, new_fit), silent = TRUE)
   if (inherits(updated, "try-error")) {
-    rlang::abort("An error occured when adding the new fit module.")
+    cli::cli_abort(
+      "An error occurred when adding the new fit module.",
+      parent = updated
+    )
   }
 
   set_env_val(
@@ -874,7 +887,7 @@ get_fit <- function(model) {
   check_model_exists(model)
   fit_name <- paste0(model, "_fit")
   if (!any(fit_name != rlang::env_names(get_model_env()))) {
-    rlang::abort(glue::glue("`{model}` does not have a `fit` method in parsnip."))
+    cli::cli_abort("{.arg {model}} does not have a {.fn fit} method in parsnip.")
   }
   rlang::env_get(get_model_env(), fit_name)
 }
@@ -907,7 +920,10 @@ set_pred <- function(model, mode, eng, type, value) {
   old_pred <- get_from_env(paste0(model, "_predict"))
   updated <- try(dplyr::bind_rows(old_pred, new_pred), silent = TRUE)
   if (inherits(updated, "try-error")) {
-    rlang::abort("An error occured when adding the new fit module.")
+    cli::cli_abort(
+      "An error occurred when adding the new fit module.",
+      parent = updated
+    )
   }
 
   set_env_val(paste0(model, "_predict"), updated)
@@ -922,11 +938,13 @@ get_pred_type <- function(model, type) {
   check_model_exists(model)
   pred_name <- paste0(model, "_predict")
   if (!any(pred_name != rlang::env_names(get_model_env()))) {
-    rlang::abort(glue::glue("`{model}` does not have any `pred` methods in parsnip."))
+    cli::cli_abort(
+      "{.arg {model}} does not have any {.arg pred} methods in parsnip."
+    )
   }
   all_preds <- rlang::env_get(get_model_env(), pred_name)
   if (!any(all_preds$type == type)) {
-    rlang::abort(glue::glue("`{model}` does not have any prediction methods in parsnip."))
+    cli::cli_abort("{.arg {model}} does not have any prediction methods in parsnip.")
   }
   dplyr::filter(all_preds, type == !!type)
 }
@@ -965,7 +983,7 @@ show_model_info <- function(model) {
       ) %>%
       dplyr::select(engine, mode, has_wts)
 
-      engines %>%
+      engine_weight_info <- engines %>%
         dplyr::left_join(weight_info, by = c("engine", "mode")) %>%
       dplyr::mutate(
         engine = paste0(engine, has_wts),
@@ -979,9 +997,15 @@ show_model_info <- function(model) {
         lab = paste0("   ", mode, engine, "\n")
       ) %>%
       dplyr::ungroup() %>%
-      dplyr::pull(lab) %>%
-      cat(sep = "")
-    cat("\n", cli::symbol$sup_1, "The model can use case weights.\n\n", sep = "")
+      dplyr::pull(lab)
+
+    cat(engine_weight_info, sep = "")
+
+    if (!all(weight_info$has_wts == "")) {
+      cat("\n", cli::symbol$sup_1, "The model can use case weights.", sep = "")
+    }
+
+    cat("\n\n")
   } else {
     cat(" no registered engines.\n\n")
   }
@@ -1047,16 +1071,18 @@ show_model_info <- function(model) {
 #' @export
 pred_value_template <-  function(pre = NULL, post = NULL, func, ...) {
   if (rlang::is_missing(func)) {
-    rlang::abort("Please supply a value to `func`. See `?set_pred`.")
+    cli::cli_abort(
+      "Please supply a value to {.arg func}. See {.help [{.fun set_pred}](parsnip::set_pred)}."
+    )
   }
   list(pre = pre, post = post, func = func, args = list(...))
 }
 
 # ------------------------------------------------------------------------------
 
-check_encodings <- function(x) {
+check_encodings <- function(x, call = caller_env()) {
   if (!is.list(x)) {
-    rlang::abort("`values` should be a list.")
+    cli::cli_abort("{.arg values} should be a list.", call = call)
   }
   req_args <- list(predictor_indicators = rlang::na_chr,
                    compute_intercept = rlang::na_lgl,
@@ -1065,20 +1091,18 @@ check_encodings <- function(x) {
 
   missing_args <- setdiff(names(req_args), names(x))
   if (length(missing_args) > 0) {
-    rlang::abort(
-      glue::glue(
-        "The values passed to `set_encoding()` are missing arguments: ",
-        paste0("'", missing_args, "'", collapse = ", ")
-      )
+    cli::cli_abort(
+      "The values passed to {.fn set_encoding} are missing arguments: \\
+      {.field {missing_args}}.",
+      call = call
     )
   }
   extra_args <- setdiff(names(x), names(req_args))
   if (length(extra_args) > 0) {
-    rlang::abort(
-      glue::glue(
-        "The values passed to `set_encoding()` had extra arguments: ",
-        paste0("'", extra_args, "'", collapse = ", ")
-      )
+    cli::cli_abort(
+      "The values passed to {.fn set_encoding} had extra arguments: \\
+      {.arg {extra_args}}.",
+      call = call
     )
   }
   invisible(x)

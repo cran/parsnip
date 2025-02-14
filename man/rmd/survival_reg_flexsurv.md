@@ -16,7 +16,7 @@ This model has 1 tuning parameters:
 The **censored** extension package is required to fit this model.
 
 
-```r
+``` r
 library(censored)
 
 survival_reg(dist = character(1)) %>% 
@@ -42,7 +42,7 @@ survival_reg(dist = character(1)) %>%
 
 The main interface for this model uses the formula method since the model specification typically involved the use of [survival::Surv()]. 
 
-For this engine, stratification cannot be specified via [`strata()`], please see [flexsurv::flexsurvreg()] for alternative specifications.
+For this engine, stratification cannot be specified via [`survival::strata()`], please see [flexsurv::flexsurvreg()] for alternative specifications.
 
 
 

@@ -73,6 +73,7 @@ translate.linear_reg <- function(x, engine = x$engine, ...) {
     # evaluated value for the parameter.
     x$args$penalty <- rlang::eval_tidy(x$args$penalty)
   }
+
   x
 }
 
@@ -106,16 +107,33 @@ update.linear_reg <-
 # ------------------------------------------------------------------------------
 
 #' @export
-check_args.linear_reg <- function(object) {
+check_args.linear_reg <- function(object, call = rlang::caller_env()) {
 
   args <- lapply(object$args, rlang::eval_tidy)
 
-  if (all(is.numeric(args$penalty)) && any(args$penalty < 0))
-    rlang::abort("The amount of regularization should be >= 0.")
-  if (is.numeric(args$mixture) && (args$mixture < 0 | args$mixture > 1))
-    rlang::abort("The mixture proportion should be within [0,1].")
-  if (is.numeric(args$mixture) && length(args$mixture) > 1)
-    rlang::abort("Only one value of `mixture` is allowed.")
+  check_number_decimal(args$mixture, min = 0, max = 1, allow_null = TRUE, call = call, arg = "mixture")
+  check_number_decimal(args$penalty, min = 0, allow_null = TRUE, call = call, arg = "penalty")
+
+  # ------------------------------------------------------------------------------
+  # We want to avoid folks passing in a poisson family instead of using
+  # poisson_reg(). It's hard to detect this.
+
+  is_fam <- names(object$eng_args) == "family"
+  if (any(is_fam)) {
+    eng_args <- rlang::eval_tidy(object$eng_args[[which(is_fam)]])
+    if (is.function(eng_args)) {
+      eng_args <- try(eng_args(), silent = TRUE)
+    }
+    if (inherits(eng_args, "family")) {
+      eng_args <- eng_args$family
+    }
+    if (eng_args == "poisson") {
+      cli::cli_abort(
+        "A Poisson family was requested for {.fn linear_reg}. Please use
+        {.fn poisson_reg} and the engines in the {.pkg poissonreg} package.",
+        call = rlang::call2("linear_reg"))
+    }
+  }
 
   invisible(object)
 }

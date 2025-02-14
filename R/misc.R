@@ -18,7 +18,9 @@ make_classes <- function(prefix) {
 check_empty_ellipse <- function(...) {
   terms <- quos(...)
   if (!is_empty(terms)) {
-    rlang::abort("Please pass other arguments to the model function via `set_engine()`.")
+    cli::cli_abort(
+      "Please pass other arguments to the model function via {.fun set_engine}."
+    )
   }
   terms
 }
@@ -239,13 +241,15 @@ prompt_missing_implementation <- function(spec,
 #' @keywords internal
 #' @export
 show_call <- function(object) {
-  object$method$fit$args <-
-    map(object$method$fit$args, convert_arg)
+  object$method$fit$args <- map(object$method$fit$args, convert_arg)
 
-  call2(object$method$fit$func["fun"],
-    !!!object$method$fit$args,
-    .ns = object$method$fit$func["pkg"]
-  )
+  fn_info <- as.list(object$method$fit$func)
+  if (!any(names(fn_info) == "pkg")) {
+    res <- call2(fn_info$fun, !!!object$method$fit$args)
+  } else {
+    res <- call2(fn_info$fun, !!!object$method$fit$args, .ns = fn_info$pkg)
+  }
+  res
 }
 
 convert_arg <- function(x) {
@@ -258,9 +262,12 @@ convert_arg <- function(x) {
 
 levels_from_formula <- function(f, dat) {
   if (inherits(dat, "tbl_spark")) {
-    res <- NULL
+    res <- list(lvls = NULL, ordered = FALSE)
   } else {
-    res <- levels(eval_tidy(rlang::f_lhs(f), dat))
+    res <- list()
+    y_data <- eval_tidy(rlang::f_lhs(f), dat)
+    res$lvls <- levels(y_data)
+    res$ordered <- is.ordered(y_data)
   }
   res
 }
@@ -285,28 +292,28 @@ show_fit <- function(model, eng) {
 #' @export
 #' @keywords internal
 #' @rdname add_on_exports
-check_args <- function(object) {
+check_args <- function(object, call = rlang::caller_env()) {
   UseMethod("check_args")
 }
 
 #' @export
-check_args.default <- function(object) {
+check_args.default <- function(object, call = rlang::caller_env()) {
   invisible(object)
 }
 
 # ------------------------------------------------------------------------------
 
-# copied form recipes
-
-names0 <- function(num, prefix = "x") {
+# copied from recipes
+# nocov start
+names0 <- function(num, prefix = "x", call = rlang::caller_env()) {
   if (num < 1) {
-    rlang::abort("`num` should be > 0.")
+    cli::cli_abort("{.arg num} should be > 0.", call = call)
   }
   ind <- format(seq_len(num))
   ind <- gsub(" ", "0", ind)
   paste0(prefix, ind)
 }
-
+# nocov end
 
 # ------------------------------------------------------------------------------
 
@@ -317,13 +324,9 @@ update_dot_check <- function(...) {
   dots <- enquos(...)
 
   if (length(dots) > 0) {
-    rlang::abort(
-      glue::glue(
-        "Extra arguments will be ignored: ",
-        glue::glue_collapse(glue::glue("`{names(dots)}`"), sep = ", ")
-      )
-    )
+    cli::cli_abort("The extra argument{?s} {.arg {names(dots)}} will be ignored.")
   }
+
   invisible(NULL)
 }
 
@@ -371,22 +374,20 @@ check_outcome <- function(y, spec) {
   if (spec$mode == "regression") {
     outcome_is_numeric <- if (is.atomic(y)) {is.numeric(y)} else {all(map_lgl(y, is.numeric))}
     if (!outcome_is_numeric) {
-      cls <- class(y)[[1]]
-      abort(paste0(
-        "For a regression model, the outcome should be `numeric`, ",
-        "not a `", cls, "`."
-      ))
+      cli::cli_abort(
+        "For a regression model, the outcome should be {.cls numeric}, not
+        {.obj_type_friendly {y}}."
+      )
     }
   }
 
   if (spec$mode == "classification") {
     outcome_is_factor <- if (is.atomic(y)) {is.factor(y)} else {all(map_lgl(y, is.factor))}
     if (!outcome_is_factor) {
-      cls <- class(y)[[1]]
-      abort(paste0(
-        "For a classification model, the outcome should be a `factor`, ",
-        "not a `", cls, "`."
-      ))
+      cli::cli_abort(
+        "For a classification model, the outcome should be a {.cls factor}, not
+        {.obj_type_friendly {y}}."
+      )
     }
 
     if (inherits(spec, "logistic_reg") && is.atomic(y) && length(levels(y)) > 2) {
@@ -404,11 +405,10 @@ check_outcome <- function(y, spec) {
   if (spec$mode == "censored regression") {
     outcome_is_surv <- inherits(y, "Surv")
     if (!outcome_is_surv) {
-      cls <- class(y)[[1]]
-      abort(paste0(
-        "For a censored regression model, the outcome should be a `Surv` object, ",
-        "not a `", cls, "`."
-      ))
+      cli::cli_abort(
+        "For a censored regression model, the outcome should be a {.cls Surv} object, not
+        {.obj_type_friendly {y}}."
+      )
     }
   }
 
@@ -420,21 +420,21 @@ check_outcome <- function(y, spec) {
 #' @export
 #' @keywords internal
 #' @rdname add_on_exports
-check_final_param <- function(x) {
+check_final_param <- function(x, call = rlang::caller_env()) {
   if (is.null(x)) {
     return(invisible(x))
   }
   if (!is.list(x) & !tibble::is_tibble(x)) {
-    rlang::abort("The parameter object should be a list or tibble")
+    cli::cli_abort("The parameter object should be a list or tibble.", call = call)
   }
   if (tibble::is_tibble(x) && nrow(x) > 1) {
-    rlang::abort("The parameter tibble should have a single row.")
+    cli::cli_abort("The parameter tibble should have a single row.", call = call)
   }
   if (tibble::is_tibble(x)) {
     x <- as.list(x)
   }
   if (length(names) == 0 || any(names(x) == "")) {
-    rlang::abort("All values in `parameters` should have a name.")
+    cli::cli_abort("All values in {.arg parameters} should have a name.", call = call)
   }
 
   invisible(x)
@@ -443,7 +443,7 @@ check_final_param <- function(x) {
 #' @export
 #' @keywords internal
 #' @rdname add_on_exports
-update_main_parameters <- function(args, param) {
+update_main_parameters <- function(args, param, call = rlang::caller_env()) {
   if (length(param) == 0) {
     return(args)
   }
@@ -455,11 +455,9 @@ update_main_parameters <- function(args, param) {
   has_extra_args <- !(names(param) %in% names(args))
   extra_args <- names(param)[has_extra_args]
   if (any(has_extra_args)) {
-    rlang::abort(
-      paste(
-        "At least one argument is not a main argument:",
-        paste0("`", extra_args, "`", collapse = ", ")
-      )
+    cli::cli_abort(
+      "Argument{?s} {.arg {extra_args}} {?is/are} not a main argument.",
+      call = call
     )
   }
   param <- param[!has_extra_args]
@@ -517,25 +515,47 @@ stan_conf_int <- function(object, newdata) {
 
 # ------------------------------------------------------------------------------
 
-check_case_weights <- function(x, spec) {
+check_case_weights <- function(x, spec, call = rlang::caller_env()) {
   if (is.null(x) | spec$engine == "spark") {
     return(invisible(NULL))
   }
   if (!hardhat::is_case_weights(x)) {
-    rlang::abort("'case_weights' should be a single numeric vector of class 'hardhat_case_weights'.")
+    cli::cli_abort(
+      "{.arg case_weights} should be a single numeric vector of
+       class {.cls hardhat_case_weights}.",
+      call = call
+    )
   }
   allowed <- case_weights_allowed(spec)
   if (!allowed) {
-    rlang::abort("Case weights are not enabled by the underlying model implementation.")
+    cli::cli_abort(
+      "Case weights are not enabled by the underlying model implementation.",
+      call = call
+    )
   }
   invisible(NULL)
+}
+
+# ------------------------------------------------------------------------------
+
+check_inherits <- function(x, cls, arg = caller_arg(x), call = caller_env()) {
+  if (is.null(x)) {
+    return(invisible(x))
+  }
+
+  if (!inherits(x, cls)) {
+    cli::cli_abort(
+      "{.arg {arg}} should be a {.cls {cls}}, not {.obj_type_friendly {x}}.",
+      call = call
+    )
+  }
 }
 
 # -----------------------------------------------------------------------------
 check_for_newdata <- function(..., call = rlang::caller_env()) {
   if (any(names(list(...)) == "newdata")) {
-    rlang::abort(
-      "Please use `new_data` instead of `newdata`.",
+    cli::cli_abort(
+      "Please use {.arg new_data} instead of {.arg newdata}.",
       call = call
     )
   }
@@ -557,3 +577,75 @@ is_cran_check <- function() {
 }
 # nocov end
 
+# ------------------------------------------------------------------------------
+
+#' Obtain names of prediction columns for a fitted model or workflow
+#'
+#' [.get_prediction_column_names()] returns a list that has the names of the
+#' columns for the primary prediction types for a model.
+#' @param x A fitted parsnip model (class `"model_fit"`) or a fitted workflow.
+#' @param syms Should the column names be converted to symbols? Defaults to `FALSE`.
+#' @return A list with elements `"estimate"` and `"probabilities"`.
+#' @examplesIf !parsnip:::is_cran_check()
+#' library(dplyr)
+#' library(modeldata)
+#' data("two_class_dat")
+#'
+#' levels(two_class_dat$Class)
+#' lr_fit <- logistic_reg() %>% fit(Class ~ ., data = two_class_dat)
+#'
+#' .get_prediction_column_names(lr_fit)
+#' .get_prediction_column_names(lr_fit, syms = TRUE)
+#' @export
+.get_prediction_column_names <- function(x, syms = FALSE) {
+  if (!inherits(x, c("model_fit", "workflow"))) {
+    cli::cli_abort("{.arg x} should be an object with class {.cls model_fit} or
+                    {.cls workflow}, not {.obj_type_friendly {x}}.")
+  }
+
+  if (inherits(x, "workflow")) {
+    x <- x %>% hardhat::extract_fit_parsnip(x)
+  }
+  model_spec <- extract_spec_parsnip(x)
+  model_engine <- model_spec$engine
+  model_mode <- model_spec$mode
+  model_type <- class(model_spec)[1]
+
+  # appropriate populate the model db
+  inst_res <- purrr::map(required_pkgs(x), rlang::check_installed)
+  predict_types <-
+    get_from_env(paste0(model_type, "_predict")) %>%
+    dplyr::filter(engine == model_engine & mode == model_mode) %>%
+    purrr::pluck("type")
+
+  if (length(predict_types) == 0) {
+    cli::cli_abort("Prediction information could not be found for this
+                   {.fn {model_type}} with engine {.val {model_engine}} and mode
+                   {.val {model_mode}}. Does a parsnip extension package need to
+                   be loaded?")
+  }
+
+  res <- list(estimate = character(0), probabilities = character(0))
+
+  if (model_mode == "regression") {
+    res$estimate <- ".pred"
+  } else if (model_mode == "classification") {
+    res$estimate <- ".pred_class"
+    if (any(predict_types == "prob")) {
+      res$probabilities <- paste0(".pred_", x$lvl)
+    }
+  } else if (model_mode == "censored regression") {
+    res$estimate <- ".pred_time"
+    if (any(predict_types %in% c("survival"))) {
+      res$probabilities <- ".pred"
+    }
+  } else {
+    # Should be unreachable
+    cli::cli_abort("Unsupported model mode {model_mode}.")
+  }
+
+  if (syms) {
+    res <- purrr::map(res, rlang::syms)
+  }
+  res
+}

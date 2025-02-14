@@ -27,15 +27,15 @@ rf_with_seed <-
 rf_with_seed
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  rf_with_seed %>%
-#    set_args(mtry = 4) %>%
-#    set_engine("ranger") %>%
-#    fit(mpg ~ ., data = mtcars)
+# rf_with_seed %>%
+#   set_args(mtry = 4) %>%
+#   set_engine("ranger") %>%
+#   fit(mpg ~ ., data = mtcars)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  set.seed(56982)
-#  rf_with_seed %>%
-#    set_args(mtry = 4) %>%
-#    set_engine("randomForest") %>%
-#    fit(mpg ~ ., data = mtcars)
+# set.seed(56982)
+# rf_with_seed %>%
+#   set_args(mtry = 4) %>%
+#   set_engine("randomForest") %>%
+#   fit(mpg ~ ., data = mtcars)
 
