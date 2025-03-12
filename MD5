@@ -1,7 +1,7 @@
-79c321600aceabb55ec1facf74b87df7 *DESCRIPTION
+57987a3df251e9710d1e0235e15dbd77 *DESCRIPTION
 503138227cc929126db341e231fd1938 *LICENSE
 a7c09842cd32b02f270dd5b5738c5bc5 *NAMESPACE
-8e881b0ec0a6fe779a5ec5dd68d489ca *NEWS.md
+c2ad5fc79dcd3cf1806a01ae60fd1103 *NEWS.md
 ae26c79cbe7ccdca75faf5984aaab976 *R/C5_rules_C5.0.R
 c80a9eb1427c585807cecf618b6f3870 *R/aaa-import-standalone-obj-type.R
 15e42ad5ad303a8fd8a3eccc9dd269e5 *R/aaa-import-standalone-types-check.R
@@ -203,7 +203,7 @@ f6dcad6448c6c2b728fff34a6602fbbd *R/svm_rbf.R
 26d685ec713689fd9f5633871d0931c7 *R/svm_rbf_data.R
 bbc5b7128a6cc916c71d41889d0f2ea5 *R/svm_rbf_kernlab.R
 19c4315183adfc97544cdfa5bf13351a *R/tidy.R
-7101c0c4e7e8e8fbea94f2ccc4fea009 *R/tidy_glmnet.R
+5c5849c712ab545c2aaaaf4061726292 *R/tidy_glmnet.R
 36d431d8588de6cef8068a3dde874c11 *R/tidy_liblinear.R
 7b1dffcd69033ad585b9d5f1b0adb9f4 *R/translate.R
 46fc70a288eb475809260feea44215cf *R/tunable.R
@@ -211,9 +211,9 @@ eecc062f16bcad977bcd5cccd246a986 *R/tune_args.R
 66967271e6c504547c8bb86654977b8d *R/type_sum.R
 9c5ac3d636d9cd917c9d68d1e021fa91 *R/update.R
 926d19dcce5a38abe86d21792b464be6 *R/varying.R
-12334f1841689cd7c1a8d6409ebb6570 *README.md
-d37af23edfad3af38e1fc8341f12b99b *build/stage23.rdb
-7c1ef06e1c3bd90baed0ad9be3cbe53a *build/vignette.rds
+a81b68b85d10cedfe1bdd1ecaebbc338 *README.md
+a3d01ad222962b0590d954fcf8d61fcb *build/stage23.rdb
+e2e50925104028d9d82ab64d55cf3a36 *build/vignette.rds
 da3a5c035c7f206202dfae84a2345db9 *data/model_db.rda
 d8bca895774c76c50d24bf275da1246f *inst/README-DOCS.md
 8b54a105d17dd77b31e0a6a891b7eaaa *inst/add-in/gadget.R
@@ -692,7 +692,7 @@ ca67167521f7f9454a6bfc734410ac50 *tests/testthat/_snaps/logistic_reg.md
 77ffe50ce935ccccf02d2c0700830abc *tests/testthat/_snaps/mars.md
 09bbf3813ed3aaa810be83afb0a4da26 *tests/testthat/_snaps/misc.md
 a661b495bab2ea371e9e237882fc425e *tests/testthat/_snaps/mlp.md
-e2483961f964bd303994ec34ab387760 *tests/testthat/_snaps/mlp_keras.md
+9ac7c5b2220c3fbf60e4076f1f68ddeb *tests/testthat/_snaps/mlp_keras.md
 5fcb5526e674fa0f8f2c495d9b52c03c *tests/testthat/_snaps/mlp_nnet.md
 8bf10f3fb50a4a2bfc11aa7a9d9564c1 *tests/testthat/_snaps/model_basics.md
 b74f8d2a834b86365f92d40f75693825 *tests/testthat/_snaps/multinom_reg.md
