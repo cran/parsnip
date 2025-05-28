@@ -500,7 +500,7 @@ multi_predict._xgb.Booster <-
 
     res <-
       map(trees, xgb_by_tree, object = object, new_data = new_data,
-          type = type, ...) %>%
+          type = type, ...) |>
       purrr::list_rbind()
     res <- arrange(res, .row, trees)
     res <- split(res[, -1], res$.row)
@@ -552,7 +552,7 @@ xgb_by_tree <- function(tree, object, new_data, type, ...) {
 #' @param weights An optional numeric vector of case weights. Note
 #'  that the data used for the case weights will not be used as a
 #'  splitting variable in the model (see
-#'  \url{https://www.rulequest.com/see5-info.html} for
+#'  `https://www.rulequest.com/see5-info.html` for
 #'  Quinlan's notes on case weights).
 #' @param minCases An integer for the smallest number of samples
 #'  that must be put in at least two of the splits.
@@ -625,7 +625,7 @@ multi_predict._C5.0 <-
 
     res <-
       map(trees, C50_by_tree, object = object,
-          new_data = new_data, type = type, ...) %>%
+          new_data = new_data, type = type, ...) |>
       purrr::list_rbind()
     res <- arrange(res, .row, trees)
     res <- split(res[, -1], res$.row)

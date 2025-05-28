@@ -21,6 +21,8 @@ double, default: 2.00)
 \item \code{prior_outcome_range}: Prior for Outcome Range (type: double, default:
 2.00)
 }
+
+Parsnip changes the default range for \code{trees} to \code{c(50, 500)}.
 }
 
 \subsection{Important engine-specific options}{
@@ -48,15 +50,16 @@ times number of observations.
 
 \subsection{Translation from parsnip to the original package (classification)}{
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{bart(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{parsnip::bart(
   trees = integer(1),
   prior_terminal_node_coef = double(1),
   prior_terminal_node_expo = double(1),
   prior_outcome_range = double(1)
-) \%>\% 
-  set_engine("dbarts") \%>\% 
-  set_mode("classification") \%>\% 
-  translate()
+) |> 
+  set_engine("dbarts") |> 
+  set_mode("classification") |> 
+  translate() |> 
+  print_model_spec()
 }\if{html}{\out{</div>}}
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{## BART Model Specification (classification)
@@ -78,15 +81,16 @@ times number of observations.
 
 \subsection{Translation from parsnip to the original package (regression)}{
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{bart(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{parsnip::bart(
   trees = integer(1),
   prior_terminal_node_coef = double(1),
   prior_terminal_node_expo = double(1),
   prior_outcome_range = double(1)
-) \%>\% 
-  set_engine("dbarts") \%>\% 
-  set_mode("regression") \%>\% 
-  translate()
+) |> 
+  set_engine("dbarts") |> 
+  set_mode("regression") |> 
+  translate()|> 
+  print_model_spec()
 }\if{html}{\out{</div>}}
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{## BART Model Specification (regression)

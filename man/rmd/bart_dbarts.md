@@ -17,6 +17,8 @@ This model has 4 tuning parameters:
 
 - `prior_outcome_range`: Prior for Outcome Range (type: double, default: 2.00)
 
+Parsnip changes the default range for `trees` to `c(50, 500)`.
+
 ## Important engine-specific options
 
 Some relevant arguments that can be passed to `set_engine()`: 
@@ -38,16 +40,17 @@ Some relevant arguments that can be passed to `set_engine()`:
 ## Translation from parsnip to the original package (classification)
 
 
-```r
-bart(
+``` r
+parsnip::bart(
   trees = integer(1),
   prior_terminal_node_coef = double(1),
   prior_terminal_node_expo = double(1),
   prior_outcome_range = double(1)
-) %>% 
-  set_engine("dbarts") %>% 
-  set_mode("classification") %>% 
-  translate()
+) |> 
+  set_engine("dbarts") |> 
+  set_mode("classification") |> 
+  translate() |> 
+  print_model_spec()
 ```
 
 ```
@@ -71,16 +74,17 @@ bart(
 ## Translation from parsnip to the original package (regression)
 
 
-```r
-bart(
+``` r
+parsnip::bart(
   trees = integer(1),
   prior_terminal_node_coef = double(1),
   prior_terminal_node_expo = double(1),
   prior_outcome_range = double(1)
-) %>% 
-  set_engine("dbarts") %>% 
-  set_mode("regression") %>% 
-  translate()
+) |> 
+  set_engine("dbarts") |> 
+  set_mode("regression") |> 
+  translate()|> 
+  print_model_spec()
 ```
 
 ```

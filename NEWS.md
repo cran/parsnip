@@ -1,3 +1,11 @@
+# parsnip 1.3.2
+
+* Switch to base R pipe
+
+* Requires changes for CRAN's "No Suggests" check.
+
+* Avoid issues with reading from package files. (#1271)
+
 # parsnip 1.3.1
 
 ## Bug Fixes
