@@ -1,7 +1,7 @@
-ddc9e85c02b45184385107d2d5a627ad *DESCRIPTION
+2caf639bf8e393538fa0245133add1f4 *DESCRIPTION
 ee30eb0db940f0ae30ea25f14e3cbcb4 *LICENSE
 a7c09842cd32b02f270dd5b5738c5bc5 *NAMESPACE
-8f116dda693e7b7d19f905cc4fc3355f *NEWS.md
+99387cf619b0176c3abcb08cb539f9bf *NEWS.md
 ae26c79cbe7ccdca75faf5984aaab976 *R/C5_rules_C5.0.R
 c80a9eb1427c585807cecf618b6f3870 *R/aaa-import-standalone-obj-type.R
 15e42ad5ad303a8fd8a3eccc9dd269e5 *R/aaa-import-standalone-types-check.R
@@ -195,7 +195,7 @@ e0d5e4219484694b36b6b373ea2a0923 *R/survival_reg.R
 39bb33b68b75ea0a055a7c971864d4a5 *R/survival_reg_survival.R
 b7710d26c93058beeec135701658aecf *R/svm_linear.R
 de9e447af5ef59342a3d97bb8960d5ff *R/svm_linear_LiblineaR.R
-8908e26d0668e5ed925f4f973e11a007 *R/svm_linear_data.R
+59b596ac6d67a2e274055bbd6b65f63d *R/svm_linear_data.R
 fbe2cc17d137ca45bc2a831eb445590c *R/svm_linear_kernlab.R
 fb45ac6a41409ea2240319232473f2e0 *R/svm_poly.R
 75c615acabe9dfa0ab7b3df6ea171f11 *R/svm_poly_data.R
@@ -207,14 +207,14 @@ bbc5b7128a6cc916c71d41889d0f2ea5 *R/svm_rbf_kernlab.R
 b3a8d3c77458f3dece7c686e6379d7eb *R/tidy_glmnet.R
 36d431d8588de6cef8068a3dde874c11 *R/tidy_liblinear.R
 feeef00ac440d4e54f2820c8aa99018c *R/translate.R
-70e1a05ed92cc2f4afb11c47f1e0cd73 *R/tunable.R
+f6a134e3a2eddaefd78c0873685624fa *R/tunable.R
 eecc062f16bcad977bcd5cccd246a986 *R/tune_args.R
 66967271e6c504547c8bb86654977b8d *R/type_sum.R
 26574b656700e95f39f407ca305b1efc *R/update.R
 68a4b2d7738bf676953acfc75889d8a0 *R/varying.R
 3499ceac916d13991dcb1bdd2db99a0e *README.md
-03f2e10ba51dbadeae471116437b6521 *build/stage23.rdb
-2a38b444a0fb8841ae0a0b0eeeeffc71 *build/vignette.rds
+d46bd21faeb3c05ec7d0a66e1a578235 *build/stage23.rdb
+2e14209cdb4c91561b064b780b00f457 *build/vignette.rds
 da3a5c035c7f206202dfae84a2345db9 *data/model_db.rda
 d8bca895774c76c50d24bf275da1246f *inst/README-DOCS.md
 e476c120ab87a181714529c25bbb2140 *inst/add-in/gadget.R
@@ -258,7 +258,7 @@ c9c0ac7dc2cecc4a43a655bde9a3a382 *man/details_bag_tree_rpart.Rd
 b67f1aeb443ae0deb745668e265e9a9c *man/details_bart_dbarts.Rd
 8c47f8e82ec35754670bee557f1b372c *man/details_boost_tree_C5.0.Rd
 1ebe75b3a46fb83c6fb827f6245b9076 *man/details_boost_tree_h2o.Rd
-33ebb524bae1434f577fedbe3e18f5d8 *man/details_boost_tree_lightgbm.Rd
+47a75ce61a14eb07b70c2f7bff8989a3 *man/details_boost_tree_lightgbm.Rd
 80d5239cb5f712fbb7950861e8e53be4 *man/details_boost_tree_mboost.Rd
 693c30f8e5b0e2af900df9b1af000c15 *man/details_boost_tree_spark.Rd
 ad206ca928f946dbcd71fff50134c982 *man/details_boost_tree_xgboost.Rd
@@ -342,7 +342,7 @@ b66b4bbae9ac336e2e3e2fdfc0ce5ed9 *man/details_survival_reg_flexsurv.Rd
 8843fe0d90482a1f7fc7572a91b7f4cf *man/details_survival_reg_flexsurvspline.Rd
 b0444bfd6f2be0270f80d4dd1bc4abe0 *man/details_survival_reg_survival.Rd
 33f87c39cac2ed3bae8e4ddff46e1d01 *man/details_svm_linear_LiblineaR.Rd
-6c12486e5906b399ad6ed2a8cbd342f1 *man/details_svm_linear_kernlab.Rd
+8e82b4a3367257e2fdc190677d2ef731 *man/details_svm_linear_kernlab.Rd
 214e5ae89a8ad5bb2cd3da9400ebb6c8 *man/details_svm_poly_kernlab.Rd
 ceac2f4ca78af104fe4d1eb76f67a90b *man/details_svm_rbf_kernlab.Rd
 82851dcb4e811116931fe322a8fb078b *man/discrim_flexible.Rd
@@ -618,7 +618,7 @@ d8a26b788d175fd8c2ebe834b44011f1 *man/rmd/survival_reg_survival.md
 b6a7ca85d69ee02ea257e46cae4d4df7 *man/rmd/svm_linear_LiblineaR.Rmd
 7d4403f8bf0e504b38746e68b00b4855 *man/rmd/svm_linear_LiblineaR.md
 3fbad7c14a89de85be2445916b8f1cbf *man/rmd/svm_linear_kernlab.Rmd
-fae6e9cc993b721887c482de020928f1 *man/rmd/svm_linear_kernlab.md
+cdf8c36da5edac5ec763a121b187dbea *man/rmd/svm_linear_kernlab.md
 84ccba7d97fa76f3d88062ac7a3983ac *man/rmd/svm_poly_kernlab.Rmd
 979d938ae5a8c71cd3756f9d614d1ffb *man/rmd/svm_poly_kernlab.md
 171df9cbd750e82423bc0801a53101fb *man/rmd/svm_rbf_kernlab.Rmd
@@ -688,7 +688,7 @@ fad55260d5464c5997c9ccaf79337dc6 *tests/testthat/_snaps/registration.md
 16e55e478bf3fd73dfd796600ed1b95c *tests/testthat/_snaps/surv_reg.md
 85c602ac71008471dc50a4a5f73e4e05 *tests/testthat/_snaps/surv_reg_flexsurv.md
 416232582fc7581d0c91786322fbbedc *tests/testthat/_snaps/surv_reg_survreg.md
-a9d0c777aaecd2e3e08a4597bb0f3336 *tests/testthat/_snaps/translate.md
+c4b45b11cb0e193bdfdd56ad3c74f9ce *tests/testthat/_snaps/translate.md
 49b2a5d366d6b3b34e2b6c2d7f0502f7 *tests/testthat/_snaps/update.md
 11687ad37d9040743c415d6154522f9a *tests/testthat/helper-extract_parameter_set.R
 afbeba081dee5f2a566b212858c1332d *tests/testthat/helper-objects.R
