@@ -97,6 +97,26 @@ rand_forest() |>
 
 This engine does not require any special encoding of the predictors. Categorical predictors can be partitioned into groups of factor levels (e.g. `{a, c}` vs `{b, d}`) when splitting at a node. Dummy variables are not required for this model. 
 
+## Prediction types
+
+
+``` r
+parsnip:::get_from_env("rand_forest_predict") |>
+  dplyr::filter(engine == "partykit") |>
+  dplyr::select(mode, type)
+```
+
+```
+## # A tibble: 5 x 2
+##   mode                type    
+##   <chr>               <chr>   
+## 1 censored regression time    
+## 2 censored regression survival
+## 3 regression          numeric 
+## 4 classification      class   
+## 5 classification      prob
+```
+
 ## Other details
 
 

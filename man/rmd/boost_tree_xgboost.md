@@ -1,7 +1,7 @@
 
 
 
-For this engine, there are multiple modes: classification and regression
+For this engine, there are multiple modes: classification and regression. Note that in late 2025, a new version of xgboost was released with differences in its interface and model objects. This version of parsnip should work with either version. 
 
 ## Tuning Parameters
 
@@ -115,6 +115,26 @@ For classification, non-numeric outcomes (i.e., factors) are internally converte
 This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
 
 The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+
+## Prediction types
+
+
+``` r
+parsnip:::get_from_env("boost_tree_predict") |>
+  dplyr::filter(engine == "xgboost") |>
+  dplyr::select(mode, type)
+```
+
+```
+## # A tibble: 5 x 2
+##   mode           type   
+##   <chr>          <chr>  
+## 1 regression     numeric
+## 2 regression     raw    
+## 3 classification class  
+## 4 classification prob   
+## 5 classification raw
+```
 
 ## Sparse Data
 

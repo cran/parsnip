@@ -15,8 +15,18 @@ to use for fitting. Possible engines are listed below. The default for this
 model is \code{"parsnip"}.}
 }
 \description{
+Fit a single mean or largest class model. \code{null_model()} is the user-facing
+function that relies on the underlying computational function, \code{nullmodel()}.
+}
+\details{
 \code{null_model()} defines a simple, non-informative model. It doesn't have any
 main arguments. This function can fit classification and regression models.
+
+\code{null_model()} emulates other model building functions, but returns the
+simplest model possible given a training set: a single mean for numeric
+outcomes and the most prevalent class for factor outcomes. When class
+probabilities are requested, the percentage of the training set samples with
+the most prevalent class is returned.
 }
 \section{Engine Details}{
 Engines may have pre-set default arguments when executing the model fit
@@ -51,10 +61,27 @@ call. For this type of model, the template of the fit calls are below:
 ## parsnip::nullmodel(x = missing_arg(), y = missing_arg())
 }\if{html}{\out{</div>}}
 }
+
+\subsection{Prediction types}{
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{parsnip:::get_from_env("null_model_predict") |>
+  dplyr::select(mode, type)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## # A tibble: 5 x 2
+##   mode           type   
+##   <chr>          <chr>  
+## 1 regression     numeric
+## 2 regression     raw    
+## 3 classification class  
+## 4 classification prob   
+## 5 classification raw
+}\if{html}{\out{</div>}}
+}
 }
 
 \examples{
-\dontshow{if (!parsnip:::is_cran_check()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (!parsnip:::is_cran_check()) withAutoprint(\{ # examplesIf}
 null_model(mode = "regression")
 \dontshow{\}) # examplesIf}
 }

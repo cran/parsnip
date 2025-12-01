@@ -9,7 +9,10 @@ ensemble. Each tree depends on the results of previous trees. All trees in
 the ensemble are combined to produce a final prediction.
 }
 \details{
-For this engine, there are multiple modes: classification and regression
+For this engine, there are multiple modes: classification and
+regression. Note that in late 2025, a new version of xgboost was
+released with differences in its interface and model objects. This
+version of parsnip should work with either version.
 \subsection{Tuning Parameters}{
 
 This model has 8 tuning parameters:
@@ -129,6 +132,24 @@ on \code{tidymodels.org}.
 
 The \code{fit()} and \code{fit_xy()} arguments have arguments called
 \code{case_weights} that expect vectors of case weights.
+}
+
+\subsection{Prediction types}{
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{parsnip:::get_from_env("boost_tree_predict") |>
+  dplyr::filter(engine == "xgboost") |>
+  dplyr::select(mode, type)
+}\if{html}{\out{</div>}}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{## # A tibble: 5 x 2
+##   mode           type   
+##   <chr>          <chr>  
+## 1 regression     numeric
+## 2 regression     raw    
+## 3 classification class  
+## 4 classification prob   
+## 5 classification raw
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Sparse Data}{
