@@ -1,7 +1,7 @@
-412115033a958952ae1223dc3b0ff8bd *DESCRIPTION
+c2a246fbd02e96d351066f7f540418ec *DESCRIPTION
 ee30eb0db940f0ae30ea25f14e3cbcb4 *LICENSE
 a7c09842cd32b02f270dd5b5738c5bc5 *NAMESPACE
-84a052b882eea6826685b894c5478456 *NEWS.md
+fab0bae14f071c96e2794aef36961781 *NEWS.md
 ae26c79cbe7ccdca75faf5984aaab976 *R/C5_rules_C5.0.R
 9b4ad91c51d6614c341e2a3d3b7cf420 *R/aaa-import-standalone-obj-type.R
 9c5cd16747b545b80a7512d15a3792f7 *R/aaa-import-standalone-types-check.R
@@ -28,7 +28,7 @@ f4a963213a3193f2d980ab2ca3cefb14 *R/bag_tree.R
 7a42f64db7371d64577f6f104883bfab *R/bart.R
 8cdbc1b30b3e537e4166ca15586f517a *R/bart_data.R
 78ea6ac717bebf93cb7784503e27eb24 *R/bart_dbarts.R
-31d1a526b2ba568df1dd01e5bbd72213 *R/boost_tree.R
+d4137f470920491b3d8236a6cea34131 *R/boost_tree.R
 8eebec48da0e0fd73c34c7bbecc6062d *R/boost_tree_C5.0.R
 ff4fd8ad1f738422e8cac5d60a1ce407 *R/boost_tree_data.R
 046e514c2b3840924d98b156c477fabf *R/boost_tree_h2o.R
@@ -214,7 +214,7 @@ c32cc0d83c2527fa61d34fe8003ac1cd *R/type_sum.R
 78e4345c483910a4c9ffc923f503cb71 *R/update.R
 f5a7ec75eb33512031fbfaddfbae3d8f *R/varying.R
 3499ceac916d13991dcb1bdd2db99a0e *README.md
-81eb9b6b89ecb9144fde4f38a8a7b956 *build/stage23.rdb
+2bd3797e2203f4d96cde80df61e27d65 *build/stage23.rdb
 627b5a58e9ceed35c33a4ba382d0fede *build/vignette.rds
 797bafb7577308f2341c137054bdf168 *data/model_db.rda
 d8bca895774c76c50d24bf275da1246f *inst/README-DOCS.md
@@ -413,7 +413,7 @@ b986520ec4e370d6608516bb13afa001 *man/nearest_neighbor.Rd
 d7926c67ac8a1df69af4620acef01ccc *man/null_model.Rd
 9dbe8b394d4f7ee27a012bb04c193564 *man/nullmodel.Rd
 addb392ac87ed36c8ecb56a5dbced0c6 *man/other_predict.Rd
-4fe73773dd5a86827969a3ee5180177e *man/parsnip-package.Rd
+1d4cbd24f5e629dbd1952a46daee93a7 *man/parsnip-package.Rd
 a291765979bba6b6f13ec4e40f7ab21c *man/parsnip_addin.Rd
 050a6f431cf955c1661415e158095741 *man/parsnip_update.Rd
 3c1160ada42503a6f6872017fedd52b0 *man/pls.Rd
@@ -757,7 +757,7 @@ ad3ce4fc9d0f06b6780e3deaac06cae7 *tests/testthat/test-adds.R
 b342b7f3e8c73bc003b44a4fd65f84d1 *tests/testthat/test-bart.R
 bc238c456ddd73d3b5cdc981f5ee3da8 *tests/testthat/test-boost_tree.R
 18f5bf5296b65819fda86bc0b1c37e66 *tests/testthat/test-boost_tree_C5.0.R
-f50ecd3515d14f3ab45c64e950fb5f5b *tests/testthat/test-boost_tree_xgboost.R
+3aede2748af41962d033d87c8406f272 *tests/testthat/test-boost_tree_xgboost.R
 7a6d6319ee5f268188756ccd97e8c99c *tests/testthat/test-c5_rules.R
 1532f53419c1d35fb53df59e0f2d37b4 *tests/testthat/test-case-weights.R
 2fbf75422548659bde09206609544db6 *tests/testthat/test-condense_control.R
@@ -773,7 +773,7 @@ c0e7a14ea25cdba8dc39232aa4dbc80d *tests/testthat/test-descriptors.R
 fa06b4518a880988ed19cc54bea176f2 *tests/testthat/test-engines.R
 2e46d45542e3f711d7df30a31ebc0a5e *tests/testthat/test-extract.R
 0ffcffe0ba84415d12685b80e98652f6 *tests/testthat/test-failed_models.R
-9f7164c54efb8bf1139d5887ecb833e5 *tests/testthat/test-fit_interfaces.R
+28ec9fbccf70ae2ad50d4b80f1c34eaa *tests/testthat/test-fit_interfaces.R
 0177e4e6cc1a84c6dd479813aefd8ed9 *tests/testthat/test-gen_additive_model.R
 c8c70fed36c14d813fca451d46366231 *tests/testthat/test-glm_grouped.R
 7eb4dc1a797a0489a936bc97a260c9e6 *tests/testthat/test-linear_reg.R
