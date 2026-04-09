@@ -13,7 +13,7 @@ predict_hazard.model_fit <- function(
 ) {
   if (lifecycle::is_present(time)) {
     lifecycle::deprecate_warn(
-      "1.0.4.9005",
+      "1.0.5",
       "predict_hazard(time)",
       "predict_hazard(eval_time)"
     )
@@ -48,10 +48,10 @@ predict_hazard.model_fit <- function(
   res
 }
 
-# @export
-# @keywords internal
-# @rdname other_predict
-# @inheritParams predict.model_fit
+#' @export
+#' @keywords internal
+#' @rdname other_predict
+#' @inheritParams predict.model_fit
 predict_hazard <- function(object, ...) {
   UseMethod("predict_hazard")
 }
