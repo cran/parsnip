@@ -5,7 +5,7 @@
 #' feed-forward neural network). This function can fit classification and
 #' regression models.
 #'
-#' \Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("mlp")}
+#' `Rd parsnip:::make_engine_list("mlp")`
 #'
 #' More information on how \pkg{parsnip} is used for modeling is at
 #' \url{https://www.tidymodels.org/}.
@@ -29,7 +29,7 @@
 #'
 #' @template spec-references
 #'
-#' @seealso \Sexpr[stage=render,results=rd]{parsnip:::make_seealso_list("mlp")}
+#' @seealso `Rd parsnip:::make_seealso_list("mlp")`
 #'
 #' @examplesIf !parsnip:::is_cran_check()
 #' show_engines("mlp")
@@ -115,7 +115,7 @@ translate.mlp <- function(x, engine = x$engine, ...) {
     engine <- "keras"
   }
 
-  if (engine == "nnet") {
+  if (engine %in% c("nnet", "keras3")) {
     if (isTRUE(is.null(quo_get_expr(x$args$hidden_units)))) {
       x$args$hidden_units <- 5
     }
