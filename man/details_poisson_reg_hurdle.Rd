@@ -55,6 +55,8 @@ When fitting a parsnip model with this engine directly, the formula
 method is required and the formula is just passed through. For example:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{library(tidymodels)
+library(poissonreg)
+
 tidymodels_prefer()
 
 data("bioChemists", package = "pscl")
@@ -83,7 +85,9 @@ However, when using a workflow, the best approach is to avoid using
 \code{\link[workflows:add_variables]{workflows::add_variables()}} in
 conjunction with a model formula:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{data("bioChemists", package = "pscl")
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(poissonreg)
+
+data("bioChemists", package = "pscl")
 spec <- 
   poisson_reg() |> 
   set_engine("hurdle")
@@ -120,7 +124,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

@@ -78,7 +78,9 @@ of penalties and it might be good to set a wide range.
 To do this, you can use \code{set_engine()} to pass a vector of penalty
 values as so:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{# Example of setting a wide penalty range
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(ordered)
+
+# Example of setting a wide penalty range
 penalties <- 10^seq(-10, 0, length.out = 20)
 
 ordinal_reg(penalty = tune()) |>
@@ -109,7 +111,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

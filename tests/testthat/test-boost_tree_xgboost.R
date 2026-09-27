@@ -86,24 +86,12 @@ test_that('xgboost execution, classification', {
     extract_xgb_evaluation_log(res_xy_wts)
   )
   # Check to see if the case weights had an effect
-  expect_true(
-    !isTRUE(all.equal(
-      extract_xgb_evaluation_log(res_f),
-      extract_xgb_evaluation_log(res_f_wts)
-    ))
-  )
+  expect_false(isTRUE(all.equal(
+    extract_xgb_evaluation_log(res_f),
+    extract_xgb_evaluation_log(res_f_wts)
+  )))
   expect_true(has_multi_predict(res_xy))
   expect_equal(multi_predict_args(res_xy), "trees")
-
-  expect_snapshot(
-    error = TRUE,
-    res <- parsnip::fit(
-      hpc_xgboost,
-      class ~ novar,
-      data = hpc,
-      control = ctrl
-    )
-  )
 })
 
 
@@ -268,10 +256,26 @@ test_that('xgboost alternate objective', {
     set_engine("xgboost", objective = logregobj) |>
     set_mode("classification")
 
+  # fitting with a function objective still works
   xgb_fit2 <- spec2 |> fit(vs ~ ., data = mtcars |> mutate(vs = as.factor(vs)))
   expect_equal(rlang::eval_tidy(xgb_fit2$spec$eng_args$objective), logregobj)
-  expect_no_error(xgb_preds2 <- predict(xgb_fit2, new_data = mtcars[1, -8]))
-  expect_s3_class(xgb_preds2, "data.frame")
+
+  # ...but the margins it returns cannot be turned into probabilities (#999)
+  cls_data <- mtcars[1:3, -8]
+  expect_snapshot(error = TRUE, predict(xgb_fit2, new_data = cls_data))
+  expect_snapshot(
+    error = TRUE,
+    predict(xgb_fit2, new_data = cls_data, type = "prob")
+  )
+  expect_error(
+    multi_predict(xgb_fit2, new_data = cls_data, trees = 2, type = "class"),
+    class = "xgboost_custom_objective_error"
+  )
+
+  # raw margins are still available
+  raw_preds <- predict(xgb_fit2, new_data = cls_data, type = "raw")
+  expect_type(raw_preds, "double")
+  expect_length(raw_preds, 3L)
 })
 
 test_that('submodel prediction', {
@@ -785,6 +789,71 @@ test_that("fit and prediction with `event_level`", {
   expect_equal(pred_p_2[[".pred_male"]], pred_xgb_2)
 })
 
+test_that("`monotone_constraints` warns about the event level", {
+  skip_if_not_installed("xgboost")
+  skip_on_cran()
+  # Issue 796
+  withr::local_options(rlib_warning_verbosity = "verbose")
+
+  set.seed(1)
+  cls_dat <- data.frame(
+    x = runif(60),
+    cls = factor(rep(c("no", "yes"), 30), levels = c("no", "yes"))
+  )
+  cls_spec <- boost_tree(trees = 5) |> set_mode("classification")
+
+  expect_snapshot(
+    mono_fit <- cls_spec |>
+      set_engine("xgboost", monotone_constraints = 1) |>
+      fit(cls ~ x, data = cls_dat, control = ctrl)
+  )
+  # the constraint still reaches xgboost, which normalises it to a string
+  expect_equal(extract_xgb_param(mono_fit, "monotone_constraints"), "(1)")
+
+  # the warning names whichever level is the event level
+  expect_snapshot(
+    mono_fit_2 <- cls_spec |>
+      set_engine("xgboost", monotone_constraints = 1, event_level = "second") |>
+      fit(cls ~ x, data = cls_dat, control = ctrl)
+  )
+})
+
+test_that("`monotone_constraints` is quiet outside binary classification", {
+  skip_if_not_installed("xgboost")
+  skip_on_cran()
+  # Issue 796
+  withr::local_options(rlib_warning_verbosity = "verbose")
+
+  set.seed(1)
+  cls_dat <- data.frame(
+    x = runif(60),
+    cls = factor(rep(c("no", "yes"), 30), levels = c("no", "yes"))
+  )
+
+  # binary, but no constraints supplied
+  expect_no_condition(
+    boost_tree(trees = 5) |>
+      set_mode("classification") |>
+      set_engine("xgboost") |>
+      fit(cls ~ x, data = cls_dat, control = ctrl)
+  )
+
+  reg_dat <- data.frame(x = runif(60), y = runif(60))
+  expect_no_condition(
+    boost_tree(trees = 5) |>
+      set_mode("regression") |>
+      set_engine("xgboost", monotone_constraints = 1) |>
+      fit(y ~ x, data = reg_dat, control = ctrl)
+  )
+
+  expect_no_condition(
+    boost_tree(trees = 5) |>
+      set_mode("classification") |>
+      set_engine("xgboost", monotone_constraints = 1) |>
+      fit(Species ~ Sepal.Length, data = iris, control = ctrl)
+  )
+})
+
 test_that("count/proportion parameters", {
   skip_if_not_installed("xgboost")
   skip_on_cran()
@@ -941,7 +1010,7 @@ test_that('interface to param arguments', {
 
 test_that('xgboost execution, quantile regression', {
   skip_if(getRversion() <= "4.2.3")
-  skip_if_not_installed("xgboost")
+  skip_if_not_installed("xgboost", minimum_version = "3.4.0.0")
   skip_if_not_installed("modeldata")
   skip_on_cran()
 

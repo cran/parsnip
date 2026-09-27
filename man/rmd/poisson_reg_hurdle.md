@@ -45,6 +45,8 @@ When fitting a parsnip model with this engine directly, the formula method is re
 
 ``` r
 library(tidymodels)
+library(poissonreg)
+
 tidymodels_prefer()
 
 data("bioChemists", package = "pscl")
@@ -73,6 +75,8 @@ However, when using a workflow, the best approach is to avoid using [workflows::
 
 
 ``` r
+library(poissonreg)
+
 data("bioChemists", package = "pscl")
 spec <- 
   poisson_reg() |> 
@@ -106,7 +110,7 @@ The reason for this is that [workflows::add_formula()] will try to create the mo
 
 This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
 
-The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+The `fit()` and `fit_xy()` functions have arguments called `case_weights` that expect vectors of case weights. 
 
 ## Prediction types
 

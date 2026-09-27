@@ -25,7 +25,9 @@ The choice of `mixture` depends on the engine parameter `solver`, which is autom
 
 
 ``` r
-linear_reg(penalty = 1, mixture = 0.5) |> 
+library(agua)
+
+linear_reg(penalty = 1, mixture = 0.5) |>
   set_engine("h2o") |> 
   translate()
 ```
@@ -61,7 +63,7 @@ By default, [h2o::h2o.glm()] uses the argument `standardize = TRUE` to center an
 
 This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
 
-The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+The `fit()` and `fit_xy()` functions have arguments called `case_weights` that expect vectors of case weights. 
 
 ## Prediction types
 

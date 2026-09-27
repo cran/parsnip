@@ -29,7 +29,7 @@ performance assessment and potential early stopping.
 
 \subsection{Translation from parsnip to the original package (regression)}{
 
-\code{\link[agua:h2o_train]{agua::h2o_train_auto()}} is a wrapper around
+\code{\link[agua:h2o_train_auto]{agua::h2o_train_auto()}} is a wrapper around
 \code{\link[h2o:h2o.automl]{h2o::h2o.automl()}}.
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{library(agua)
@@ -52,7 +52,9 @@ auto_ml() |>
 
 \subsection{Translation from parsnip to the original package (classification)}{
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{auto_ml() |>  
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(agua)
+
+auto_ml() |>
   set_engine("h2o") |> 
   set_mode("classification") |> 
   translate()
@@ -82,7 +84,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

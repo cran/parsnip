@@ -65,6 +65,8 @@ We suggest that you set the collection of penalty values when fitting the model.
 To do this, you can use `set_engine()` to pass a vector of penalty values as so: 
 
 ```r
+library(ordered)
+
 # Example of setting a wide penalty range
 penalties <- 10^seq(-10, 0, length.out = 20)
 
@@ -90,7 +92,7 @@ By default, [ordinalNet::ordinalNet()] uses the argument `standardize = TRUE` to
 
 This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
 
-The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+The `fit()` and `fit_xy()` functions have arguments called `case_weights` that expect vectors of case weights. 
 
 ## Prediction types
 

@@ -50,7 +50,9 @@ found at
 
 The \strong{bonsai} extension package is required to fit this model.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{boost_tree(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(bonsai)
+
+boost_tree(
   mtry = integer(), trees = integer(), tree_depth = integer(), 
   learn_rate = numeric(), min_n = integer(), loss_reduction = numeric()
 ) |>
@@ -85,7 +87,9 @@ The \strong{bonsai} extension package is required to fit this model.
 
 The \strong{bonsai} extension package is required to fit this model.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{boost_tree(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(bonsai)
+
+boost_tree(
   mtry = integer(), trees = integer(), tree_depth = integer(), 
   learn_rate = numeric(), min_n = integer(), loss_reduction = numeric()
 ) |> 
@@ -141,7 +145,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 
 Although the source documentation is unclear about how the weights are
@@ -204,7 +208,7 @@ The \code{sample_size} argument is translated to the \code{bagging_fraction}
 parameter in the \code{param} argument of \code{lgb.train}. The argument is
 interpreted by lightgbm as a \emph{proportion} rather than a count, so bonsai
 internally reparameterizes the \code{sample_size} argument with
-\code{\link[dials:trees]{dials::sample_prop()}} during tuning.
+\code{\link[dials:sample_prop]{dials::sample_prop()}} during tuning.
 
 To effectively enable bagging, the user would also need to set the
 \code{bagging_freq} argument to lightgbm. \code{bagging_freq} defaults to 0, which
@@ -229,7 +233,9 @@ is \code{regression}.
 
 You can specify an alternative objective using \code{set_engine()}:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{boost_tree() |>
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(bonsai)
+
+boost_tree() |>
   set_engine("lightgbm", objective = "multiclassova") |>
   set_mode("classification")
 }\if{html}{\out{</div>}}

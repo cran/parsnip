@@ -61,7 +61,8 @@ learn more about using special terms in formulas with tidymodels, see
 For example, in this model, the numeric column \code{rx} is used to estimate
 two different scale parameters for each value of the column:
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(survival)
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(censored)
+library(survival)
 
 survival_reg() |> 
   fit(Surv(futime, fustat) ~ age + strata(rx), data = ovarian) |> 
@@ -94,7 +95,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

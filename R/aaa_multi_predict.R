@@ -14,9 +14,19 @@
 #'  multiple rows per sub-model. Note that, within the tibbles, the column names
 #'  follow the usual standard based on prediction `type` (i.e. `.pred_class` for
 #'  `type = "class"` and so on).
+#'
+#'  `type = "raw"` is the exception: it returns the engine's own prediction
+#'  object with no parsnip post-processing, so it is not a tibble with a
+#'  `.pred` list-column. For glmnet engines this is a matrix with one column
+#'  per penalty value, or a three-dimensional array for `multinom_reg()`.
+#'  Because `...` is passed to the engine but `type` is a named argument of
+#'  `multi_predict()` itself, an engine-level prediction type cannot be
+#'  supplied this way; the engine's default is used.
 #' @export
 multi_predict <- function(object, ...) {
-  if (inherits(object$fit, "try-error")) {
+  # `[[` rather than `$`: this runs before dispatch, so `object` may be any
+  # object, and `$fit` would partial match (an earth fit has `fitted.values`)
+  if (inherits(object[["fit"]], "try-error")) {
     cli::cli_warn("Model fit failed; cannot make predictions.")
     return(NULL)
   }
@@ -93,7 +103,7 @@ has_multi_predict.model_fit <- function(object, ...) {
 #' @export
 #' @rdname has_multi_predict
 has_multi_predict.workflow <- function(object, ...) {
-  has_multi_predict(object$fit$model$model)
+  has_multi_predict(hardhat::extract_fit_parsnip(object), ...)
 }
 
 
@@ -134,5 +144,5 @@ multi_predict_args.model_fit <- function(object, ...) {
 #' @export
 #' @rdname has_multi_predict
 multi_predict_args.workflow <- function(object, ...) {
-  object <- object$fit$model$model
+  multi_predict_args(hardhat::extract_fit_parsnip(object), ...)
 }

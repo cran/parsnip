@@ -28,7 +28,9 @@ columns. For a data frame \code{x}, the default is
 
 The \strong{baguette} extension package is required to fit this model.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{bag_mars(num_terms = integer(1), prod_degree = integer(1), prune_method = character(1)) |> 
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(baguette)
+
+bag_mars(num_terms = integer(1), prod_degree = integer(1), prune_method = character(1)) |>
   set_engine("earth") |> 
   set_mode("regression") |> 
   translate()
@@ -96,7 +98,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 
 Note that the \code{earth} package documentation has: “In the current
@@ -124,7 +126,8 @@ implementation, \emph{building models with weights can be slow}.”
 123-140
 \item Friedman, J. 1991. “Multivariate Adaptive Regression Splines.” \emph{The
 Annals of Statistics}, vol. 19, no. 1, pp. 1-67.
-\item Milborrow, S. \href{http://www.milbo.org/doc/earth-notes.pdf}{“Notes on the earth package.”}
+\item Milborrow, S. “Notes on the earth package.”
+(\verb{http://www.milbo.org/doc/earth-notes.pdf})
 \item Kuhn, M, and K Johnson. 2013. \emph{Applied Predictive Modeling}. Springer.
 }
 }

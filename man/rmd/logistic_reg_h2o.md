@@ -26,8 +26,10 @@ The choice of `mixture` depends on the engine parameter `solver`, which is autom
 
 
 ``` r
-logistic_reg() |> 
-  set_engine("h2o") |> 
+library(agua)
+
+logistic_reg() |>
+  set_engine("h2o") |>
   translate()
 ```
 
@@ -45,7 +47,9 @@ To use a non-default argument in [h2o::h2o.glm()], pass in as an engine argument
 
 
 ``` r
-logistic_reg() |> 
+library(agua)
+
+logistic_reg() |>
   set_engine("h2o", compute_p_values = TRUE) |> 
   translate()
 ```
@@ -97,7 +101,7 @@ parsnip:::get_from_env("logistic_reg_predict") |>
 
 This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
 
-The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+The `fit()` and `fit_xy()` functions have arguments called `case_weights` that expect vectors of case weights. 
 
 ## Initializing h2o 
 

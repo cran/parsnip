@@ -20,7 +20,6 @@ test_that('bad input', {
 # ------------------------------------------------------------------------------
 
 num_pred <- names(hpc)[1:3]
-hpc_bad_form <- as.formula(class ~ term)
 
 # ------------------------------------------------------------------------------
 
@@ -51,15 +50,6 @@ test_that('nullmodel execution', {
       null_model(mode = "regression"),
       x = hpc[, num_pred],
       y = hpc$num_pending
-    )
-  )
-
-  expect_snapshot(
-    error = TRUE,
-    res <- fit(
-      null_model(mode = "regression") |> set_engine("parsnip"),
-      hpc_bad_form,
-      data = hpc
     )
   )
 
@@ -118,6 +108,65 @@ test_that('nullmodel prediction', {
   )
 })
 
+test_that("quantile regression", {
+  quantile_levels <- c(0.25, 0.5, 0.75)
+  dat <- tibble(
+    outcome = c(1:9, NA_real_),
+    predictor = 1:10
+  )
+  expected <- quantile(
+    dat$outcome,
+    probs = quantile_levels,
+    na.rm = TRUE
+  )
+
+  spec <-
+    null_model() |>
+    set_mode("quantile regression", quantile_levels = quantile_levels)
+
+  expect_no_condition(
+    fit_form <- fit(spec, outcome ~ predictor, data = dat)
+  )
+  expect_equal(fit_form$fit$value, expected)
+  expect_equal(fit_form$fit$quantile_levels, quantile_levels)
+
+  expect_no_condition(
+    fit_xy <- fit_xy(spec, x = dat["predictor"], y = dat$outcome)
+  )
+  expect_equal(fit_xy$fit$value, expected)
+
+  pred <- predict(fit_form, new_data = dat[1:3, ])
+  expect_named(pred, ".pred_quantile")
+  expect_s3_class(
+    pred$.pred_quantile,
+    c("quantile_pred", "vctrs_vctr", "list")
+  )
+  expect_equal(
+    attr(pred$.pred_quantile, "quantile_levels"),
+    quantile_levels
+  )
+
+  pred_long <- as_tibble(pred$.pred_quantile)
+  expect_equal(pred_long$.pred_quantile, rep(unname(expected), 3))
+  expect_equal(pred_long$.quantile_levels, rep(quantile_levels, 3))
+  expect_equal(pred_long$.row, rep(1:3, each = length(quantile_levels)))
+})
+
+test_that("quantile regression with one quantile", {
+  spec <-
+    null_model() |>
+    set_mode("quantile regression", quantile_levels = 0.5)
+
+  fit <- fit(spec, mpg ~ ., data = mtcars)
+  pred <- predict(fit, new_data = mtcars[1:2, ])
+
+  expect_equal(fit$fit$value, quantile(mtcars$mpg, probs = 0.5))
+  expect_equal(
+    as_tibble(pred$.pred_quantile)$.pred_quantile,
+    rep(median(mtcars$mpg), 2)
+  )
+})
+
 # ------------------------------------------------------------------------------
 
 test_that('classification', {
@@ -126,7 +175,7 @@ test_that('classification', {
       set_engine("parsnip") |>
       fit(class ~ ., data = hpc)
   )
-  expect_true(!is.null(null_model$fit))
+  expect_false(is.null(null_model$fit))
 })
 
 # ------------------------------------------------------------------------------

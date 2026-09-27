@@ -156,6 +156,24 @@
       Error in `fn()`:
       ! Please use `new_data` instead of `newdata`.
 
+# logistic_reg() errors for more than two outcome levels
+
+    Code
+      check_outcome(iris$Species, logistic_reg())
+    Condition
+      Error:
+      ! Logistic regression models a binary outcome, but the outcome has 3 levels: "setosa", "versicolor", and "virginica".
+      i Use `multinom_reg()` for an outcome with more than two levels, or collapse the outcome to two levels.
+
+---
+
+    Code
+      fit(set_engine(logistic_reg(), "glm"), Species ~ ., data = iris)
+    Condition
+      Error in `fit()`:
+      ! Logistic regression models a binary outcome, but the outcome has 3 levels: "setosa", "versicolor", and "virginica".
+      i Use `multinom_reg()` for an outcome with more than two levels, or collapse the outcome to two levels.
+
 # check_outcome works as expected
 
     Code
@@ -179,7 +197,7 @@
     Code
       fit(reg_spec, ~mpg, mtcars)
     Condition
-      Error:
+      Error in `fit()`:
       ! `linear_reg()` was unable to find an outcome.
       i Ensure that you have specified an outcome column and that it hasn't been removed in pre-processing.
 
@@ -188,7 +206,7 @@
     Code
       fit_xy(reg_spec, data.frame(x = 1:5), y = NULL)
     Condition
-      Error:
+      Error in `fit_xy()`:
       ! `linear_reg()` was unable to find an outcome.
       i Ensure that you have specified an outcome column and that it hasn't been removed in pre-processing.
 
@@ -215,7 +233,7 @@
     Code
       fit(class_spec, ~mpg, mtcars)
     Condition
-      Error:
+      Error in `fit()`:
       ! `logistic_reg()` was unable to find an outcome.
       i Ensure that you have specified an outcome column and that it hasn't been removed in pre-processing.
 
@@ -224,7 +242,7 @@
     Code
       check_outcome(1:2, cens_spec)
     Condition
-      Error in `check_outcome()`:
+      Error:
       ! For a censored regression model, the outcome should be a <Surv> object, not an integer vector.
 
 # obtaining prediction columns

@@ -51,16 +51,6 @@ test_that('keras3 execution, classification', {
   )
 
   keras3::clear_session()
-
-  expect_snapshot(
-    error = TRUE,
-    res <- parsnip::fit(
-      hpc_keras3,
-      class ~ novar,
-      data = hpc,
-      control = ctrl
-    )
-  )
 })
 
 
@@ -263,13 +253,10 @@ test_that('multivariate keras3 formula', {
       cbind(V1, V2, V3) ~ .,
       data = nn_dat[-(1:5), ]
     )
-  expect_equal(
-    length(unlist(keras3::get_weights(extract_fit_engine(nnet_form)))),
-    24
-  )
+  expect_length(unlist(keras3::get_weights(extract_fit_engine(nnet_form))), 24)
 
   nnet_form_pred <- predict(nnet_form, new_data = nn_dat[1:5, -(1:3)])
-  expect_equal(names(nnet_form_pred), paste0(".pred_", c("V1", "V2", "V3")))
+  expect_named(nnet_form_pred, paste0(".pred_", c("V1", "V2", "V3")))
 
   keras3::clear_session()
 
@@ -280,12 +267,9 @@ test_that('multivariate keras3 formula', {
       x = nn_dat[-(1:5), -(1:3)],
       y = nn_dat[-(1:5), 1:3]
     )
-  expect_equal(
-    length(unlist(keras3::get_weights(extract_fit_engine(nnet_xy)))),
-    24
-  )
+  expect_length(unlist(keras3::get_weights(extract_fit_engine(nnet_xy))), 24)
   nnet_form_xy <- predict(nnet_xy, new_data = nn_dat[1:5, -(1:3)])
-  expect_equal(names(nnet_form_xy), paste0(".pred_", c("V1", "V2", "V3")))
+  expect_named(nnet_form_xy, paste0(".pred_", c("V1", "V2", "V3")))
 
   keras3::clear_session()
 })

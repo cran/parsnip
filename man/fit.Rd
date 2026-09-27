@@ -37,9 +37,9 @@ examples.}
 \item{control}{A named list with elements \code{verbosity} and
 \code{catch}. See \code{\link[=control_parsnip]{control_parsnip()}}.}
 
-\item{...}{Not currently used; values passed here will be
-ignored. Other options required to fit the model should be
-passed using \code{set_engine()}.}
+\item{...}{Must be empty; an error is raised if any arguments are
+passed here. Options required to fit the model should be passed to
+\code{set_engine()}, and case weights to the \code{case_weights} argument.}
 
 \item{x}{A matrix, sparse matrix, or data frame of predictors. Only some
 models have support for sparse matrix input. See \code{parsnip::get_encoding()}
@@ -96,7 +96,7 @@ If you would like to use an alternative method for generating contrasts when
 supplying a formula to \code{fit()}, set the global option \code{contrasts} to your
 preferred method. For example, you might set it to:
 \code{options(contrasts = c(unordered = "contr.helmert", ordered = "contr.poly"))}.
-See the help page for \code{\link[stats:contrast]{stats::contr.treatment()}} for more possible contrast
+See the help page for \code{\link[stats:contr.treatment]{stats::contr.treatment()}} for more possible contrast
 types.
 
 For models with \code{"censored regression"} modes, an additional computation is

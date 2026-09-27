@@ -5,7 +5,7 @@
 \title{RuleFit models via h2o}
 \description{
 \code{\link[h2o:h2o.rulefit]{h2o::h2o.rulefit()}} fits a model that derives simple feature rules from a tree
-ensemble and uses the rules as features to a regularized (LASSO) model. \code{\link[agua:h2o_train]{agua::h2o_train_rule()}}
+ensemble and uses the rules as features to a regularized (LASSO) model. \code{\link[agua:h2o_train_rule]{agua::h2o_train_rule()}}
 is a wrapper around this function.
 }
 \details{
@@ -38,12 +38,12 @@ of: “rules_and_linear”, “rules”, “linear”, defaults to
 
 \subsection{Translation from parsnip to the underlying model call (regression)}{
 
-\code{\link[agua:h2o_train]{agua::h2o_train_rule()}} is a wrapper around
+\code{\link[agua:h2o_train_rule]{agua::h2o_train_rule()}} is a wrapper around
 \code{\link[h2o:h2o.rulefit]{h2o::h2o.rulefit()}}.
 
 The \strong{agua} extension package is required to fit this model.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(rules)
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(agua)
 
 rule_fit(
   trees = integer(1),
@@ -73,12 +73,14 @@ rule_fit(
 
 \subsection{Translation from parsnip to the underlying model call (classification)}{
 
-\code{\link[agua:h2o_train]{agua::h2o_train_rule()}} for \code{rule_fit()} is a
+\code{\link[agua:h2o_train_rule]{agua::h2o_train_rule()}} for \code{rule_fit()} is a
 wrapper around \code{\link[h2o:h2o.rulefit]{h2o::h2o.rulefit()}}.
 
 The \strong{agua} extension package is required to fit this model.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{rule_fit(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(agua)
+
+rule_fit(
   trees = integer(1),
   tree_depth = integer(1),
   penalty = numeric(1)
@@ -118,7 +120,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

@@ -73,8 +73,7 @@ pred_types <-
 #' @keywords internal
 #' @export
 get_model_env <- function() {
-  current <- utils::getFromNamespace("parsnip", ns = "parsnip")
-  current
+  parsnip
 }
 
 #' @rdname get_model_env
@@ -244,13 +243,11 @@ check_spec_mode_engine_val <- function(
   # Initially, check if the specification is well-defined in the current model
   # parsnip model environment. If so, return early.
   # If not, troubleshoot more precisely and raise a relevant error.
-  model_env_match <-
-    vctrs::vec_slice(
-      model_info,
-      model_info$engine == eng & model_info$mode == mode
-    )
+  n_matching_specs <- sum(
+    model_info$engine == eng & model_info$mode == mode
+  )
 
-  if (vctrs::vec_size(model_env_match) == 1) {
+  if (n_matching_specs == 1) {
     return(invisible(NULL))
   }
 
@@ -509,13 +506,16 @@ check_interface_val <- function(x, call = call) {
 #' @param eng A single character string for the model engine.
 #' @param has_submodel A single logical for whether the argument
 #'  can make predictions on multiple submodels at once.
-#' @param func A named character vector that describes how to call
-#'  a function. `func` should have elements `pkg` and `fun`. The
+#' @param func A named character vector or named list that describes how
+#'  to call a function. `func` should have elements `pkg` and `fun`. The
 #'  former is optional but is recommended and the latter is
 #'  required. For example, `c(pkg = "stats", fun = "lm")` would be
 #'  used to invoke the usual linear regression function. In some
 #'  cases, it is helpful to use `c(fun = "predict")` when using a
-#'  package's `predict` method.
+#'  package's `predict` method. `set_model_arg()` stores `func` as a
+#'  list, so either form may be given there; it also accepts the
+#'  optional `range`, `trans`, and `values` elements used to describe a
+#'  tuning parameter, which require the list form.
 #' @param type A single character value for the type of prediction. Possible
 #'  values are: `class`, `conf_int`, `numeric`, `pred_int`, `prob`, `quantile`,
 #'   and `raw`.
@@ -735,6 +735,11 @@ set_model_arg <- function(model, eng, parsnip, original, func, has_submodel) {
   check_string(original, allow_empty = FALSE)
   check_func_val(func)
   check_bool(has_submodel)
+
+  # Consumers of a tuning parameter's `func` reach into it with `$`, which
+  # errors on an atomic vector. Store a list so the documented
+  # `c(pkg = , fun = )` form works too. See #1251.
+  func <- as.list(func)
 
   # First-wins: skip if this argument is already registered.
   # This prevents conflicts when extension packages try to register
@@ -1259,12 +1264,11 @@ set_encoding <- function(model, mode, eng, options) {
 #' @keywords internal
 #' @export
 get_encoding <- function(model) {
-  check_model_exists(model)
-  nm <- paste0(model, "_encoding")
-  res <- try(get_from_env(nm), silent = TRUE)
-  if (inherits(res, "try-error")) {
+  encodings <- get_from_env(paste0(model, "_encoding"))
+  if (is.null(encodings)) {
+    check_model_exists(model)
     # for objects made before encodings were specified in parsnip
-    res <-
+    encodings <-
       get_from_env(model) |>
       dplyr::mutate(
         model = model,
@@ -1282,7 +1286,7 @@ get_encoding <- function(model) {
         remove_intercept
       )
   }
-  res
+  encodings
 }
 
 # ------------------------------------------------------------------------------
@@ -1296,4 +1300,17 @@ earth_glm_covert <- function(x, object) {
 
   colnames(x) <- object$lvl
   x
+}
+
+earth_class_pred <- function(x, object) {
+  # For two classes, earth returns a single column of the probability of the
+  # second level. For three or more, it returns one column per level.
+  if (ncol(x) == 1) {
+    res <- ifelse(x[, 1] >= 0.5, object$lvl[2], object$lvl[1])
+  } else {
+    best <- apply(x, 1, which.max)
+    res <- if (is.null(colnames(x))) object$lvl[best] else colnames(x)[best]
+  }
+
+  unname(res)
 }

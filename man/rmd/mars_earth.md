@@ -85,7 +85,7 @@ Factor/categorical predictors need to be converted to numeric values (e.g., dumm
 
 This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
 
-The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+The `fit()` and `fit_xy()` functions have arguments called `case_weights` that expect vectors of case weights. 
 
 Note that the `earth` package documentation has: "In the current implementation, _building models with weights can be slow_."
 
@@ -121,7 +121,7 @@ The "Fitting and Predicting with parsnip" [article](https://www.tidymodels.org/l
 
  - Friedman, J. 1991. "Multivariate Adaptive Regression Splines." _The Annals of Statistics_, vol. 19, no. 1, pp. 1-67.
  
- - Milborrow, S. ["Notes on the earth package."](http://www.milbo.org/doc/earth-notes.pdf) 
+ - Milborrow, S. "Notes on the earth package." (`http://www.milbo.org/doc/earth-notes.pdf`) 
  
  - Kuhn, M, and K Johnson. 2013. _Applied Predictive Modeling_. Springer.
 

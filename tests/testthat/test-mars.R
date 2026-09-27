@@ -32,7 +32,6 @@ test_that('bad input', {
 # ------------------------------------------------------------------------------
 
 num_pred <- colnames(hpc)[1:3]
-hpc_bad_form <- as.formula(class ~ term)
 hpc_basic <- mars(mode = "regression") |> set_engine("earth")
 
 # ------------------------------------------------------------------------------
@@ -229,7 +228,7 @@ test_that('classification', {
       set_engine("earth") |>
       fit(Class ~ ., data = modeldata::lending_club[-(1:5), ])
   )
-  expect_true(!is.null(extract_fit_engine(glm_mars)$glm.list))
+  expect_false(is.null(extract_fit_engine(glm_mars)$glm.list))
   parsnip_pred <- predict(
     glm_mars,
     new_data = lending_club[1:5, -ncol(lending_club)],
@@ -314,4 +313,73 @@ test_that('classification probabilities for multiclass', {
   expect_named(res_bn, c(".pred_Class1", ".pred_Class2"))
   expect_s3_class(res_bn, c("tbl_df", "tbl", "data.frame"))
   expect_equal(nrow(res_bn), 3L)
+})
+
+test_that('class predictions for multiclass', {
+  skip_if_not_installed("earth")
+  skip_if_not_installed("modeldata")
+  # Issues 472 and 1409
+
+  spec <- mars(mode = "classification", engine = "earth")
+
+  ### Multiclass
+  set.seed(123)
+  suppressWarnings({
+    fit_mc <- fit(spec, Species ~ ., iris)
+  })
+
+  # Test with one row from each class
+  res_mc <- predict(fit_mc, iris[c(1, 51, 101), ], type = "class")
+  expect_named(res_mc, ".pred_class")
+  expect_s3_class(res_mc$.pred_class, "factor")
+  expect_equal(levels(res_mc$.pred_class), levels(iris$Species))
+  expect_equal(
+    as.character(res_mc$.pred_class),
+    c("setosa", "versicolor", "virginica")
+  )
+
+  # The predicted class is the one with the largest probability
+  prob_mc <- predict(fit_mc, iris, type = "prob")
+  expect_equal(
+    as.character(predict(fit_mc, iris, type = "class")$.pred_class),
+    levels(iris$Species)[apply(prob_mc, 1, which.max)]
+  )
+
+  ### Binary
+  set.seed(123)
+  suppressWarnings({
+    fit_bn <- fit(spec, Class ~ ., two_class_dat)
+  })
+
+  res_bn <- predict(fit_bn, two_class_dat, type = "class")
+  prob_bn <- predict(fit_bn, two_class_dat, type = "prob")
+  expect_equal(levels(res_bn$.pred_class), levels(two_class_dat$Class))
+  expect_equal(
+    as.character(res_bn$.pred_class),
+    ifelse(prob_bn$.pred_Class2 >= 0.5, "Class2", "Class1")
+  )
+})
+
+test_that("prune_method = 'cv' works with prod_degree", {
+  skip_if_not_installed("earth")
+  # Issue 432
+
+  set.seed(28193)
+  n_obs <- 200
+  dat <- data.frame(x1 = rnorm(n_obs, 5, 3), x2 = rnorm(n_obs, 2, 1))
+  dat$y <- dat$x1 + dat$x2 + rnorm(n_obs, sd = 0.5)
+
+  cv_fit <-
+    mars(mode = "regression", prod_degree = 2, prune_method = "cv") |>
+    set_engine("earth", nfold = 3) |>
+    fit(y ~ ., data = dat)
+
+  expect_s3_class(extract_fit_engine(cv_fit), "earth")
+
+  # earth re-evaluates its recorded call with base `eval()`, so no argument
+  # may still be a quosure
+  expect_all_false(
+    purrr::map_lgl(as.list(extract_fit_engine(cv_fit)$call), rlang::is_quosure)
+  )
+  expect_equal(extract_fit_engine(cv_fit)$call$degree, 2)
 })

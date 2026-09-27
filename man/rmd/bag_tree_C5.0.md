@@ -49,20 +49,23 @@ This engine does not require any special encoding of the predictors. Categorical
 
 This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
 
-The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+The `fit()` and `fit_xy()` functions have arguments called `case_weights` that expect vectors of case weights. 
 
 ## Prediction types
 
 
 ``` r
-parsnip:::get_from_env("bag_mars_predict") |>
+parsnip:::get_from_env("bag_tree_predict") |>
   dplyr::filter(engine == "C5.0") |>
   dplyr::select(mode, type)
 ```
 
 ```
-## # A tibble: 0 x 2
-## # i 2 variables: mode <chr>, type <chr>
+## # A tibble: 2 x 2
+##   mode           type 
+##   <chr>          <chr>
+## 1 classification class
+## 2 classification prob
 ```
 
 ## References
@@ -70,4 +73,3 @@ parsnip:::get_from_env("bag_mars_predict") |>
  - Breiman, L. 1996. "Bagging predictors". Machine Learning. 24 (2): 123-140
  
  - Kuhn, M, and K Johnson. 2013. *Applied Predictive Modeling*. Springer.
-

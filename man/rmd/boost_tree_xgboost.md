@@ -157,7 +157,7 @@ For classification, non-numeric outcomes (i.e., factors) are internally converte
 
 This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
 
-The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+The `fit()` and `fit_xy()` functions have arguments called `case_weights` that expect vectors of case weights. 
 
 ## Prediction types
 
@@ -259,7 +259,11 @@ Note that, since the `validation` argument provides an alternative interface to 
 
 ### Objective function
 
-parsnip chooses the objective function based on the characteristics of the outcome. To use a different loss, pass the `objective` argument to [set_engine()] directly. 
+parsnip chooses the objective function based on the characteristics of the outcome. To use a different loss, pass the `objective` argument to [set_engine()] directly.
+
+### Monotonic constraints
+
+For binary classification, the signs of the `monotone_constraints` engine argument are relative to the event level rather than to the second factor level. parsnip converts the outcome so that the event level is the one xgboost models, and `event_level` defaults to `"first"`. With the default and an outcome with levels `c("no", "yes")`, `monotone_constraints = 1` therefore forces the probability of `"no"` to be nondecreasing in that predictor, which is the opposite of what the usual `0`/`1` outcome coding would suggest. Set `event_level = "second"` to constrain the probability of `"yes"` instead, or negate the constraint. parsnip warns once per session when `monotone_constraints` is used for binary classification. Regression and multiclass classification are unaffected.
 
 ## Saving fitted model objects
 

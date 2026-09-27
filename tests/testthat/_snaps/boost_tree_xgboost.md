@@ -1,10 +1,22 @@
-# xgboost execution, classification
+# xgboost alternate objective
 
     Code
-      res <- parsnip::fit(hpc_xgboost, class ~ novar, data = hpc, control = ctrl)
+      predict(xgb_fit2, new_data = cls_data)
     Condition
       Error:
-      ! object 'novar' not found
+      ! Class and probability predictions are not available for xgboost models fit with a function-valued `objective`.
+      i xgboost returns raw margins for a custom objective, and parsnip cannot know which inverse link would convert them to probabilities.
+      i Use `predict(type = "raw")` and apply the inverse link yourself, or register a custom engine that post-processes the predictions.
+
+---
+
+    Code
+      predict(xgb_fit2, new_data = cls_data, type = "prob")
+    Condition
+      Error:
+      ! Class and probability predictions are not available for xgboost models fit with a function-valued `objective`.
+      i xgboost returns raw margins for a custom objective, and parsnip cannot know which inverse link would convert them to probabilities.
+      i Use `predict(type = "raw")` and apply the inverse link yourself, or register a custom engine that post-processes the predictions.
 
 # submodel prediction
 
@@ -66,6 +78,28 @@
       Warning:
       ! 1000 samples were requested but there were 333 rows in the data.
       i 333 will be used.
+
+# `monotone_constraints` warns about the event level
+
+    Code
+      mono_fit <- fit(set_engine(cls_spec, "xgboost", monotone_constraints = 1), cls ~
+        x, data = cls_dat, control = ctrl)
+    Condition
+      Warning:
+      ! The signs of `monotone_constraints` are relative to the event level, which is the first level of the outcome factor.
+      i `monotone_constraints = 1` makes the probability of the first level nondecreasing in that predictor.
+      This warning is displayed once per session.
+
+---
+
+    Code
+      mono_fit_2 <- fit(set_engine(cls_spec, "xgboost", monotone_constraints = 1,
+        event_level = "second"), cls ~ x, data = cls_dat, control = ctrl)
+    Condition
+      Warning:
+      ! The signs of `monotone_constraints` are relative to the event level, which is the second level of the outcome factor.
+      i `monotone_constraints = 1` makes the probability of the second level nondecreasing in that predictor.
+      This warning is displayed once per session.
 
 # count/proportion parameters
 
@@ -140,11 +174,11 @@
       evaluation_log:
         iter validation_quantile
        <num>               <num>
-           1            7.009181
-           2            6.548682
+           1            7.281056
+           2            6.935199
          ---                 ---
-          49            5.314723
-          50            5.304116
+          49            5.021312
+          50            5.012909
 
 ---
 
@@ -181,7 +215,7 @@
           0.9)), data = x$data, nrounds = 50, evals = x$watchlist, 
           verbose = 0, early_stopping_rounds = 2)
       # of features: 20 
-      # of rounds:  42 
+      # of rounds:  50 
       xgb.attributes:
          best_iteration, best_score 
       callbacks:
@@ -189,9 +223,9 @@
       evaluation_log:
         iter validation_quantile
        <num>               <num>
-           1            7.009181
-           2            6.548682
+           1            7.281056
+           2            6.935199
          ---                 ---
-          41            5.339619
-          42            5.342320
+          49            5.021312
+          50            5.012909
 

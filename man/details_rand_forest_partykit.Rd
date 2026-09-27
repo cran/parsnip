@@ -9,15 +9,15 @@ trees, each independent of the others. The final prediction uses all
 predictions from the individual trees and combines them.
 }
 \details{
-For this engine, there are multiple modes: censored regression,
-regression, and classification
+For this engine, there are multiple modes: regression, classification,
+and censored regression
 \subsection{Tuning Parameters}{
 
 This model has 3 tuning parameters:
 \itemize{
-\item \code{trees}: # Trees (type: integer, default: 500L)
 \item \code{min_n}: Minimal Node Size (type: integer, default: 20L)
 \item \code{mtry}: # Randomly Selected Predictors (type: integer, default: 5L)
+\item \code{trees}: # Trees (type: integer, default: 500L)
 }
 }
 
@@ -106,7 +106,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 
@@ -120,11 +120,11 @@ The \code{fit()} and \code{fit_xy()} arguments have arguments called
 \if{html}{\out{<div class="sourceCode">}}\preformatted{## # A tibble: 5 x 2
 ##   mode                type    
 ##   <chr>               <chr>   
-## 1 censored regression time    
-## 2 censored regression survival
-## 3 regression          numeric 
-## 4 classification      class   
-## 5 classification      prob
+## 1 regression          numeric 
+## 2 classification      class   
+## 3 classification      prob    
+## 4 censored regression time    
+## 5 censored regression survival
 }\if{html}{\out{</div>}}
 }
 

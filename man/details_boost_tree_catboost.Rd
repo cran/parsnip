@@ -13,11 +13,18 @@ catboost has native support for categorical predictors.
 For this engine, there are multiple modes: regression and classification
 \subsection{Tuning Parameters}{
 
-This model has 3 tuning parameters:
+This model has 7 tuning parameters:
 \itemize{
 \item \code{tree_depth}: Tree Depth (type: integer, default: 6L)
 \item \code{trees}: # Trees (type: integer, default: 1000L)
 \item \code{learn_rate}: Learning Rate (type: double, default: 0.03)
+\item \code{mtry}: Proportion Randomly Selected Predictors (type: double,
+default: see below)
+\item \code{min_n}: Minimal Node Size (type: integer, default: 1L)
+\item \code{sample_size}: Proportion Observations Sampled (type: double, default:
+see below)
+\item \code{stop_iter}: # Iterations Before Stopping (type: integer, default:
+Inf)
 }
 
 The \code{mtry} parameter controls the proportion of predictors that will be
@@ -51,7 +58,9 @@ the grow policy is \code{Lossguide}).
 
 The \strong{bonsai} extension package is required to fit this model.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{boost_tree(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(bonsai)
+
+boost_tree(
   mtry = integer(), trees = integer(), min_n = integer(), tree_depth = integer(),
   learn_rate = numeric(), sample_size = numeric(), stop_iter = integer()
 ) |>
@@ -75,9 +84,11 @@ The \strong{bonsai} extension package is required to fit this model.
 ## 
 ## Model fit template:
 ## bonsai::train_catboost(x = missing_arg(), y = missing_arg(), 
-##     weights = missing_arg(), iterations = integer(), depth = integer(), 
-##     learning_rate = numeric(), thread_count = 1, allow_writing_files = FALSE, 
-##     random_seed = sample.int(10^5, 1))
+##     weights = missing_arg(), rsm = integer(), iterations = integer(), 
+##     min_data_in_leaf = integer(), depth = integer(), learning_rate = numeric(), 
+##     subsample = numeric(), early_stopping_rounds = integer(), 
+##     thread_count = 1, allow_writing_files = FALSE, random_seed = sample.int(10^5, 
+##         1))
 }\if{html}{\out{</div>}}
 }
 
@@ -85,7 +96,9 @@ The \strong{bonsai} extension package is required to fit this model.
 
 The \strong{bonsai} extension package is required to fit this model.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{boost_tree(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(bonsai)
+
+boost_tree(
   mtry = integer(), trees = integer(), min_n = integer(), tree_depth = integer(),
   learn_rate = numeric(), sample_size = numeric(), stop_iter = integer()
 ) |>
@@ -109,9 +122,11 @@ The \strong{bonsai} extension package is required to fit this model.
 ## 
 ## Model fit template:
 ## bonsai::train_catboost(x = missing_arg(), y = missing_arg(), 
-##     weights = missing_arg(), iterations = integer(), depth = integer(), 
-##     learning_rate = numeric(), thread_count = 1, allow_writing_files = FALSE, 
-##     random_seed = sample.int(10^5, 1))
+##     weights = missing_arg(), rsm = integer(), iterations = integer(), 
+##     min_data_in_leaf = integer(), depth = integer(), learning_rate = numeric(), 
+##     subsample = numeric(), early_stopping_rounds = integer(), 
+##     thread_count = 1, allow_writing_files = FALSE, random_seed = sample.int(10^5, 
+##         1))
 }\if{html}{\out{</div>}}
 
 \code{\link[bonsai:train_catboost]{bonsai::train_catboost()}} is a wrapper
@@ -144,7 +159,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 
@@ -172,7 +187,7 @@ The \code{sample_size} argument is translated to the \code{subsample} parameter 
 catboost. The argument is interpreted by catboost as a \emph{proportion}
 rather than a count, so bonsai internally reparameterizes the
 \code{sample_size} argument with
-\code{\link[dials:trees]{dials::sample_prop()}} during tuning.
+\code{\link[dials:sample_prop]{dials::sample_prop()}} during tuning.
 
 The default value for \code{subsample} depends on the dataset size and the
 bootstrap type. For datasets with fewer than 100 observations, no

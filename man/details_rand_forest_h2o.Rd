@@ -28,10 +28,12 @@ regression.
 
 \subsection{Translation from parsnip to the original package (regression)}{
 
-\code{\link[agua:h2o_train]{agua::h2o_train_rf()}} is a wrapper around
+\code{\link[agua:h2o_train_rf]{agua::h2o_train_rf()}} is a wrapper around
 \code{\link[h2o:h2o.randomForest]{h2o::h2o.randomForest()}}.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{rand_forest(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(agua)
+
+rand_forest(
   mtry = integer(1),
   trees = integer(1),
   min_n = integer(1)
@@ -62,7 +64,9 @@ chosen value if it is not consistent with the actual data dimensions.
 
 \subsection{Translation from parsnip to the original package (classification)}{
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{rand_forest(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(agua)
+
+rand_forest(
   mtry = integer(1),
   trees = integer(1),
   min_n = integer(1)
@@ -102,7 +106,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

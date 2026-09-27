@@ -36,10 +36,12 @@ enough data.
 
 The \strong{agua} extension package is required to fit this model.
 
-\code{\link[agua:h2o_train]{agua::h2o_train_nb()}} is a wrapper around
+\code{\link[agua:h2o_train_nb]{agua::h2o_train_nb()}} is a wrapper around
 \code{\link[h2o:h2o.naiveBayes]{h2o::h2o.naiveBayes()}}.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{naive_Bayes(Laplace = numeric(0)) |> 
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(agua)
+
+naive_Bayes(Laplace = numeric(0)) |>
   set_engine("h2o") |> 
   translate()
 }\if{html}{\out{</div>}}
@@ -63,7 +65,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

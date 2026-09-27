@@ -99,15 +99,23 @@ bag_tree(
 
 ## Case weights
 
+### Classification and regression
+
 ```{r}
 #| child: template-uses-case-weights.Rmd
+```
+
+### Censored regression
+
+```{r}
+#| child: template-no-case-weights.Rmd
 ```
 
 ## Prediction types
 
 ```{r}
 #| label: predict-types
-parsnip:::get_from_env("bag_mars_predict") |>
+parsnip:::get_from_env("bag_tree_predict") |>
   dplyr::filter(engine == "rpart") |>
   dplyr::select(mode, type)
 ```

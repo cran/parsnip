@@ -19,9 +19,9 @@
 #'   examples.
 #' @param control A named list with elements `verbosity` and
 #'  `catch`. See [control_parsnip()].
-#' @param ... Not currently used; values passed here will be
-#'  ignored. Other options required to fit the model should be
-#'  passed using `set_engine()`.
+#' @param ... Must be empty; an error is raised if any arguments are
+#'  passed here. Options required to fit the model should be passed to
+#'  `set_engine()`, and case weights to the `case_weights` argument.
 #' @details  `fit()` and `fit_xy()` substitute the current arguments in the model
 #'  specification into the computational engine's code, check them
 #'  for validity, then fit the model using the data and the
@@ -122,7 +122,7 @@ fit.model_spec <-
         "Please set the mode in the {.help [model specification](parsnip::model_spec)}."
       )
     }
-    control <- condense_control(control, control_parsnip())
+    control <- condense_control(control, default_parsnip_control)
     check_case_weights(case_weights, object)
 
     if (inherits(formula, "recipe")) {
@@ -140,8 +140,6 @@ fit.model_spec <-
       data <- sparsevctrs::coerce_to_sparse_tibble(data, rlang::caller_env(0))
     }
 
-    dots <- quos(...)
-
     if (length(possible_engines(object)) == 0) {
       prompt_missing_implementation(
         spec = object,
@@ -157,12 +155,12 @@ fit.model_spec <-
       }
     }
 
-    if (all(c("x", "y") %in% names(dots))) {
+    if (all(c("x", "y") %in% ...names())) {
       cli::cli_abort(
         "{.fn fit.model_spec} is for the formula methods. Use {.fn fit_xy} instead."
       )
     }
-    cl <- match.call(expand.dots = TRUE)
+    check_fit_dots(...)
     # Create an environment with the evaluated argument objects. This will be
     # used when a model call is made later.
     eval_env <- rlang::env()
@@ -186,7 +184,7 @@ fit.model_spec <-
     data <- materialize_sparse_tibble(data, object, "data")
 
     fit_interface <-
-      check_interface(eval_env$formula, eval_env$data, cl, object)
+      check_interface(eval_env$formula, eval_env$data, object)
 
     if (object$engine == "spark" && !inherits(eval_env$data, "tbl_spark")) {
       cli::cli_abort(
@@ -222,15 +220,13 @@ fit.model_spec <-
           object = object,
           control = control,
           env = eval_env,
-          target = object$method$fit$interface,
-          ...
+          target = object$method$fit$interface
         ),
         formula_data.frame = form_xy(
           object = object,
           control = control,
           env = eval_env,
-          target = object$method$fit$interface,
-          ...
+          target = object$method$fit$interface
         ),
 
         cli::cli_abort("{.val {interfaces}} is unknown.")
@@ -265,15 +261,15 @@ fit_xy.model_spec <-
     if (inherits(object, "surv_reg")) {
       cli::cli_abort("Survival models must use the formula interface.")
     }
+    check_fit_dots(..., formula = FALSE)
 
-    control <- condense_control(control, control_parsnip())
+    control <- condense_control(control, default_parsnip_control)
 
     if (is.null(colnames(x))) {
       cli::cli_abort("{.arg {x}} should have column names.")
     }
     check_case_weights(case_weights, object)
 
-    dots <- quos(...)
     if (is.null(object$engine)) {
       eng_vals <- possible_engines(object)
       object$engine <- eng_vals[1]
@@ -281,7 +277,11 @@ fit_xy.model_spec <-
         cli::cli_warn("Engine set to {.val {object$engine}}.")
       }
     }
-    y_var <- colnames(y)
+    if (inherits(y, "Surv")) {
+      y_var <- character(0)
+    } else {
+      y_var <- colnames(y)
+    }
 
     if (object$engine != "spark" & NCOL(y) == 1 & !(is.atomic(y))) {
       if (is.matrix(y)) {
@@ -293,7 +293,6 @@ fit_xy.model_spec <-
 
     x <- to_sparse_data_frame(x, object)
 
-    cl <- match.call(expand.dots = TRUE)
     eval_env <- rlang::env()
     eval_env$x <- x
     eval_env$y <- y
@@ -305,7 +304,7 @@ fit_xy.model_spec <-
     }
 
     # TODO case weights: pass in eval_env not individual elements
-    fit_interface <- check_xy_interface(eval_env$x, eval_env$y, cl, object)
+    fit_interface <- check_xy_interface(eval_env$x, eval_env$y, object)
 
     if (object$engine == "spark") {
       cli::cli_abort(
@@ -335,8 +334,7 @@ fit_xy.model_spec <-
           object = object,
           env = eval_env,
           control = control,
-          target = "matrix",
-          ...
+          target = "matrix"
         ),
 
         data.frame_data.frame = ,
@@ -344,8 +342,7 @@ fit_xy.model_spec <-
           object = object,
           env = eval_env,
           control = control,
-          target = "data.frame",
-          ...
+          target = "data.frame"
         ),
 
         # heterogenous combinations
@@ -353,8 +350,7 @@ fit_xy.model_spec <-
         data.frame_formula = xy_form(
           object = object,
           env = eval_env,
-          control = control,
-          ...
+          control = control
         ),
         cli::cli_abort("{.val {interfaces}} is unknown.")
       )
@@ -366,28 +362,74 @@ fit_xy.model_spec <-
 
 # ------------------------------------------------------------------------------
 
-eval_mod <- function(e, capture = FALSE, catch = FALSE, envir = NULL, ...) {
-  if (capture) {
-    if (catch) {
-      junk <- capture.output(
-        res <- try(eval_tidy(e, env = envir, ...), silent = TRUE)
-      )
+# `fit()` and `fit_xy()` have never supported extra arguments, but each
+# interface pathway treated them differently: silently dropped, silently
+# applied, or an internal "unused argument" error. See #492.
+check_fit_dots <- function(..., formula = TRUE, call = rlang::caller_env()) {
+  dot_names <- ...names()
+  if (length(dot_names) == 0) {
+    return(invisible(NULL))
+  }
+
+  msg <-
+    c(
+      "{.arg ...} must be empty.",
+      "x" = "Problematic argument{?s}: {.arg {dot_names}}.",
+      "i" = "Arguments for the model fit should be passed to
+             {.fn set_engine}, and case weights to the {.arg case_weights}
+             argument."
+    )
+
+  # The generic advice above is not enough for `offset`: passing a bare column
+  # name to `set_engine()` fails, since it is never evaluated against the data.
+  # See #1439.
+  if ("offset" %in% dot_names) {
+    if (formula) {
+      msg <-
+        c(
+          msg,
+          "i" = "To use an offset, include it in the formula, as in
+                 {.code y ~ x + offset(z)}."
+        )
     } else {
-      junk <- capture.output(res <- eval_tidy(e, env = envir, ...))
+      msg <-
+        c(
+          msg,
+          "i" = "To use an offset with {.fn fit_xy}, pass the offset vector
+                 itself to {.fn set_engine}, as in
+                 {.code set_engine(\"lm\", offset = data$z)}."
+        )
     }
+  }
+
+  cli::cli_abort(msg, call = call)
+}
+
+# `catch` comes from `control_parsnip()`: when it is `TRUE` a failed fit is
+# returned as a `try-error` object and stored in the model fit, rather than
+# thrown.
+eval_mod_catch <- function(e, catch = FALSE, envir = NULL) {
+  if (catch) {
+    try(eval_tidy(e, env = envir), silent = TRUE)
   } else {
-    if (catch) {
-      res <- try(eval_tidy(e, env = envir, ...), silent = TRUE)
-    } else {
-      res <- eval_tidy(e, env = envir, ...)
-    }
+    eval_tidy(e, env = envir)
+  }
+}
+
+eval_mod <- function(e, capture = FALSE, catch = FALSE, envir = NULL) {
+  if (capture) {
+    junk <- capture.output(
+      res <- eval_mod_catch(e, catch = catch, envir = envir)
+    )
+  } else {
+    res <- eval_mod_catch(e, catch = catch, envir = envir)
   }
   res
 }
 
 # ------------------------------------------------------------------------------
 
-check_interface <- function(formula, data, cl, model, call = caller_env()) {
+check_interface <- function(formula, data, model, call = caller_env()) {
   check_formula(formula, call = call)
   check_inherits(data, c("data.frame", "dgCMatrix", "tbl_spark"), call = call)
 
@@ -400,7 +442,7 @@ check_interface <- function(formula, data, cl, model, call = caller_env()) {
   cli::cli_abort("Error when checking the interface.", call = call)
 }
 
-check_xy_interface <- function(x, y, cl, model, call = caller_env()) {
+check_xy_interface <- function(x, y, model, call = caller_env()) {
   sparse_ok <- allow_sparse(model)
   sparse_x <- inherits(x, "dgCMatrix")
   if (!sparse_ok & sparse_x) {
@@ -444,7 +486,7 @@ check_xy_interface <- function(x, y, cl, model, call = caller_env()) {
     return("data.frame")
   }
 
-  check_outcome(y, model)
+  check_outcome(y, model, call = call)
 
   cli::cli_abort("Error when checking the interface.", call = call)
 }
@@ -455,7 +497,7 @@ allow_sparse <- function(x) {
   }
 
   res <- get_from_env(paste0(class(x)[1], "_encoding"))
-  all(res$allow_sparse_x[res$engine == x$engine])
+  all(res$allow_sparse_x[res$engine == x$engine & res$mode == x$mode])
 }
 
 #' @method print model_fit

@@ -78,6 +78,8 @@ With parsnip, we suggest using the formula method when fitting:
 
 ```r
 library(tidymodels)
+library(multilevelmod)
+
 data("riesby")
 
 linear_reg() |> 
@@ -89,6 +91,7 @@ When using tidymodels infrastructure, it may be better to use a workflow. In thi
 
 ```r
 library(tidymodels)
+library(multilevelmod)
 
 glmer_spec <- 
   linear_reg() |> 
@@ -110,7 +113,7 @@ For prediction, the `"stan_glmer"` engine can compute posterior intervals analog
 
 This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
 
-The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+The `fit()` and `fit_xy()` functions have arguments called `case_weights` that expect vectors of case weights. 
 
 ## Prediction types
 

@@ -8,6 +8,8 @@ ordinal_reg(
   mode = "classification",
   ordinal_link = NULL,
   odds_link = NULL,
+  threshold_structure = NULL,
+  parallel_reg = NULL,
   penalty = NULL,
   mixture = NULL,
   engine = "polr"
@@ -20,6 +22,13 @@ only possible value for this model is "classification".}
 \item{ordinal_link}{The ordinal link function.}
 
 \item{odds_link}{The odds or probability link function.}
+
+\item{threshold_structure}{The threshold structure for the cutpoints
+(specific engines only).}
+
+\item{parallel_reg}{Logical; whether predictor effects are shared across
+thresholds (\code{TRUE}) or category-specific effects (\code{FALSE}). The default,
+\code{NULL}, uses the engine default. Available for specific engines only.}
 
 \item{penalty}{A non-negative number representing the total
 amount of regularization (specific engines only).}
@@ -43,7 +52,7 @@ model is \code{"polr"}.}
 \code{ordinal_reg()} defines a generalized linear model that predicts an ordinal
 outcome. This function can fit classification models.
 
-\verb{Rd parsnip:::make_engine_list("ordinal_reg")}
+\Sexpr[stage=render,results=rd]{parsnip:::make_engine_list("ordinal_reg")}
 
 More information on how \pkg{parsnip} is used for modeling is at
 \url{https://www.tidymodels.org/}.
@@ -59,7 +68,7 @@ with the data.
 
 Each of the arguments in this function other than \code{mode} and \code{engine} are
 captured as \link[rlang:topic-quosure]{quosures}. To pass values
-programmatically, use the \link[rlang:injection-operator]{injection operator} like so:
+programmatically, use the \link[rlang:!!]{injection operator} like so:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{value <- 1
 ordinal_reg(argument = !!value)
@@ -79,6 +88,6 @@ ordinal_reg(mode = "classification")
 \url{https://www.tidymodels.org}, \href{https://www.tmwr.org/}{\emph{Tidy Modeling with R}}, \href{https://www.tidymodels.org/find/parsnip/}{searchable table of parsnip models}
 }
 \seealso{
-\verb{Rd parsnip:::make_seealso_list("ordinal_reg")}
+\Sexpr[stage=render,results=rd]{parsnip:::make_seealso_list("ordinal_reg")}
 }
 \keyword{internal}

@@ -4,9 +4,9 @@
 \alias{details_cubist_rules_Cubist}
 \title{Cubist rule-based regression models}
 \description{
-\code{\link[Cubist:cubist.default]{Cubist::cubist()}} fits a model that derives simple feature rules from a tree
+\code{\link[Cubist:cubist]{Cubist::cubist()}} fits a model that derives simple feature rules from a tree
 ensemble and uses creates regression models within each rule.
-\code{\link[rules:rules-internal]{rules::cubist_fit()}} is a wrapper around this function.
+\code{\link[rules:cubist_fit]{rules::cubist_fit()}} is a wrapper around this function.
 }
 \details{
 For this engine, there is a single mode: regression
@@ -65,7 +65,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

@@ -42,12 +42,14 @@ the metric and early stopping criteria on the validation set.
 
 \subsection{Translation from parsnip to the original package (regression)}{
 
-\code{\link[agua:h2o_train]{agua::h2o_train_xgboost()}} is a wrapper
+\code{\link[agua:h2o_train_xgboost]{agua::h2o_train_xgboost()}} is a wrapper
 around \code{\link[h2o:h2o.xgboost]{h2o::h2o.xgboost()}}.
 
 The \strong{agua} extension package is required to fit this model.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{boost_tree(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(agua)
+
+boost_tree(
   mtry = integer(), trees = integer(), tree_depth = integer(), 
   learn_rate = numeric(), min_n = integer(), loss_reduction = numeric(), stop_iter = integer()
 ) |>
@@ -82,7 +84,9 @@ The \strong{agua} extension package is required to fit this model.
 
 The \strong{agua} extension package is required to fit this model.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{boost_tree(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(agua)
+
+boost_tree(
   mtry = integer(), trees = integer(), tree_depth = integer(), 
   learn_rate = numeric(), min_n = integer(), loss_reduction = numeric(), stop_iter = integer()
 ) |> 
@@ -131,7 +135,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

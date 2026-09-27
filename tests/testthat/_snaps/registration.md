@@ -473,6 +473,10 @@
             penalty      --> penalty
             epochs       --> iter.max
             activation   --> Th
+            learn_rate   --> alpha
+            iterbreak    --> iterbreak
+            minibatch    --> minibatch
+            n.hidden2    --> n.hidden2
       
        fit modules:
                    engine                mode

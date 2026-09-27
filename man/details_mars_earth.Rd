@@ -90,7 +90,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 
 Note that the \code{earth} package documentation has: “In the current
@@ -133,7 +133,8 @@ contains examples for \code{mars()} with the \code{"earth"} engine.
 \itemize{
 \item Friedman, J. 1991. “Multivariate Adaptive Regression Splines.” \emph{The
 Annals of Statistics}, vol. 19, no. 1, pp. 1-67.
-\item Milborrow, S. \href{http://www.milbo.org/doc/earth-notes.pdf}{“Notes on the earth package.”}
+\item Milborrow, S. “Notes on the earth package.”
+(\verb{http://www.milbo.org/doc/earth-notes.pdf})
 \item Kuhn, M, and K Johnson. 2013. \emph{Applied Predictive Modeling}. Springer.
 }
 }

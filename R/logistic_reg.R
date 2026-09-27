@@ -79,8 +79,8 @@ translate.logistic_reg <- function(x, engine = x$engine, ...) {
 
   if (engine == "glmnet") {
     # See https://parsnip.tidymodels.org/reference/glmnet-details.html
-    .check_glmnet_penalty_fit(x)
-    x <- set_glmnet_penalty_path(x)
+    .check_glmnet_penalty_fit(x, engine)
+    x <- set_glmnet_penalty_path(x, "lambda")
     # Since the `fit` information is gone for the penalty, we need to have an
     # evaluated value for the parameter.
     x$args$penalty <- rlang::eval_tidy(x$args$penalty)
@@ -142,6 +142,34 @@ update.logistic_reg <-
       ...
     )
   }
+
+# ------------------------------------------------------------------------------
+
+# Most engines cannot fit this. `glm` bins every level after the first into the
+# event and `keras3` returns a column per level, but in both cases the
+# probability columns parsnip labels do not mean what their names say.
+# `LiblineaR` is excluded because it genuinely fits a multiclass model, and
+# `multinom_reg()` has no LiblineaR engine to send those users to. See #1444.
+#' @export
+check_outcome_levels.logistic_reg <- function(
+  spec,
+  y,
+  call = rlang::caller_env()
+) {
+  if (nlevels(y) <= 2 || identical(spec$engine, "LiblineaR")) {
+    return(invisible(NULL))
+  }
+
+  cli::cli_abort(
+    c(
+      "!" = "Logistic regression models a binary outcome, but the outcome
+             has {nlevels(y)} levels: {.val {levels(y)}}.",
+      "i" = "Use {.fn multinom_reg} for an outcome with more than two
+             levels, or collapse the outcome to two levels."
+    ),
+    call = call
+  )
+}
 
 # ------------------------------------------------------------------------------
 

@@ -33,13 +33,13 @@ defaults to 0 (ridge regression) and 0.5 otherwise.
 
 \subsection{Translation from parsnip to the original package}{
 
-\code{\link[agua:h2o_train]{agua::h2o_train_glm()}} for \code{poisson_reg()} is
+\code{\link[agua:h2o_train_glm]{agua::h2o_train_glm()}} for \code{poisson_reg()} is
 a wrapper around \code{\link[h2o:h2o.glm]{h2o::h2o.glm()}} with
 \code{family = 'poisson'}.
 
 The \strong{agua} extension package is required to fit this model.
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(poissonreg)
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(agua)
 
 poisson_reg(penalty = double(1), mixture = double(1)) |> 
   set_engine("h2o") |> 
@@ -82,7 +82,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

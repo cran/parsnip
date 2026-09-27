@@ -22,7 +22,9 @@ This model has 3 tuning parameters:
 
 \subsection{Translation from parsnip to the original package}{
 
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{decision_tree(
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{library(ordered)
+
+decision_tree(
   tree_depth = integer(1),
   min_n = integer(1),
   cost_complexity = double(1)
@@ -62,7 +64,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

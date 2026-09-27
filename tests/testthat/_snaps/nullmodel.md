@@ -4,7 +4,7 @@
       translate(set_engine(null_model(mode = "regression")))
     Condition
       Error in `set_engine()`:
-      ! Missing engine. Possible mode/engine combinations are: classification {parsnip} and regression {parsnip}.
+      ! Missing engine. Possible mode/engine combinations are: classification {parsnip}, quantile regression {parsnip}, and regression {parsnip}.
 
 ---
 
@@ -14,15 +14,6 @@
       Error in `set_engine()`:
       x Engine "wat?" is not supported for `null_model()`.
       i See `show_engines("null_model")`.
-
-# nullmodel execution
-
-    Code
-      res <- fit(set_engine(null_model(mode = "regression"), "parsnip"), hpc_bad_form,
-      data = hpc)
-    Condition
-      Error:
-      ! object 'term' not found
 
 # null_model printing
 

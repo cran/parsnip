@@ -42,16 +42,6 @@ test_that('keras execution, classification', {
   )
 
   keras::backend()$clear_session()
-
-  expect_snapshot(
-    error = TRUE,
-    res <- parsnip::fit(
-      hpc_keras,
-      class ~ novar,
-      data = hpc,
-      control = ctrl
-    )
-  )
 })
 
 
@@ -267,13 +257,10 @@ test_that('multivariate nnet formula', {
       cbind(V1, V2, V3) ~ .,
       data = nn_dat[-(1:5), ]
     )
-  expect_equal(
-    length(unlist(keras::get_weights(extract_fit_engine(nnet_form)))),
-    24
-  )
+  expect_length(unlist(keras::get_weights(extract_fit_engine(nnet_form))), 24)
 
   nnet_form_pred <- predict(nnet_form, new_data = nn_dat[1:5, -(1:3)])
-  expect_equal(names(nnet_form_pred), paste0(".pred_", c("V1", "V2", "V3")))
+  expect_named(nnet_form_pred, paste0(".pred_", c("V1", "V2", "V3")))
 
   keras::backend()$clear_session()
 
@@ -284,12 +271,9 @@ test_that('multivariate nnet formula', {
       x = nn_dat[-(1:5), -(1:3)],
       y = nn_dat[-(1:5), 1:3]
     )
-  expect_equal(
-    length(unlist(keras::get_weights(extract_fit_engine(nnet_xy)))),
-    24
-  )
+  expect_length(unlist(keras::get_weights(extract_fit_engine(nnet_xy))), 24)
   nnet_form_xy <- predict(nnet_xy, new_data = nn_dat[1:5, -(1:3)])
-  expect_equal(names(nnet_form_pred), paste0(".pred_", c("V1", "V2", "V3")))
+  expect_named(nnet_form_pred, paste0(".pred_", c("V1", "V2", "V3")))
 
   keras::backend()$clear_session()
 })

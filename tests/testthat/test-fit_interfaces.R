@@ -11,16 +11,11 @@ class(sprk) <- c(class(sprk), "tbl_spark")
 
 tester <-
   function(object, formula = NULL, data = NULL, model) {
-    check_interface(
-      formula,
-      data,
-      match.call(expand.dots = TRUE),
-      model
-    )
+    check_interface(formula, data, model)
   }
 tester_xy <-
   function(object, x = NULL, y = NULL, model) {
-    check_xy_interface(x, y, match.call(expand.dots = TRUE), model)
+    check_xy_interface(x, y, model)
   }
 
 
@@ -106,8 +101,8 @@ test_that("elapsed time parsnip mods", {
 
   expect_output(print(lm1), "Fit time:")
   expect_output(print(lm2), "Fit time:")
-  expect_true(!is.null(lm1$elapsed))
-  expect_true(!is.null(lm2$elapsed))
+  expect_false(is.null(lm1$elapsed))
+  expect_false(is.null(lm2$elapsed))
 
   lm3 <-
     linear_reg() |>
@@ -196,4 +191,77 @@ test_that("overhead of parsnip interface is minimal (#1071)", {
       round(bm$median[3], 4)
     )
   )
+})
+
+test_that("`fit()` and `fit_xy()` reject extra arguments", {
+  # Issue 492
+  spec <- linear_reg() |> set_engine("lm")
+  x <- mtcars[, c("disp", "hp")]
+
+  expect_snapshot(
+    error = TRUE,
+    fit(spec, mpg ~ disp + hp, data = mtcars, subset = 1:7)
+  )
+  expect_snapshot(
+    error = TRUE,
+    fit_xy(spec, x = x, y = mtcars$mpg, subset = 1:7)
+  )
+  expect_snapshot(
+    error = TRUE,
+    fit(spec, mpg ~ disp + hp, data = mtcars, subset = 1:7, foo = 1)
+  )
+
+  # the `fit_xy()` redirect still takes precedence over the dots check
+  expect_snapshot(
+    error = TRUE,
+    fit(spec, mpg ~ disp + hp, data = mtcars, x = 1, y = 2)
+  )
+
+  # fits without extra arguments are unaffected
+  expect_no_condition(fit(spec, mpg ~ disp + hp, data = mtcars))
+  expect_no_condition(fit_xy(spec, x = x, y = mtcars$mpg))
+})
+
+test_that("`offset` in `...` gets interface-specific advice", {
+  # Issue 1439
+  spec <- linear_reg() |> set_engine("lm")
+  dat <- transform(mtcars, lo = log(wt))
+
+  # `fit()` points at the formula, `fit_xy()` cannot
+  expect_snapshot(
+    error = TRUE,
+    fit(spec, mpg ~ wt + cyl, offset = lo, data = dat)
+  )
+  expect_snapshot(
+    error = TRUE,
+    fit_xy(spec, x = dat[, c("wt", "cyl")], y = dat$mpg, offset = dat$lo)
+  )
+
+  # both routes the messages recommend actually apply the offset
+  form_fit <- fit(spec, mpg ~ wt + cyl + offset(lo), data = dat)
+  expect_false(is.null(extract_fit_engine(form_fit)$offset))
+
+  xy_fit <- linear_reg() |>
+    set_engine("lm", offset = dat$lo) |>
+    fit_xy(x = dat[, c("wt", "cyl")], y = dat$mpg)
+  expect_false(is.null(extract_fit_engine(xy_fit)$offset))
+})
+
+test_that("fitting does not rely on `$` partial matching", {
+  skip_if_not_installed("modeldata")
+
+  # `levels_from_formula()` returns `lvls`, which `form_form()` once read as
+  # `$lvl`
+  withr::local_options(warnPartialMatchDollar = TRUE)
+
+  cls_dat <- transform(mtcars, vs = factor(vs))
+  spec <- logistic_reg() |> set_engine("glm")
+
+  expect_no_condition(cls_fit <- fit(spec, vs ~ mpg, data = cls_dat))
+  expect_equal(cls_fit$lvl, levels(cls_dat$vs))
+
+  expect_no_condition(
+    xy_fit <- fit_xy(spec, x = mtcars["mpg"], y = cls_dat$vs)
+  )
+  expect_equal(xy_fit$lvl, levels(cls_dat$vs))
 })

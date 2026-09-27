@@ -5,7 +5,7 @@
 \title{C5.0 rule-based classification models}
 \description{
 \code{\link[C50:C5.0]{C50::C5.0()}} fits a model that derives feature rules from a tree for
-prediction. A single tree or boosted ensemble can be used. \code{\link[rules:rules-internal]{rules::c5_fit()}}
+prediction. A single tree or boosted ensemble can be used. \code{\link[rules:c5_fit]{rules::c5_fit()}}
 is a wrapper around this function.
 }
 \details{
@@ -67,7 +67,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

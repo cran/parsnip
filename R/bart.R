@@ -99,6 +99,43 @@ bart <-
 
 # ------------------------------------------------------------------------------
 
+# dbarts fits binary classification only. It is handed the factor codes, so a
+# third level silently becomes a `y` value of 2 and the "probabilities" that
+# come back are not on [0, 1]. Error rather than return nonsense. See #1444.
+#' @export
+check_outcome_levels.bart <- function(spec, y, call = rlang::caller_env()) {
+  if (!identical(spec$engine, "dbarts") || nlevels(y) == 2) {
+    return(invisible(NULL))
+  }
+
+  used <- levels(droplevels(y))
+  unused <- setdiff(levels(y), used)
+
+  msg <-
+    c(
+      "!" = "BART classification with the {.val dbarts} engine requires an
+             outcome with exactly 2 levels, but {.val {nlevels(y)}} were
+             given: {.val {levels(y)}}.",
+      "i" = "dbarts models a binary outcome, so additional levels cannot be
+             fit."
+    )
+
+  if (length(used) == 2) {
+    msg <-
+      c(
+        msg,
+        "i" = "Only {.val {used}} appear in the data.",
+        # `qty()` must be the last quantity set before `{?s}`
+        "i" = "{cli::qty(unused)}Use {.fn droplevels} to drop the unused
+               level{?s} {.val {unused}}."
+      )
+  }
+
+  cli::cli_abort(msg, call = call)
+}
+
+# ------------------------------------------------------------------------------
+
 #' @method update bart
 #' @rdname parsnip_update
 #' @inheritParams bart
@@ -172,7 +209,7 @@ dbart_predict_calc <- function(
     mn <- colMeans(post_dist, na.rm = TRUE)
     res <-
       tibble::tibble(a = 1 - mn, b = mn) |>
-      setNames(paste0(".pred_", obj$lv))
+      setNames(paste0(".pred_", obj$lvl))
   } else if (type %in% c("conf_int", "pred_int")) {
     if (mod_mode == "regression") {
       res <-
@@ -181,15 +218,15 @@ dbart_predict_calc <- function(
           .pred_upper = apply(post_dist, 2, quantile, probs = hi, na.rm = TRUE)
         )
     } else {
+      # rows are the lower and upper quantiles, columns are observations
       bnds <- apply(post_dist, 2, quantile, probs = c(lo, hi), na.rm = TRUE)
-      bnds <- apply(bnds, 1, function(x) sort(x))
 
       res <-
         tibble::tibble(
-          .pred_lower_a = 1 - bnds[, 2],
-          .pred_lower_b = bnds[, 1],
-          .pred_upper_a = 1 - bnds[, 1],
-          .pred_upper_b = bnds[, 2]
+          .pred_lower_a = 1 - bnds[2, ],
+          .pred_lower_b = bnds[1, ],
+          .pred_upper_a = 1 - bnds[1, ],
+          .pred_upper_b = bnds[2, ]
         ) |>
         rlang::set_names(
           c(

@@ -1,7 +1,7 @@
 
 
 
-For this engine, there are multiple modes: censored regression, regression, and classification
+For this engine, there are multiple modes: regression, classification, and censored regression
 
 ## Tuning Parameters
 
@@ -9,9 +9,9 @@ For this engine, there are multiple modes: censored regression, regression, and 
 
 This model has 2 tuning parameters:
 
-- `tree_depth`: Tree Depth (type: integer, default: see below)
-
 - `min_n`: Minimal Node Size (type: integer, default: 20L)
+
+- `tree_depth`: Tree Depth (type: integer, default: see below)
 
 The `tree_depth` parameter defaults to `0` which means no restrictions are applied to tree depth.
 
@@ -120,7 +120,7 @@ This engine does not require any special encoding of the predictors. Categorical
 
 This model can utilize case weights during model fitting. To use them, see the documentation in [case_weights] and the examples on `tidymodels.org`. 
 
-The `fit()` and `fit_xy()` arguments have arguments called `case_weights` that expect vectors of case weights. 
+The `fit()` and `fit_xy()` functions have arguments called `case_weights` that expect vectors of case weights. 
 
 ## Prediction types
 
@@ -135,11 +135,11 @@ parsnip:::get_from_env("decision_tree_predict") |>
 ## # A tibble: 5 x 2
 ##   mode                type    
 ##   <chr>               <chr>   
-## 1 censored regression time    
-## 2 censored regression survival
-## 3 regression          numeric 
-## 4 classification      class   
-## 5 classification      prob
+## 1 regression          numeric 
+## 2 classification      class   
+## 3 classification      prob    
+## 4 censored regression time    
+## 5 censored regression survival
 ```
 
 ## Other details

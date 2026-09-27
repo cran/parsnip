@@ -6,17 +6,19 @@
 form_form <-
   function(object, control, env, ..., call = rlang::caller_env()) {
     if (inherits(env$data, "data.frame")) {
-      check_outcome(eval_tidy(rlang::f_lhs(env$formula), env$data), object)
+      check_outcome(
+        eval_tidy(rlang::f_lhs(env$formula), env$data),
+        object,
+        call = call
+      )
 
       encoding_info <- get_encoding(class(object)[1])
-      encoding_info <-
-        vctrs::vec_slice(
-          encoding_info,
-          encoding_info$mode == object$mode &
-            encoding_info$engine == object$engine
-        )
+      is_spec_encoding <-
+        encoding_info$mode == object$mode &
+        encoding_info$engine == object$engine
 
-      remove_intercept <- encoding_info$remove_intercept
+      # this way of filtering is intentionally written in the base-R way for speed.
+      remove_intercept <- encoding_info$remove_intercept[is_spec_encoding]
       if (remove_intercept) {
         env$data <- env$data[,
           colnames(env$data) != "(Intercept)",
@@ -47,7 +49,7 @@ form_form <-
     fit_call <- make_form_call(object, env = env)
 
     res <- list(
-      lvl = y_levels$lvl,
+      lvl = y_levels$lvls,
       ordered = y_levels$ordered,
       spec = object
     )
@@ -57,8 +59,7 @@ form_form <-
       fit_call,
       capture = control$verbosity == 0,
       catch = control$catch,
-      envir = env,
-      ...
+      envir = env
     )
     elapsed <- proc.time() - time
     res$preproc <- list(y_var = all.vars(rlang::f_lhs(env$formula)))
@@ -82,13 +83,15 @@ xy_xy <- function(
     )
   }
 
-  check_outcome(env$y, object)
+  check_outcome(env$y, object, call = call)
 
-  encoding_info <-
-    get_encoding(class(object)[1]) |>
-    dplyr::filter(mode == object$mode, engine == object$engine)
+  encoding_info <- get_encoding(class(object)[1])
+  is_spec_encoding <-
+    encoding_info$mode == object$mode &
+    encoding_info$engine == object$engine
 
-  remove_intercept <- encoding_info$remove_intercept
+  # this way of filtering is intentionally written in the base-R way for speed.
+  remove_intercept <- encoding_info$remove_intercept[is_spec_encoding]
   if (remove_intercept) {
     env$x <- env$x[, colnames(env$x) != "(Intercept)", drop = FALSE]
   }
@@ -114,16 +117,20 @@ xy_xy <- function(
     fit_call,
     capture = control$verbosity == 0,
     catch = control$catch,
-    envir = env,
-    ...
+    envir = env
   )
   elapsed <- proc.time() - time
 
-  if (is.atomic(env$y)) {
-    y_name <- character(0)
+  if (!is.null(env$y_var)) {
+    y_name <- env$y_var
   } else {
-    y_name <- colnames(env$y)
+    if (is.atomic(env$y)) {
+      y_name <- character(0)
+    } else {
+      y_name <- colnames(env$y)
+    }
   }
+
   res$preproc <- list(y_var = y_name, x_names = colnames(env$x))
   res$elapsed <- list(elapsed = elapsed, print = control$verbosity > 1L)
   res
@@ -137,13 +144,15 @@ form_xy <- function(
   ...,
   call = rlang::caller_env()
 ) {
-  encoding_info <-
-    get_encoding(class(object)[1]) |>
-    dplyr::filter(mode == object$mode, engine == object$engine)
+  encoding_info <- get_encoding(class(object)[1])
+  is_spec_encoding <-
+    encoding_info$mode == object$mode &
+    encoding_info$engine == object$engine
 
-  indicators <- encoding_info$predictor_indicators
-  remove_intercept <- encoding_info$remove_intercept
-  allow_sparse_x <- encoding_info$allow_sparse_x
+  # this way of filtering is intentionally written in the base-R way for speed.
+  indicators <- encoding_info$predictor_indicators[is_spec_encoding]
+  remove_intercept <- encoding_info$remove_intercept[is_spec_encoding]
+  allow_sparse_x <- encoding_info$allow_sparse_x[is_spec_encoding]
 
   if (allow_sparse_x && sparsevctrs::has_sparse_elements(env$data)) {
     target <- "dgCMatrix"
@@ -152,7 +161,6 @@ form_xy <- function(
   data_obj <- .convert_form_to_xy_fit(
     formula = env$formula,
     data = env$data,
-    ...,
     composition = target,
     indicators = indicators,
     remove_intercept = remove_intercept,
@@ -178,17 +186,16 @@ form_xy <- function(
   res
 }
 
-xy_form <- function(object, env, control, ...) {
-  check_outcome(env$y, object)
+xy_form <- function(object, env, control, call = rlang::caller_env(), ...) {
+  check_outcome(env$y, object, call = call)
 
   encoding_info <- get_encoding(class(object)[1])
-  encoding_info <-
-    vctrs::vec_slice(
-      encoding_info,
-      encoding_info$mode == object$mode & encoding_info$engine == object$engine
-    )
+  is_spec_encoding <-
+    encoding_info$mode == object$mode &
+    encoding_info$engine == object$engine
 
-  remove_intercept <- encoding_info$remove_intercept
+  # this way of filtering is intentionally written in the base-R way for speed.
+  remove_intercept <- encoding_info$remove_intercept[is_spec_encoding]
 
   data_obj <-
     .convert_xy_to_form_fit(
@@ -205,17 +212,16 @@ xy_form <- function(object, env, control, ...) {
   res <- form_form(
     object = object,
     env = env,
-    control = control,
-    ...
+    control = control
   )
   if (!is.null(env$y_var)) {
     data_obj$y_var <- env$y_var
   } else {
     if (is.atomic(env$y)) {
       data_obj$y_var <- character(0)
+    } else {
+      data_obj$y_var <- colnames(env$y)
     }
-
-    data_obj$y_var <- colnames(env$y)
   }
 
   res$preproc <- data_obj[c("x_var", "y_var")]

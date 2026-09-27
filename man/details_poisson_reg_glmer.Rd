@@ -81,6 +81,7 @@ The model can accept case weights.
 With parsnip, we suggest using the formula method when fitting:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{library(tidymodels)
+library(multilevelmod)
 
 poisson_reg() |> 
   set_engine("glmer") |> 
@@ -92,6 +93,7 @@ workflow. In this case, you can add the appropriate columns using
 \code{add_variables()} then supply the typical formula when adding the model:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{library(tidymodels)
+library(multilevelmod)
 
 glmer_spec <- 
   poisson_reg() |> 
@@ -113,7 +115,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

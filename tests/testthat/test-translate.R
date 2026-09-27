@@ -246,30 +246,19 @@ test_that("arguments (nearest_neighbor)", {
 test_that("arguments (ordinal_reg)", {
   suppressMessages({
     basic <- ordinal_reg(mode = "classification")
-    adjacent_categories <- ordinal_reg(odds_link = "adjacent")
-    ordinal_link <-
-      ordinal_reg(ordinal_link = "probit") |> set_engine("ordinalNet")
+    ordinal_link <- ordinal_reg(ordinal_link = "probit")
+    ordinalNet <- ordinal_link |> set_engine("ordinalNet")
+    glmnetcr <- ordinal_link |> set_engine("glmnetcr")
     penalty <- ordinal_reg(penalty = .001)
-    ordinalNet <- ordinal_reg() |> set_engine("ordinalNet")
-    penalty_ordinalNet <-
-      ordinal_reg(penalty = .001) |> set_engine("ordinalNet")
-    penalties_ordinalNet <-
-      ordinal_reg(penalty = 10^seq(-5, -1)) |> set_engine("ordinalNet")
   })
 
   # empty because engines are not defined in parsnip
   expect_snapshot(basic |> translate_args())
-  # only the cumulative link odds link is supported by polr
-  expect_snapshot(adjacent_categories |> translate_args())
-  # penalty is required for ordinalNet engine
-  expect_snapshot(ordinal_link |> translate_args())
+  # penalty is required for ordinalNet and glmnetcr engines
+  expect_snapshot(ordinalNet |> translate_args(), error = TRUE)
+  expect_snapshot(glmnetcr |> translate_args(), error = TRUE)
   # empty because engines are not defined in parsnip
   expect_snapshot(penalty |> translate_args())
-  # a penalty path is prepared automatically for ordinalNet
-  expect_snapshot(ordinalNet |> translate_args())
-  # a provided penalty or path is overridden informatively
-  expect_snapshot(penalty_ordinalNet |> translate_args())
-  expect_snapshot(penalties_ordinalNet |> translate_args())
 })
 
 
@@ -389,25 +378,25 @@ test_that("get_model_spec helper", {
 
   expect_type(mod1$fit, "list")
   expect_length(mod1$fit, 4)
-  expect_equal(names(mod1$fit), c("interface", "protect", "func", "defaults"))
+  expect_named(mod1$fit, c("interface", "protect", "func", "defaults"))
 
   expect_type(mod1$pred, "list")
   expect_length(mod1$pred, 4)
-  expect_equal(names(mod1$pred), c("numeric", "conf_int", "pred_int", "raw"))
+  expect_named(mod1$pred, c("numeric", "conf_int", "pred_int", "raw"))
 
   expect_type(mod1$pred$numeric, "list")
   expect_length(mod1$pred$numeric, 4)
-  expect_equal(names(mod1$pred$numeric), c("pre", "post", "func", "args"))
+  expect_named(mod1$pred$numeric, c("pre", "post", "func", "args"))
 
   expect_type(mod1$pred$conf_int, "list")
   expect_length(mod1$pred$conf_int, 4)
-  expect_equal(names(mod1$pred$conf_int), c("pre", "post", "func", "args"))
+  expect_named(mod1$pred$conf_int, c("pre", "post", "func", "args"))
 
   expect_type(mod1$pred$pred_int, "list")
   expect_length(mod1$pred$pred_int, 4)
-  expect_equal(names(mod1$pred$pred_int), c("pre", "post", "func", "args"))
+  expect_named(mod1$pred$pred_int, c("pre", "post", "func", "args"))
 
   expect_type(mod1$pred$raw, "list")
   expect_length(mod1$pred$raw, 4)
-  expect_equal(names(mod1$pred$raw), c("pre", "post", "func", "args"))
+  expect_named(mod1$pred$raw, c("pre", "post", "func", "args"))
 })

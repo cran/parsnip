@@ -31,7 +31,7 @@ type of model.
 centering all predictors).
 }
 
-See \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} and
+See \code{\link[rstan:sampling]{rstan::sampling()}} and
 \code{\link[rstanarm:priors]{rstanarm::priors()}} for more information on these
 and other options.
 }
@@ -79,7 +79,7 @@ This model can utilize case weights during model fitting. To use them,
 see the documentation in \link{case_weights} and the examples
 on \code{tidymodels.org}.
 
-The \code{fit()} and \code{fit_xy()} arguments have arguments called
+The \code{fit()} and \code{fit_xy()} functions have arguments called
 \code{case_weights} that expect vectors of case weights.
 }
 

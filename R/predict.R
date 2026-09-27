@@ -38,6 +38,13 @@
 #'            linear predictors). Default value is `FALSE`.
 #'     \item `eval_time`: for `type` equal to `"survival"` or `"hazard"`, the
 #'            time points at which the survival probability or hazard is estimated.
+#'     \item `add_censoring_weights`: for `type` equal to `"survival"`, a single
+#'            logical for whether to add inverse probability of censoring weight
+#'            columns to the `.pred` list-column. Default is `FALSE`. When
+#'            `TRUE`, `new_data` must contain either a [survival::Surv()] outcome
+#'            column or the variables referenced in the model formula's LHS so
+#'            that the outcome can be reconstructed. See [augment.model_fit()]
+#'            and the `tidymodels.org` reference for details.
 #'  }
 #' @details For `type = NULL`, `predict()` uses
 #'
@@ -63,9 +70,11 @@
 #' `predict.model_fit()` does not require the outcome to be present. For
 #' performance metrics on the predicted survival probability, inverse probability
 #' of censoring weights (IPCW) are required (see the `tidymodels.org` reference
-#' below). Those require the outcome and are thus not returned by `predict()`.
-#' They can be added via [augment.model_fit()] if `new_data` contains a column
-#' with the outcome as a `Surv` object.
+#' below). Those require the outcome and are thus not returned by `predict()` by
+#' default. They are added when `add_censoring_weights = TRUE` and `new_data`
+#' contains either a `Surv` outcome column or the variables that built it in the
+#' fit's formula (e.g., `time` and `status` for `Surv(time, status)`). The same
+#' columns are added by [augment.model_fit()].
 #'
 #' Also, when `type = "linear_pred"`, censored regression models will by default
 #' be formatted such that the linear predictor _increases_ with time. This may
@@ -264,12 +273,6 @@ check_pred_type <- function(object, type, ..., call = rlang::caller_env()) {
     "hazard" = if (object$spec$mode != "censored regression") {
       cli::cli_abort(
         "For hazard predictions, the object should be a censored regression.",
-        call = call
-      )
-    },
-    "linear_pred" = if (object$spec$mode != "censored regression") {
-      cli::cli_abort(
-        "For the linear predictor, the object should be a censored regression.",
         call = call
       )
     }
@@ -495,9 +498,11 @@ check_pred_type_dots <- function(
     "level",
     "std_error",
     "quantile_levels",
+    "quantile",
     "time",
     "eval_time",
-    "increasing"
+    "increasing",
+    "add_censoring_weights"
   )
 
   eval_time_types <- c("survival", "hazard")
@@ -505,10 +510,9 @@ check_pred_type_dots <- function(
   is_pred_arg <- names(the_dots) %in% other_args
   if (!all(is_pred_arg)) {
     bad_args <- names(the_dots)[!is_pred_arg]
-    bad_args <- paste0("`", bad_args, "`", collapse = ", ")
     cli::cli_abort(
       "The ellipses are not used to pass args to the model function's
-         predict function. These arguments cannot be used: {.val bad_args}",
+       predict function. These arguments cannot be used: {.arg {bad_args}}",
       call = call
     )
   }
@@ -553,6 +557,15 @@ check_pred_type_dots <- function(
     )
   }
 
+  # `add_censoring_weights` only applies to survival predictions
+  if (any(nms == "add_censoring_weights") & type != "survival") {
+    cli::cli_abort(
+      "{.arg add_censoring_weights} should only be passed to {.fn predict}
+       when {.arg type} is {.val survival}.",
+      call = call
+    )
+  }
+
   invisible(TRUE)
 }
 
@@ -569,8 +582,7 @@ prepare_data <- function(object, new_data) {
   translate_from_xy_to_formula <- any(preproc_names == "x_var", na.rm = TRUE)
   # For backwards compatibility, only do this if `y_var` is missing and
   # `x_names` is present
-  translate_from_xy_to_xy <- any(preproc_names == "x_names", na.rm = TRUE) &&
-    identical(object$preproc$y_var, character(0))
+  translate_from_xy_to_xy <- any(preproc_names == "x_names", na.rm = TRUE)
 
   if (translate_from_formula_to_xy) {
     new_data <- .convert_form_to_xy_new(object$preproc, new_data)$x
