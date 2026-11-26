@@ -578,6 +578,54 @@ set_model_arg(
   has_submodel = FALSE
 )
 
+# Engine-specific tunable parameters for brulee
+
+set_model_arg(
+  model = "linear_reg",
+  eng = "brulee",
+  parsnip = "epochs",
+  original = "epochs",
+  func = list(pkg = "dials", fun = "epochs", range = c(5L, 500L)),
+  has_submodel = FALSE
+)
+
+set_model_arg(
+  model = "linear_reg",
+  eng = "brulee",
+  parsnip = "learn_rate",
+  original = "learn_rate",
+  func = list(pkg = "dials", fun = "learn_rate", range = c(-3, -1 / 5)),
+  has_submodel = FALSE
+)
+
+set_model_arg(
+  model = "linear_reg",
+  eng = "brulee",
+  parsnip = "momentum",
+  original = "momentum",
+  func = list(pkg = "dials", fun = "momentum", range = c(0.00, 0.99)),
+  has_submodel = FALSE
+)
+
+set_model_arg(
+  model = "linear_reg",
+  eng = "brulee",
+  parsnip = "batch_size",
+  original = "batch_size",
+  func = list(pkg = "dials", fun = "batch_size", range = c(3L, 8L)),
+  has_submodel = FALSE
+)
+
+set_model_arg(
+  model = "linear_reg",
+  eng = "brulee",
+  parsnip = "stop_iter",
+  original = "stop_iter",
+  func = list(pkg = "dials", fun = "stop_iter"),
+  has_submodel = FALSE
+)
+
+
 set_fit(
   model = "linear_reg",
   eng = "brulee",
@@ -670,5 +718,110 @@ set_pred(
       object = expr(object$fit),
       newdata = expr(new_data)
     )
+  )
+)
+
+# ------------------------------------------------------------------------------
+# lmrob
+
+set_model_engine("linear_reg", "regression", "lmrob")
+set_dependency("linear_reg", "lmrob", "robustbase", mode = "regression")
+
+set_fit(
+  model = "linear_reg",
+  eng = "lmrob",
+  mode = "regression",
+  value = list(
+    interface = "formula",
+    protect = c("formula", "data", "weights"),
+    func = c(pkg = "robustbase", fun = "lmrob"),
+    defaults = list()
+  )
+)
+
+set_encoding(
+  model = "linear_reg",
+  eng = "lmrob",
+  mode = "regression",
+  options = list(
+    predictor_indicators = "traditional",
+    compute_intercept = TRUE,
+    remove_intercept = TRUE,
+    allow_sparse_x = FALSE
+  )
+)
+
+set_pred(
+  model = "linear_reg",
+  eng = "lmrob",
+  mode = "regression",
+  type = "numeric",
+  value = list(
+    pre = NULL,
+    post = NULL,
+    func = c(fun = "predict"),
+    args = list(
+      object = expr(object$fit),
+      newdata = expr(new_data),
+      type = "response"
+    )
+  )
+)
+
+set_pred(
+  model = "linear_reg",
+  eng = "lmrob",
+  mode = "regression",
+  type = "conf_int",
+  value = list(
+    pre = NULL,
+    post = function(results, object) {
+      tibble::as_tibble(results) |>
+        dplyr::select(-fit) |>
+        setNames(c(".pred_lower", ".pred_upper"))
+    },
+    func = c(fun = "predict"),
+    args = list(
+      object = expr(object$fit),
+      newdata = expr(new_data),
+      interval = "confidence",
+      level = expr(level),
+      type = "response"
+    )
+  )
+)
+set_pred(
+  model = "linear_reg",
+  eng = "lmrob",
+  mode = "regression",
+  type = "pred_int",
+  value = list(
+    pre = NULL,
+    post = function(results, object) {
+      tibble::as_tibble(results) |>
+        dplyr::select(-fit) |>
+        setNames(c(".pred_lower", ".pred_upper"))
+    },
+    func = c(fun = "predict"),
+    args = list(
+      object = expr(object$fit),
+      newdata = expr(new_data),
+      interval = "prediction",
+      level = expr(level),
+      type = "response"
+    )
+  )
+)
+
+set_pred(
+  model = "linear_reg",
+  eng = "lmrob",
+  mode = "regression",
+  type = "raw",
+  value = list(
+    pre = NULL,
+    post = NULL,
+    func = c(fun = "predict"),
+    args = list(object = expr(object$fit), newdata = expr(new_data))
   )
 )
